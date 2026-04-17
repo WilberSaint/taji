@@ -135,7 +135,7 @@ httpServer.listen(PORT, '0.0.0.0', () => {
   ║                                        ║
   ║     🌱 TAJI SERVER RUNNING 🌱          ║
   ║                                        ║
-  ║  Port: ${PORT}                       ║
+  ║  Port: ${PORT}                            ║
   ║  Environment: ${process.env.NODE_ENV || 'development'}              ║
   ║  Listening on: 0.0.0.0 (todas las IPs) ║
   ║                                        ║

@@ -13,6 +13,7 @@ export function LobbyScreen() {
   const [isPublic, setIsPublic] = useState(true);
   const [loading, setLoading] = useState(false);
   const [reconnecting, setReconnecting] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Cargar salas públicas al inicio
   useEffect(() => {
@@ -192,10 +193,26 @@ export function LobbyScreen() {
                 Salas Públicas
               </h2>
               <button
-                onClick={listRooms}
-                className="text-sm text-blue-600 hover:text-blue-700"
+                onClick={async () => {
+                  setIsRefreshing(true);
+                  try {
+                    await listRooms();
+                  } catch (error) {
+                    console.error('Error al actualizar las salas:', error);
+                  } finally {
+                    setTimeout(() => setIsRefreshing(false), 500);
+                  }
+                }}
+                disabled={isRefreshing}
+                className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
-                🔄 Actualizar
+                <motion.div
+                  animate={{ rotate: isRefreshing ? 360 : 0 }}
+                  transition={{ duration: 1, repeat: isRefreshing ? Infinity : 0, ease: "linear" }}
+                >
+                  🔄
+                </motion.div>
+                {isRefreshing ? 'Actualizando...' : 'Actualizar'}
               </button>
             </div>
 
