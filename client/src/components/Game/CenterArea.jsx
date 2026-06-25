@@ -7,23 +7,23 @@ import { Shield, AlertTriangle } from 'lucide-react';
 /* ================= POSICIONES RELATIVAS ================= */
 const PLANT_POSITIONS = {
   [ENERGY_TYPES.EOLICA]: {
-    left: '4%',
-    top: '50%',
+    left: '6%',
+    top: '52%',
     transform: 'translateY(-50%)',
   },
   [ENERGY_TYPES.SOLAR]: {
     left: '50%',
-    top: '-6%',
+    top: '5%',
     transform: 'translateX(-50%)',
   },
   [ENERGY_TYPES.GEOTERMICA]: {
-    right: '4%',
-    top: '50%',
+    right: '7%',
+    top: '55%',
     transform: 'translateY(-50%)',
   },
   [ENERGY_TYPES.HIDROELECTRICA]: {
     left: '50%',
-    bottom: '-14%',
+    bottom: '-11%',
     transform: 'translateX(-50%)',
   },
 };
@@ -33,7 +33,7 @@ const PLANT_SIZES = {
   [ENERGY_TYPES.EOLICA]: 'w-[38%] aspect-square',
   [ENERGY_TYPES.SOLAR]: 'w-[38%] aspect-square',
   [ENERGY_TYPES.GEOTERMICA]: 'w-[38%] aspect-square',
-  [ENERGY_TYPES.HIDROELECTRICA]: 'w-[56%] aspect-[4/3]',
+  [ENERGY_TYPES.HIDROELECTRICA]: 'w-[54%] aspect-[4/3]',
 };
 
 const PLANT_IMAGES = {
@@ -96,12 +96,13 @@ export default function CenterArea({ currentPlayer }) {
   className="
     relative
     w-[45%]
-    max-w-[620px]
-    aspect-[3/2]
+    max-w-[680px]
+    aspect-[11/7]
+    -translate-y-6
   "
     >
       {/* Fondo */}
-      <div className="absolute inset-0 rounded-3xl bg-white/5 backdrop-blur-sm border-2 border-white/20" />
+      <div className="absolute inset-0 rounded-3xl bg-white/5 backdrop-blur-sm border-2 border-white/10" />
 
       {/* Plantas */}
       {energyTypes.map((slotType) => {
@@ -140,8 +141,8 @@ export default function CenterArea({ currentPlayer }) {
               className="w-full h-full object-contain pointer-events-none drop-shadow-2xl"
               style={{
                 filter: hasPlant
-                  ? 'brightness(1.15) contrast(1.1)'
-                  : 'brightness(0.6) grayscale(0.6) opacity(0.75)',
+                  ? 'brightness(1.15)'
+                  : 'brightness(0.8)',
               }}
             />
 

@@ -92,6 +92,7 @@ export default function GameBoard() {
           </button>
         </div>
 
+
         {/* OPONENTE SUPERIOR */}
         <div className="absolute top-[4%] left-1/2 -translate-x-1/2 z-20">
           <OpponentBoard
@@ -100,26 +101,28 @@ export default function GameBoard() {
           />
         </div>
 
-        {/* OPONENTE IZQUIERDO */}
-        <div className="absolute top-1/2 left-[18%] -translate-y-1/2 z-20">
-          <OpponentBoard
-            player={visualOpponents[1]}
-            orientation="landscape"
-            small
-          />
-        </div>
+        {gameState.players.length > 2 && (
+          /* OPONENTE IZQUIERDO */
+          <div className="absolute top-1/2 left-[18%] -translate-y-1/2 z-20">
+            <OpponentBoard
+              player={visualOpponents[1]}
+              orientation="landscape"
+              small
+            />
+          </div>)};
 
-        {/* OPONENTE DERECHO (SIMÉTRICO REAL) */}
-        <div className="absolute top-1/2 right-[18%] -translate-y-1/2 z-20">
-          <OpponentBoard
-            player={visualOpponents[2]}
-            orientation="landscape"
-            small
-          />
-        </div>
+        {gameState.players.length > 3 && (
+          /* OPONENTE DERECHO (SIMÉTRICO REAL) */
+          <div className="absolute top-1/2 right-[18%] -translate-y-1/2 z-20">
+            <OpponentBoard
+              player={visualOpponents[2]}
+              orientation="landscape"
+              small
+            />
+          </div>)};
 
         {/* CENTRO */}
-        <div className="absolute inset-0 flex items-center justify-center z-10">
+        <div className="absolute inset-0 flex items-center justify-center z-10 top-8">
           <CenterArea currentPlayer={currentPlayer} />
         </div>
 
@@ -196,9 +199,8 @@ function OpponentBoard({ player, small, orientation }) {
       <PlayerFrame player={player} />
 
       <div
-        className={`mt-1 flex gap-1 ${
-          orientation === 'landscape' ? 'flex-col' : 'flex-row'
-        }`}
+        className={`mt-1 flex gap-1 ${orientation === 'landscape' ? 'flex-col' : 'flex-row'
+          }`}
       >
         {BOARD_ENERGIES.map(type => (
           <PlayerSlot
