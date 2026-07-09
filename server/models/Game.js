@@ -1,16 +1,17 @@
-import Deck from './Deck.js';
-import { 
-  GAME_STATUS, 
-  GAME_RULES, 
-  CARD_TYPES 
-} from '../utils/constants.js';
-import { 
-  canPlayCard, 
+import Deck from "./Deck.js";
+import {
+  GAME_STATUS,
+  GAME_RULES,
+  CARD_TYPES,
+  EVENT_TYPES,
+} from "../utils/constants.js";
+import {
+  canPlayCard,
   checkVictoryCondition,
   canEndTurn,
-  validateDiscard
-} from '../utils/gameValidator.js';
-import logger from '../utils/logger.js';
+  validateDiscard,
+} from "../utils/gameValidator.js";
+import logger from "../utils/logger.js";
 
 /**
  * Clase que representa una partida de TAJI
@@ -33,19 +34,19 @@ export default class Game {
    */
   start() {
     logger.game(`Iniciando partida ${this.id}`);
-    
+
     // Determinar orden aleatorio de jugadores
     this.shufflePlayers();
-    
+
     // Repartir cartas iniciales
     this.dealInitialCards();
-    
+
     // Resetear estados de turnos
-    this.players.forEach(p => p.resetTurnState());
-    
+    this.players.forEach((p) => p.resetTurnState());
+
     logger.success(`Partida ${this.id} iniciada`, {
-      players: this.players.map(p => p.name),
-      firstPlayer: this.getCurrentPlayer().name
+      players: this.players.map((p) => p.name),
+      firstPlayer: this.getCurrentPlayer().name,
     });
   }
 
@@ -63,11 +64,11 @@ export default class Game {
    * Reparte cartas iniciales a todos los jugadores
    */
   dealInitialCards() {
-    this.players.forEach(player => {
+    this.players.forEach((player) => {
       const cards = this.deck.drawMultiple(GAME_RULES.INITIAL_HAND_SIZE);
       player.addCards(cards);
       logger.debug(`Cartas iniciales repartidas a ${player.name}`, {
-        count: cards.length
+        count: cards.length,
       });
     });
   }
@@ -83,7 +84,7 @@ export default class Game {
    * Obtiene un jugador por ID
    */
   getPlayer(playerId) {
-    return this.players.find(p => p.id === playerId);
+    return this.players.find((p) => p.id === playerId);
   }
 
   /**
@@ -92,14 +93,14 @@ export default class Game {
   nextTurn() {
     // Resetear estado del turno del jugador actual
     this.getCurrentPlayer().resetTurnState();
-    
+
     // Incrementar turno
     this.currentTurnIndex = (this.currentTurnIndex + 1) % this.players.length;
     this.turnCount++;
-    
+
     const newCurrentPlayer = this.getCurrentPlayer();
     logger.game(`Turno ${this.turnCount}: ${newCurrentPlayer.name}`);
-    
+
     return newCurrentPlayer;
   }
 
@@ -108,17 +109,17 @@ export default class Game {
    */
   drawCard(playerId) {
     const player = this.getPlayer(playerId);
-    
+
     if (!player) {
-      return { success: false, error: 'Jugador no encontrado' };
+      return { success: false, error: "Jugador no encontrado" };
     }
 
     // Verificar si el mazo está vacío
     if (this.deck.isEmpty()) {
-      logger.warn('Mazo vacío, rellenando desde descarte');
-      
+      logger.warn("Mazo vacío, rellenando desde descarte");
+
       if (this.discardPile.length === 0) {
-        return { success: false, error: 'No hay cartas disponibles' };
+        return { success: false, error: "No hay cartas disponibles" };
       }
 
       // Rellenar mazo desde descarte
@@ -127,17 +128,17 @@ export default class Game {
     }
 
     const card = this.deck.draw();
-    
+
     if (!card) {
-      return { success: false, error: 'No se pudo robar carta' };
+      return { success: false, error: "No se pudo robar carta" };
     }
 
     player.addCard(card);
-    
-    return { 
-      success: true, 
+
+    return {
+      success: true,
       card: card,
-      deckCount: this.deck.getCount()
+      deckCount: this.deck.getCount(),
     };
   }
 
@@ -146,7 +147,7 @@ export default class Game {
    */
   drawMultipleCards(playerId, count) {
     const results = [];
-    
+
     for (let i = 0; i < count; i++) {
       const result = this.drawCard(playerId);
       if (result.success) {
@@ -163,35 +164,35 @@ export default class Game {
   /**
    * Juega una carta
    */
-  playCard(playerId, cardId, targetPlayerId, slotType) {
+  playCard(playerId, cardId, targetPlayerId, movements) {
     const player = this.getPlayer(playerId);
     const targetPlayer = this.getPlayer(targetPlayerId);
-    
+
     // Validaciones básicas
     if (!player) {
-      return { success: false, error: 'Jugador no encontrado' };
+      return { success: false, error: "Jugador no encontrado" };
     }
 
     if (!targetPlayer) {
-      return { success: false, error: 'Jugador objetivo no encontrado' };
+      return { success: false, error: "Jugador objetivo no encontrado" };
     }
 
     if (player.id !== this.getCurrentPlayer().id) {
-      return { success: false, error: 'No es tu turno' };
+      return { success: false, error: "No es tu turno" };
     }
 
     if (player.hasPlayedThisTurn) {
-      return { success: false, error: 'Ya jugaste una carta en este turno' };
+      return { success: false, error: "Ya jugaste una carta en este turno" };
     }
 
     // Obtener carta de la mano
     const card = player.getCard(cardId);
     if (!card) {
-      return { success: false, error: 'Carta no encontrada en tu mano' };
+      return { success: false, error: "Carta no encontrada en tu mano" };
     }
 
     // Validar si la carta se puede jugar
-    const validation = canPlayCard(card, targetPlayer, slotType, player);
+    const validation = canPlayCard(card, player, movements);
     if (!validation.valid) {
       return { success: false, error: validation.error };
     }
@@ -199,8 +200,9 @@ export default class Game {
     // Remover carta de la mano
     player.removeCard(cardId);
 
+    slotType = movements?.[0]?.destino?.slot; // Obtener slot del primer movimiento
     // Aplicar efectos de la carta
-    const effect = this.applyCardEffect(card, targetPlayer, slotType);
+    const effect = this.applyCardEffect(card, targetPlayer, movements);
 
     // Robar 1 carta después de jugar
     const drawnCard = this.drawCard(playerId);
@@ -208,7 +210,13 @@ export default class Game {
     // Marcar que el jugador ya jugó en este turno
     player.hasPlayedThisTurn = true;
 
-    logger.game(`${player.name} jugó ${card.name} en ${slotType} de ${targetPlayer.name}`);
+    if (card.type === CARD_TYPES.EVENTO) {
+      logger.game(`${player.name} jugó ${card.name}`);
+    } else {
+      logger.game(
+        `${player.name} jugó ${card.name} en ${slotType} de ${targetPlayer.name}`,
+      );
+    }
 
     return {
       success: true,
@@ -216,81 +224,218 @@ export default class Game {
       target: { playerId: targetPlayerId, slotType },
       effect: effect,
       drawnCard: drawnCard.success ? drawnCard.card : null,
-      gameState: this.getState()
+      gameState: this.getState(),
     };
   }
 
   /**
    * Aplica el efecto de una carta jugada
    */
-  applyCardEffect(card, targetPlayer, slotType) {
-    const slot = targetPlayer.board[slotType];
+  applyCardEffect(card, targetPlayer, movements) {
     const effect = {
       type: card.type,
+      subtype: card.subtype,
       cancelled: false,
       destroyed: false,
-      cardsToDiscard: []
+      cardsToDiscard: [],
+      stolen: null,
+      swapped: null,
+      swappedBoards: false,
+      spreads: [],
+      allDiscarded: false,
+      handsDiscarded: [],
+      error: null,
     };
 
     // CASO 1: JUGAR PLANTA
     if (card.type === CARD_TYPES.PLANTA) {
+      const slotType = movements?.[0]?.destino?.slot; // Obtener slot del primer movimiento
       targetPlayer.playPlant(card, slotType);
       return effect;
     }
 
     // CASO 2: JUGAR MANTENIMIENTO
     if (card.type === CARD_TYPES.MANTENIMIENTO) {
+      const slotType = movements?.[0]?.destino?.slot; // Obtener slot del primer movimiento
+      const slot = targetPlayer.board[slotType];
       // Revisar si hay riesgos para anulación mutua
-      const risks = slot.modifiers.filter(m => m.type === CARD_TYPES.RIESGO);
-      
+      const risks = slot.modifiers.filter((m) => m.type === CARD_TYPES.RIESGO);
+
       if (risks.length > 0) {
         // ANULACIÓN MUTUA: el mantenimiento cancela 1 riesgo
         effect.cancelled = true;
         effect.cardsToDiscard.push(card, risks[0]);
-        
+
         // Remover el riesgo
-        slot.modifiers = slot.modifiers.filter(m => m.id !== risks[0].id);
-        
-        logger.game(`¡Anulación mutua! Mantenimiento canceló riesgo en ${slotType}`);
+        slot.modifiers = slot.modifiers.filter((m) => m.id !== risks[0].id);
+
+        logger.game(
+          `¡Anulación mutua! Mantenimiento canceló riesgo en ${slotType}`,
+        );
       } else {
         // Agregar mantenimiento normalmente
         targetPlayer.addModifier(slotType, card);
       }
-      
+
       return effect;
     }
 
     // CASO 3: JUGAR RIESGO
     if (card.type === CARD_TYPES.RIESGO) {
       // Revisar si hay mantenimientos para anulación mutua
-      const maintenances = slot.modifiers.filter(m => m.type === CARD_TYPES.MANTENIMIENTO);
-      
+      const slotType = movements?.[0]?.destino?.slot; // Obtener slot del primer movimiento
+      const slot = targetPlayer.board[slotType];
+      const maintenances = slot.modifiers.filter(
+        (m) => m.type === CARD_TYPES.MANTENIMIENTO,
+      );
+
       if (maintenances.length > 0) {
         // ANULACIÓN MUTUA: el riesgo cancela 1 mantenimiento
         effect.cancelled = true;
         effect.cardsToDiscard.push(card, maintenances[0]);
-        
+
         // Remover el mantenimiento
-        slot.modifiers = slot.modifiers.filter(m => m.id !== maintenances[0].id);
-        
-        logger.game(`¡Anulación mutua! Riesgo canceló mantenimiento en ${slotType}`);
+        slot.modifiers = slot.modifiers.filter(
+          (m) => m.id !== maintenances[0].id,
+        );
+
+        logger.game(
+          `¡Anulación mutua! Riesgo canceló mantenimiento en ${slotType}`,
+        );
       } else {
         // Agregar riesgo
         targetPlayer.addModifier(slotType, card);
-        
+
         // Revisar si se alcanzaron 2 riesgos (DESTRUCCIÓN)
-        const riskCount = slot.modifiers.filter(m => m.type === CARD_TYPES.RIESGO).length;
-        
+        const riskCount = slot.modifiers.filter(
+          (m) => m.type === CARD_TYPES.RIESGO,
+        ).length;
+
         if (riskCount >= 2) {
           effect.destroyed = true;
           const destroyedCards = targetPlayer.destroyPlant(slotType);
           effect.cardsToDiscard.push(...destroyedCards);
-          
+
           logger.game(`¡Planta destruida! ${slotType} de ${targetPlayer.name}`);
         }
       }
-      
+
       return effect;
+    }
+
+    if (card.type === CARD_TYPES.EVENTO) {
+      // Aplicar efecto del evento
+      switch (card.subtype) {
+        case EVENT_TYPES.COMPRA: {
+          const destino = movements?.[0]?.destino;
+          if (!destino) break;
+
+          const slotType = destino.slot;
+          if (!slotType) break;
+
+          const cartaRobada = targetPlayer.board[slotType].plant;
+          const modifiers = targetPlayer.board[slotType].modifiers;
+
+          if (cartaRobada?.plant) break;
+
+          const jugadorActual = this.getCurrentPlayer();
+          jugadorActual.playPlant(cartaRobada, slotType);
+          if (modifiers.length > 0) {
+            for (const modifier of modifiers) {
+              jugadorActual.addModifier(slotType, modifier);
+            }
+          }
+
+          jugadorVictima.destroyPlant();
+
+          effect.stolen = { from: jugadorVictima, slot: slotType };
+          break;
+        }
+
+        case EVENT_TYPES.DESCARTE: {
+          for (const player of this.players) {
+            if (player === this.getCurrentPlayer()) continue;
+            effect.cardsToDiscard.push(...player.hand);
+            effect.handsDiscarded.push({
+              jugadorId: player.id,
+              cartas: player.hand,
+            });
+            player.discardCards(player.hand);
+            this.drawMultipleCards(player.id, 3);
+          }
+          effect.allDiscarded = true;
+        }
+
+        case EVENT_TYPES.INTERCAMBIO_PLANTA: {
+          const origen = movements?.[0]?.origen;
+          const destino = movements?.[0]?.destino;
+          if (!origen || !destino) {
+            effect.error = "No hay origen o destino para el intercambio";
+            break;
+          }
+          const jugadorActual = this.getPlayer(origen.jugador);
+
+          const slotOrigen = jugadorActual.board[destino.slot];
+          const slotDestino = targetPlayer.board[origen.slot];
+
+          jugadorActual.board[destino.slot] = slotDestino;
+          targetPlayer.board[origen.slot] = slotOrigen;
+
+          effect.swapped = [origen, destino];
+          break;
+        }
+
+        case EVENT_TYPES.INTERCAMBIO_TERRENO: {
+          const jugadorActual = this.getCurrentPlayer();
+
+          const boardTemp = jugadorActual.board;
+          jugadorActual.board = targetPlayer.board;
+          targetPlayer.board = jugadorActual.board;
+
+          effect.swappedBoards = true;
+          break;
+        }
+
+        case EVENT_TYPES.CONTAGIO: {
+          effect.contagios = [];
+
+          for (const movement of movements) {
+            const jugadorOrigen = this.getPlayer(movement.origen.jugador);
+            const jugadorDestino = this.getPlayer(movement.destino.jugador);
+
+            const slotOrigen = jugadorOrigen?.board[movement.origen.slot];
+            const slotDestino = jugadorDestino?.board[movement.destino.slot];
+
+            //Conseguir el riesgo del slot origen;
+            const riesgo = slotOrigen?.modifiers?.find(
+              (m) => m.type === CARD_TYPES.RIESGO,
+            );
+            if (!riesgo) continue;
+
+            if (!slotDestino?.plant) continue;
+
+            jugadorOrigen.clearModifiers(movement.origen.slot);
+            jugadorDestino.addModifier(movement.destino.slot);
+
+            // Revisar si se alcanzaron 2 riesgos (DESTRUCCIÓN)
+            const riskCount = slotDestino.modifiers.filter(
+              (m) => m.type === CARD_TYPES.RIESGO,
+            ).length;
+
+            if (riskCount >= 2) {
+              effect.destroyed = true;
+              const destroyedCards = targetPlayer.destroyPlant(slotType);
+              effect.cardsToDiscard.push(...destroyedCards);
+
+              logger.game(
+                `¡Planta destruida! ${slotType} de ${targetPlayer.name}`,
+              );
+            }
+            effect.contagios.push({ origen: movement.origen, destino: movement.destino });
+          }
+          break;
+        }
+      }
     }
 
     return effect;
@@ -301,17 +446,17 @@ export default class Game {
    */
   discardCards(playerId, cardIds) {
     const player = this.getPlayer(playerId);
-    
+
     if (!player) {
-      return { success: false, error: 'Jugador no encontrado' };
+      return { success: false, error: "Jugador no encontrado" };
     }
 
     if (player.id !== this.getCurrentPlayer().id) {
-      return { success: false, error: 'No es tu turno' };
+      return { success: false, error: "No es tu turno" };
     }
 
     if (player.hasDiscardedThisTurn) {
-      return { success: false, error: 'Ya descartaste cartas en este turno' };
+      return { success: false, error: "Ya descartaste cartas en este turno" };
     }
 
     // Validar descarte
@@ -322,7 +467,7 @@ export default class Game {
 
     // Remover cartas de la mano
     const discardedCards = player.removeCards(cardIds);
-    
+
     // Agregar al descarte
     this.discardPile.push(...discardedCards);
 
@@ -331,13 +476,15 @@ export default class Game {
 
     player.hasDiscardedThisTurn = true;
 
-    logger.game(`${player.name} descartó ${discardedCards.length} cartas y robó ${drawnCards.length}`);
+    logger.game(
+      `${player.name} descartó ${discardedCards.length} cartas y robó ${drawnCards.length}`,
+    );
 
     return {
       success: true,
       discardedCards: discardedCards,
       drawnCards: drawnCards,
-      gameState: this.getState()
+      gameState: this.getState(),
     };
   }
 
@@ -346,17 +493,21 @@ export default class Game {
    */
   endTurn(playerId) {
     const player = this.getPlayer(playerId);
-    
+
     if (!player) {
-      return { success: false, error: 'Jugador no encontrado' };
+      return { success: false, error: "Jugador no encontrado" };
     }
 
     if (player.id !== this.getCurrentPlayer().id) {
-      return { success: false, error: 'No es tu turno' };
+      return { success: false, error: "No es tu turno" };
     }
 
     // Validar que puede terminar el turno
-    const validation = canEndTurn(player, player.hasPlayedThisTurn, player.hasDiscardedThisTurn);
+    const validation = canEndTurn(
+      player,
+      player.hasPlayedThisTurn,
+      player.hasDiscardedThisTurn,
+    );
     if (!validation.valid) {
       return { success: false, error: validation.error };
     }
@@ -368,7 +519,7 @@ export default class Game {
         success: true,
         victory: true,
         winner: player.getState(),
-        gameState: this.getState()
+        gameState: this.getState(),
       };
     }
 
@@ -379,7 +530,7 @@ export default class Game {
       success: true,
       victory: false,
       nextPlayer: nextPlayer.getState(),
-      gameState: this.getState()
+      gameState: this.getState(),
     };
   }
 
@@ -400,22 +551,25 @@ export default class Game {
       id: this.id,
       players: this.players.map((p, index) => ({
         ...p.getState(true), // Ocultar manos de otros jugadores
-        isCurrentTurn: index === this.currentTurnIndex
+        isCurrentTurn: index === this.currentTurnIndex,
       })),
       currentTurnIndex: this.currentTurnIndex,
       currentPlayerId: this.getCurrentPlayer().id,
       deck: {
         count: this.deck.getCount(),
-        isEmpty: this.deck.isEmpty()
+        isEmpty: this.deck.isEmpty(),
       },
       discardPile: {
         count: this.discardPile.length,
-        topCard: this.discardPile.length > 0 ? this.discardPile[this.discardPile.length - 1] : null
+        topCard:
+          this.discardPile.length > 0
+            ? this.discardPile[this.discardPile.length - 1]
+            : null,
       },
       status: this.status,
       winner: this.winner ? this.winner.getState() : null,
       turnCount: this.turnCount,
-      startedAt: this.startedAt
+      startedAt: this.startedAt,
     };
   }
 
@@ -425,13 +579,13 @@ export default class Game {
   getStateForPlayer(playerId) {
     const state = this.getState();
     const player = this.getPlayer(playerId);
-    
+
     if (player) {
       // Reemplazar el estado del jugador con uno que incluya su mano completa
-      const playerIndex = this.players.findIndex(p => p.id === playerId);
+      const playerIndex = this.players.findIndex((p) => p.id === playerId);
       state.players[playerIndex] = {
         ...player.getState(false), // NO ocultar su propia mano
-        isCurrentTurn: playerIndex === this.currentTurnIndex
+        isCurrentTurn: playerIndex === this.currentTurnIndex,
       };
     }
 

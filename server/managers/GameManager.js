@@ -52,7 +52,7 @@ class GameManager {
   /**
    * Maneja una jugada de carta
    */
-  playCard(roomCode, playerId, cardId, targetPlayerId, slotType) {
+  playCard(roomCode, playerId, cardId, targetPlayerId, movements) {
     const game = this.games.get(roomCode);
 
     if (!game) {
@@ -63,7 +63,7 @@ class GameManager {
       return { success: false, error: 'La partida no está en curso' };
     }
 
-    const result = game.playCard(playerId, cardId, targetPlayerId, slotType);
+    const result = game.playCard(playerId, cardId, targetPlayerId, movements);
 
     // Si hubo cartas descartadas (anulación o destrucción), agregarlas a la pila
     if (result.success && result.effect && result.effect.cardsToDiscard.length > 0) {

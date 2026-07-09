@@ -86,7 +86,7 @@ export function setupGameHandlers(io, socket) {
    */
   socket.on(SOCKET_EVENTS.GAME_PLAY_CARD, (data, callback) => {
     try {
-      const { cardId, targetPlayerId, slotType } = data;
+      const { cardId, targetPlayerId, movements } = data;
       const roomCode = socket.roomCode;
 
       if (!roomCode) {
@@ -104,7 +104,7 @@ export function setupGameHandlers(io, socket) {
         socket.id,
         cardId,
         targetPlayerId,
-        slotType
+        movements
       );
 
       if (!result.success) {
@@ -126,10 +126,12 @@ export function setupGameHandlers(io, socket) {
         effect: result.effect
       });
 
+      const slotType = movements?.[0]?.destino?.slot;
+
       // Si hubo anulación mutua
       if (result.effect.cancelled) {
         io.to(roomCode).emit(SOCKET_EVENTS.GAME_CARDS_CANCELLED, {
-          slotType: slotType,
+          slotType,
           targetPlayerId: targetPlayerId,
           cardsDiscarded: result.effect.cardsToDiscard
         });
@@ -138,7 +140,7 @@ export function setupGameHandlers(io, socket) {
       // Si hubo destrucción
       if (result.effect.destroyed) {
         io.to(roomCode).emit(SOCKET_EVENTS.GAME_PLANT_DESTROYED, {
-          slotType: slotType,
+          slotType,
           playerId: targetPlayerId,
           cardsDiscarded: result.effect.cardsToDiscard
         });

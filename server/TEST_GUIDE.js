@@ -267,7 +267,7 @@ function verEstado() {
     console.log('  Tablero:');
     Object.entries(player.board).forEach(([type, slot]) => {
       if (slot.plant) {
-        console.log(`    ${type}: ✅ ${slot.plant.name}`);
+        console.log(`    ${type}: ✅ ${slot.type}`);
         if (slot.modifiers.length > 0) {
           console.log(`      Modificadores: ${slot.modifiers.length}`);
         }

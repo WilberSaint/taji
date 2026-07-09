@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { CARD_TYPES, ENERGY_TYPES, DECK_CONFIG } from './constants.js';
+import { CARD_TYPES, ENERGY_TYPES, DECK_CONFIG, EVENT_TYPES } from './constants.js';
 
 /**
  * Construye el mazo completo del juego con todas las cartas
@@ -50,6 +50,20 @@ export function buildDeck() {
     }
   });
 
+  //Construir eventos
+  Object.entries(DECK_CONFIG.EVENTOS).forEach(([subtype, count]) => {
+    for(let i = 0; i < count; i++){
+      deck.push({
+        id: uuidv4(),
+        type: CARD_TYPES.EVENTO,
+        subtype: subtype,
+        name: getCardName(CARD_TYPES.EVENTO, subtype),
+        description: getCardDescription(CARD_TYPES.EVENTO, subtype),
+        image: `/assets/cards/eventos/${subtype}.png`
+      })
+    }
+  })
+
   return deck;
 }
 
@@ -65,11 +79,13 @@ function getCardName(type, subtype) {
     [ENERGY_TYPES.SOLAR]: 'Solar',
     [ENERGY_TYPES.EOLICA]: 'Eólica',
     [ENERGY_TYPES.HIDROELECTRICA]: 'Hidroeléctrica',
-    [ENERGY_TYPES.GEOTERMICA]: 'Geotérmica'
+    [ENERGY_TYPES.GEOTERMICA]: 'Geotérmica',
+    [EVENT_TYPES.INTERCAMBIO_TERRENO]: 'Intercambio de Terreno',
+    [EVENT_TYPES.INTERCAMBIO_PLANTA]: 'Intercambio de Planta',
   };
 
-  const prefix = type === CARD_TYPES.PLANTA ? 'Planta' : capitalize(type);
-  return `${prefix} ${names[subtype] || subtype}`;
+  const prefix = type === CARD_TYPES.PLANTA ? 'Planta' : (type === CARD_TYPES.EVENTO ? '' : capitalize(type));
+  return `${prefix} ${names[subtype] || capitalize(subtype)}`;
 }
 
 /**
@@ -92,6 +108,21 @@ function getCardDescription(type, subtype) {
     return subtype === ENERGY_TYPES.COMODIN
       ? 'Afecta cualquier planta enemiga'
       : 'Amenaza la estabilidad de plantas enemigas';
+  }
+
+  if(type === CARD_TYPES.EVENTO) {
+    switch(subtype){
+      case(DECK_CONFIG.EVENTOS.compra): 
+        return 'Compra una planta a uno de los otros jugadores';
+      case(DECK_CONFIG.EVENTOS.intercambio_planta):
+        return 'Intercambia una de tus plantas con la de otro jugador';
+      case(DECK_CONFIG.EVENTOS.esparcimiento):
+        return 'Esparce los riesgos de tus plantas a las plantas de otros jugadores';
+      case(DECK_CONFIG.EVENTOS.descarte):
+        return 'Haz que todos descarten sus cartas y vuelve a jugar';
+      case(DECK_CONFIG.EVENTOS.intercambio_terreno):
+        return 'Intercambia todas tus plantas con las de otro jugador';
+    }
   }
 
   return '';

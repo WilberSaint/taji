@@ -189,6 +189,15 @@ export default class Player {
   }
 
   /**
+   * Verifica si el jugador ya tiene una planta del tipo especificado
+   * @param {*} plantType Tipo de planta que se desea saber si se tiene 
+   * @returns True si la tiene, false si no
+   */
+  hasPlant(plantType){
+    return this.board[plantType].plant
+  }
+
+  /**
    * Verifica si el jugador ha ganado
    */
   hasWon() {
