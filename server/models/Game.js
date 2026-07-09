@@ -346,9 +346,9 @@ export default class Game {
             }
           }
 
-          jugadorVictima.destroyPlant();
+          targetPlayer.destroyPlant();
 
-          effect.stolen = { from: jugadorVictima, slot: slotType };
+          effect.stolen = { from: targetPlayer.id, slot: slotType };
           break;
         }
 
@@ -397,7 +397,7 @@ export default class Game {
         }
 
         case EVENT_TYPES.CONTAGIO: {
-          effect.contagios = [];
+          effect.spreads = [];
 
           for (const movement of movements) {
             const jugadorOrigen = this.getPlayer(movement.origen.jugador);
@@ -431,7 +431,7 @@ export default class Game {
                 `¡Planta destruida! ${slotType} de ${targetPlayer.name}`,
               );
             }
-            effect.contagios.push({ origen: movement.origen, destino: movement.destino });
+            effect.spreads.push({ origen: movement.origen, destino: movement.destino });
           }
           break;
         }

@@ -146,12 +146,47 @@ export function setupGameHandlers(io, socket) {
         });
       }
 
+      //EFECTOS DE EVENTOS ESPECIALES
+      
+      if (result.effect.stolen) {
+        io.to(roomCode).emit(SOCKET_EVENTS.GAME_PLANT_BOUGHT, {
+          fromPlayer: result.effect.stolen.from,
+          slotType: result.effect.stolen.slot,
+          toPlayer: socket.id
+        });
+      }
+
+      if (result.effect.allDiscarded) {
+        io.to(roomCode).emit(SOCKET_EVENTS.GAME_ALL_DISCARDED, {
+          hands: result.effect.handsDiscarded
+        });
+      }
+
+      if (result.effect.swapped) {
+        io.to(roomCode).emit(SOCKET_EVENTS.GAME_PLANTS_SWAPPED, {
+          swapped: result.effect.swapped
+        });
+      }
+
+      if (result.effect.swappedBoards) {
+        io.to(roomCode).emit(SOCKET_EVENTS.GAME_TERRAIN_SWAPPED, {
+          playerId: targetPlayerId,
+        });
+      }
+
+      if (result.effect.spreads.length > 0) {
+        io.to(roomCode).emit(SOCKET_EVENTS.GAME_RISK_SPREAD, {
+          spreads: result.effect.spreads
+        });
+      }
+
       // Enviar carta robada al jugador
       if (result.drawnCard) {
         io.to(socket.id).emit(SOCKET_EVENTS.GAME_CARDS_DRAWN, {
           cards: [result.drawnCard]
         });
       }
+
 
       // Actualizar estado del juego para todos
       room.players.forEach(player => {
