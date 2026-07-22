@@ -128,7 +128,6 @@ export default class Player {
     }
 
     slot.plant = card;
-    this.hasPlayedThisTurn = true;
     logger.game(`${this.name} jugó planta ${card.name} en ${slotType}`);
     return true;
   }

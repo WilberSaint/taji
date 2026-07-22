@@ -191,8 +191,17 @@ export default class Game {
       return { success: false, error: "Carta no encontrada en tu mano" };
     }
 
+    const movementsPlayer = movements?.map((m) => ({
+      origen: m.origen
+        ? { jugador: this.getPlayer(m.origen.jugador), slot: m.origen.slot }
+        : null,
+      destino: m.destino
+        ? { jugador: this.getPlayer(m.destino.jugador), slot: m.destino.slot }
+        : null,
+    }));
+
     // Validar si la carta se puede jugar
-    const validation = canPlayCard(card, player, movements);
+    const validation = canPlayCard(card, player, movementsPlayer);
     if (!validation.valid) {
       return { success: false, error: validation.error };
     }
@@ -200,7 +209,8 @@ export default class Game {
     // Remover carta de la mano
     player.removeCard(cardId);
 
-    slotType = movements?.[0]?.destino?.slot; // Obtener slot del primer movimiento
+    console.log(movements);
+    const slotType = movements?.[0]?.destino?.slot; // Obtener slot del primer movimiento
     // Aplicar efectos de la carta
     const effect = this.applyCardEffect(card, targetPlayer, movements);
 
@@ -209,6 +219,15 @@ export default class Game {
 
     // Marcar que el jugador ya jugó en este turno
     player.hasPlayedThisTurn = true;
+
+    // Si fue carta de descarte, permitir volver a jugar
+    if (
+      card.type === CARD_TYPES.EVENTO &&
+      card.subtype === EVENT_TYPES.DESCARTE
+    ) {
+      player.hasPlayedThisTurn = false;
+      player.hasDiscardedThisTurn = false;
+    }
 
     if (card.type === CARD_TYPES.EVENTO) {
       logger.game(`${player.name} jugó ${card.name}`);
@@ -346,7 +365,7 @@ export default class Game {
             }
           }
 
-          targetPlayer.destroyPlant();
+          targetPlayer.destroyPlant(slotType);
 
           effect.stolen = { from: targetPlayer.id, slot: slotType };
           break;
@@ -360,10 +379,12 @@ export default class Game {
               jugadorId: player.id,
               cartas: player.hand,
             });
-            player.discardCards(player.hand);
+            const cardIds = player.hand.map((c) => c.id);
+            player.removeCards(cardIds);
             this.drawMultipleCards(player.id, 3);
           }
           effect.allDiscarded = true;
+          break;
         }
 
         case EVENT_TYPES.INTERCAMBIO_PLANTA: {
@@ -375,12 +396,37 @@ export default class Game {
           }
           const jugadorActual = this.getPlayer(origen.jugador);
 
-          const slotOrigen = jugadorActual.board[destino.slot];
-          const slotDestino = targetPlayer.board[origen.slot];
+          const slotOrigen = jugadorActual.board[origen.slot];
+          const slotDestino = targetPlayer.board[destino.slot];
 
-          jugadorActual.board[destino.slot] = slotDestino;
-          targetPlayer.board[origen.slot] = slotOrigen;
 
+          const actualPlant = slotOrigen.plant;
+          const actualModifiers = slotOrigen.modifiers;
+
+          const opponentPlant = slotDestino.plant;
+          const opponentModifiers = slotDestino.modifiers;
+
+          jugadorActual.destroyPlant(origen.slot);
+          targetPlayer.destroyPlant(destino.slot);
+
+          jugadorActual.playPlant(opponentPlant, destino.slot);
+          if (opponentModifiers.length > 0) {
+            for (const modifier of opponentModifiers) {
+              jugadorActual.addModifier(destino.slot, modifier);
+            }
+          }
+
+          targetPlayer.playPlant(actualPlant, origen.slot);
+          if (actualModifiers.length > 0) {
+            for (const modifier of actualModifiers) {
+              targetPlayer.addModifier(origen.slot, modifier);
+            }
+          }
+
+          
+          logger.game(
+            `Planta intercambiada: ${origen.slot} de ${jugadorActual.name} ↔ ${destino.slot} de ${targetPlayer.name}`,
+          );
           effect.swapped = [origen, destino];
           break;
         }
@@ -390,21 +436,22 @@ export default class Game {
 
           const boardTemp = jugadorActual.board;
           jugadorActual.board = targetPlayer.board;
-          targetPlayer.board = jugadorActual.board;
+          targetPlayer.board = boardTemp;
 
           effect.swappedBoards = true;
           break;
         }
 
-        case EVENT_TYPES.CONTAGIO: {
+        case EVENT_TYPES.ESPARCIMIENTO: {
           effect.spreads = [];
 
           for (const movement of movements) {
             const jugadorOrigen = this.getPlayer(movement.origen.jugador);
             const jugadorDestino = this.getPlayer(movement.destino.jugador);
 
-            const slotOrigen = jugadorOrigen?.board[movement.origen.slot];
-            const slotDestino = jugadorDestino?.board[movement.destino.slot];
+            const slotType = movement.destino.slot;
+            const slotOrigen = jugadorOrigen?.board[slotType];
+            const slotDestino = jugadorDestino?.board[slotType];
 
             //Conseguir el riesgo del slot origen;
             const riesgo = slotOrigen?.modifiers?.find(
@@ -415,7 +462,7 @@ export default class Game {
             if (!slotDestino?.plant) continue;
 
             jugadorOrigen.clearModifiers(movement.origen.slot);
-            jugadorDestino.addModifier(movement.destino.slot);
+            jugadorDestino.addModifier(movement.destino.slot, riesgo);
 
             // Revisar si se alcanzaron 2 riesgos (DESTRUCCIÓN)
             const riskCount = slotDestino.modifiers.filter(
@@ -423,15 +470,16 @@ export default class Game {
             ).length;
 
             if (riskCount >= 2) {
-              effect.destroyed = true;
-              const destroyedCards = targetPlayer.destroyPlant(slotType);
+              const destroyedCards = jugadorDestino.destroyPlant(slotType);
               effect.cardsToDiscard.push(...destroyedCards);
-
               logger.game(
-                `¡Planta destruida! ${slotType} de ${targetPlayer.name}`,
+                `¡Planta destruida! ${slotType} de ${jugadorDestino.name}`,
               );
             }
-            effect.spreads.push({ origen: movement.origen, destino: movement.destino });
+            effect.spreads.push({
+              origen: movement.origen,
+              destino: movement.destino,
+            });
           }
           break;
         }

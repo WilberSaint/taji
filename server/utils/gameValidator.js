@@ -41,7 +41,7 @@ function canPlayPlant(card, currentPlayer, movements) {
     return { valid: false, error: "Solo puedes jugar una planta por turno" };
   }
 
-  const { targetPlayer, slotType } = movements[0].destino;
+  const { jugador: targetPlayer, slot: slotType } = movements[0].destino;
 
   // Validar que sea el turno del jugador
   if (currentPlayer.id !== targetPlayer.id) {
@@ -81,7 +81,7 @@ function canPlayMaintenance(card, currentPlayer, movements) {
     };
   }
 
-  const { targetPlayer, slotType } = movements[0].destino;
+  const { jugador: targetPlayer, slot: slotType } = movements[0].destino;
   const slot = targetPlayer.board[slotType];
 
   // Validar que haya una planta
@@ -127,7 +127,7 @@ function canPlayRisk(card, currentPlayer, movements) {
     return { valid: false, error: "Solo puedes jugar un riesgo por turno" };
   }
 
-  const { targetPlayer, slotType } = movements[0].destino;
+  const { jugador: targetPlayer, slot: slotType } = movements[0].destino;
   const slot = targetPlayer.board[slotType];
 
   // Validar que haya una planta
@@ -213,8 +213,9 @@ function canPlayPurchase(card, currentPlayer, movements) {
     return { valid: false, error: "Solo puedes comprar una planta por turno" };
   }
 
-  const { targetPlayer, slotType } = movements[0].destino;
+  const { jugador: targetPlayer, slot: slotType } = movements[0].destino;
 
+  const slot = targetPlayer.board[slotType];
   if (targetPlayer.id === currentPlayer.id) {
     return { valid: false, error: "No puedes comprar tus propias plantas" };
   }
@@ -257,9 +258,10 @@ function canPlayExchangePlant(card, currentPlayer, movements) {
     };
   }
 
-  const currentSlot = currentPlayer.board[movements[0].origen.slotType];
-  const { targetPlayer, targetSlotTyoe } = movements[0].destino;
-  const targetSlot = targetPlayer.board[targetSlotTyoe];
+  const currentSlot = currentPlayer.board[movements[0].origen.slot];
+  const { jugador: targetPlayer, slot: targetSlotType } =
+    movements[0].destino;
+  const targetSlot = targetPlayer.board[targetSlotType];
 
   //Validar el intercambio con otro jugador
   if (targetPlayer.id === currentPlayer.id) {
@@ -294,7 +296,7 @@ function canPlayExchangePlant(card, currentPlayer, movements) {
   //Validar que si tengan las plantas que se desean intercambiar
   if (
     !currentPlayer.hasPlant(currentSlot.type) ||
-    !currentPlayer.hasPlant(targetSlot.type)
+    !targetPlayer.hasPlant(targetSlot.type)
   ) {
     return {
       valid: false,
@@ -315,14 +317,13 @@ function canPlayExchangePlant(card, currentPlayer, movements) {
     }
   }
 
-  return true;
+  return {valid: true};
 }
 
 function canPlaySpreading(card, currentPlayer, movements) {
-
-  for(const movement of movements) {
-    const { currentSlotType } = movement.origen.slotType;
-    const { targetPlayer, slotType } = movement.destino;
+  for (const movement of movements) {
+    const currentSlotType = movement.origen.slot;
+    const { jugador: targetPlayer, slot: slotType } = movement.destino;
     const currentSlot = currentPlayer.board[currentSlotType];
     const targetSlot = targetPlayer.board[slotType];
 
@@ -359,6 +360,7 @@ function canPlaySpreading(card, currentPlayer, movements) {
     }
   }
 
+  return { valid: true };
 }
 
 function canPlayExchangeTerrain(card, currentPlayer, movements) {
@@ -370,7 +372,7 @@ function canPlayExchangeTerrain(card, currentPlayer, movements) {
     };
   }
 
-  const { targetPlayer, slotType } = movements[0].destino;
+  const { jugador: targetPlayer, slotRef: slotType } = movements[0].destino;
 
   //Validar el intercambio
   if (currentPlayer === targetPlayer) {
@@ -379,6 +381,8 @@ function canPlayExchangeTerrain(card, currentPlayer, movements) {
       error: "No puedes intercambiar tu propio terreno",
     };
   }
+
+  return { valid: true };
 }
 
 /**
