@@ -4,6 +4,7 @@ import { useGameStore } from '../../store/gameStore';
 import { useSocket } from '../../hooks/useSocket';
 import { Trash2 } from 'lucide-react';
 import { useState } from 'react';
+import { CARD_TYPES } from '../../utils/constants';
 
 export default function PlayerHand({ cards = [] }) {
   const {
@@ -13,6 +14,8 @@ export default function PlayerHand({ cards = [] }) {
     toggleCardForDiscard,
     clearSelectedCardsForDiscard,
     isMyTurn,
+    setSpecialPlay,
+    clearSpecialPlay,
     gameState
   } = useGameStore();
 
@@ -27,13 +30,38 @@ export default function PlayerHand({ cards = [] }) {
   ]
   /* ===== ACCIONES ===== */
   const handleCardClick = (card) => {
-    if (!isMyTurn) return;
+    console.log('🃏 handleCardClick:', { cardType: card.type, cardName: card.name, isMyTurn, discardMode, selectedCardId: selectedCard?.id });
+    if (!isMyTurn) {
+      console.warn('⚠️ BLOQUEADO: No es mi turno');
+      return;
+    }
 
     if (discardMode) {
       toggleCardForDiscard(card.id);
-    } else {
-      setSelectedCard(selectedCard?.id === card.id ? null : card);
+      return;
     }
+
+    //Si ya está seleccionada la misma carta, deseleccionar
+    if (selectedCard?.id === card.id) {
+      setSelectedCard(null);
+      clearSpecialPlay();
+      return;
+    }
+
+    if (card.type === CARD_TYPES.EVENTO) {
+      console.log('🎯 EVENTO detectado, entrando a flujo especial');
+      setSpecialPlay({
+        card,
+        step: 'origen',
+        movimientos: [],
+        pendiente: null,
+      });
+      setSelectedCard(card);
+      console.log('✅ specialPlay y selectedCard seteados');
+      return;
+    }
+
+    setSelectedCard(card);
   };
 
   const handleDiscard = async () => {

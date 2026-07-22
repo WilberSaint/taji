@@ -97,6 +97,15 @@ export const useGameStore = create((set, get) => ({
   
   clearSelectedCardsForDiscard: () => set({ selectedCardsForDiscard: [] }),
 
+  // ============ ACCIONES ESPECIALES ============
+  specialPlay: null,
+  setSpecialPlay: (play) => {
+    console.log('📡 setSpecialPlay llamado:', play ? { subtype: play.card?.subtype, step: play.step } : 'null');
+    set({specialPlay: play});
+  },
+  clearSpecialPlay: () => set({ specialPlay: null }),
+
+
   // ============ ESTADO DE ANIMACIONES ============
   animatingCard: null,
   
@@ -132,7 +141,8 @@ export const useGameStore = create((set, get) => ({
     notification: null,
     selectedCardsForDiscard: [],
     animatingCard: null,
-    isMyTurn: false
+    isMyTurn: false,
+    specialPlay: null,
   })
 }));
 
