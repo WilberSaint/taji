@@ -48,6 +48,9 @@ export const SOCKET_EVENTS = {
   LOBBY_READY: "lobby:ready",
   LOBBY_START_GAME: "lobby:start_game",
   LOBBY_RECONNECT: "lobby:reconnect",
+  LOBBY_ADD_BOT: "lobby:add_bot",
+  LOBBY_REMOVE_BOT: "lobby:remove_bot",
+  LOBBY_KICK_PLAYER: "lobby:kick_player",
 
   // Game
   GAME_DRAW_CARD: "game:draw_card",
@@ -56,6 +59,7 @@ export const SOCKET_EVENTS = {
   GAME_END_TURN: "game:end_turn",
 
   // Server -> Client
+  YOU_WERE_KICKED: "game:you_were_kicked",
   GAME_STATE_UPDATE: "game:state_update",
   GAME_TURN_CHANGED: "game:turn_changed",
   GAME_CARD_PLAYED: "game:card_played",
@@ -135,4 +139,4 @@ export const GAME_RULES = {
 
 // Configuración de servidor
 export const SERVER_URL =
-  import.meta.env.VITE_SERVER_URL || "http://134.209.5.40";
+  import.meta.env.VITE_SERVER_URL || "http://localhost:3001";

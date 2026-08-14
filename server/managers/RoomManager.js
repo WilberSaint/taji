@@ -89,6 +89,97 @@ class RoomManager {
   }
 
   /**
+   * Agrega un bot a la sala
+   */
+  addBot(roomCode, requesterId) {
+    const room = this.rooms.get(roomCode);
+
+    if (!room) {
+      return { success: false, error: 'Sala no encontrada' };
+    }
+
+    if (room.hostId !== requesterId) {
+      return { success: false, error: 'Solo el host puede agregar bots' };
+    }
+
+    if (room.isFull()) {
+      return { success: false, error: 'La sala está llena' };
+    }
+
+    const botCount = room.players.filter(p => p.isBot).length;
+    const botName = `Bot ${botCount + 1}`;
+    const botId = `bot_${Date.now()}`;
+
+    const bot = new Player(botId, botName, null, null, true);
+    bot.setReady(true);
+
+    const added = room.addPlayer(bot);
+    if (!added) {
+      return { success: false, error: 'No se pudo agregar el bot' };
+    }
+
+    logger.info(`Bot ${botName} agregado a la sala ${roomCode}`);
+    return { success: true, room };
+  }
+
+  /**
+   * Remueve un bot de la sala
+   */
+  removeBot(roomCode, botId, requesterId) {
+    const room = this.rooms.get(roomCode);
+
+    if (!room) {
+      return { success: false, error: 'Sala no encontrada' };
+    }
+
+    if (room.hostId !== requesterId) {
+      return { success: false, error: 'Solo el host puede remover bots' };
+    }
+
+    const bot = room.getPlayer(botId);
+    if (!bot || !bot.isBot) {
+      return { success: false, error: 'Jugador no es un bot' };
+    }
+
+    const removed = room.removePlayer(botId);
+    if (!removed) {
+      return { success: false, error: 'No se pudo remover el bot' };
+    }
+
+    logger.info(`Bot ${bot.name} removido de la sala ${roomCode}`);
+    return { success: true, room };
+  }
+
+  kickPlayer(roomCode, playerIdToKick, requesterId) {
+    const room = this.rooms.get(roomCode);
+
+    if (!room) {
+      return { success: false, error: 'Sala no encontrada' };
+    }
+
+    if (room.hostId !== requesterId) {
+      return { success: false, error: 'Solo el host puede expulsar jugadores' };
+    }
+
+    if (playerIdToKick === requesterId) {
+      return { success: false, error: 'No te puedes expulsar a ti mismo' };
+    }
+
+    const playerToKick = room.getPlayer(playerIdToKick);
+    if (!playerToKick) {
+      return { success: false, error: 'Jugador no encontrado' };
+    }
+
+    const removed = room.removePlayer(playerIdToKick);
+    if (!removed) {
+      return { success: false, error: 'No se pudo expulsar al jugador' };
+    }
+
+    logger.info(`Jugador ${playerToKick.name} expulsado de la sala ${roomCode} por el host`);
+    return { success: true, room, kickedPlayer: playerToKick };
+  }
+
+  /**
    * Obtiene una sala por código
    */
   getRoom(roomCode) {

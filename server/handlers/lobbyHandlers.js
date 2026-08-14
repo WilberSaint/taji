@@ -303,4 +303,79 @@ export function setupLobbyHandlers(io, socket) {
       }
     }
   });
+
+  socket.on(SOCKET_EVENTS.LOBBY_ADD_BOT, (data, callback) => {
+    try {
+      const roomCode = socket.roomCode;
+      if (!roomCode) {
+        return callback?.({ success: false, error: 'No estás en ninguna sala' });
+      }
+
+      const result = RoomManager.addBot(roomCode, socket.id);
+
+      if (!result.success) {
+        return callback?.({ success: false, error: result.error });
+      }
+
+      io.to(roomCode).emit(SOCKET_EVENTS.ROOM_UPDATED, result.room.getState());
+      callback?.({ success: true });
+
+    } catch (error) {
+      logger.error('Error al agregar bot', error);
+      callback?.({ success: false, error: 'Error interno del servidor' });
+    }
+  });
+
+  socket.on(SOCKET_EVENTS.LOBBY_REMOVE_BOT, (data, callback) => {
+    try {
+      const { botId } = data;
+      const roomCode = socket.roomCode;
+
+      if (!roomCode) {
+        return callback?.({ success: false, error: 'No estás en ninguna sala' });
+      }
+
+      const result = RoomManager.removeBot(roomCode, botId, socket.id);
+
+      if (!result.success) {
+        return callback?.({ success: false, error: result.error });
+      }
+
+      io.to(roomCode).emit(SOCKET_EVENTS.ROOM_UPDATED, result.room.getState());
+      callback?.({ success: true });
+
+    } catch (error) {
+      logger.error('Error al remover bot', error);
+      callback?.({ success: false, error: 'Error interno del servidor' });
+    }
+  });
+
+  socket.on(SOCKET_EVENTS.LOBBY_KICK_PLAYER, (data, callback) => {
+    try {
+      const { playerId } = data;
+      const roomCode = socket.roomCode;
+
+      if (!roomCode) {
+        return callback?.({ success: false, error: 'No estás en ninguna sala' });
+      }
+
+      const result = RoomManager.kickPlayer(roomCode, playerId, socket.id);
+
+      if (!result.success) {
+        return callback?.({ success: false, error: result.error });
+      }
+
+      // Notificar al jugador expulsado
+      io.to(playerId).emit(SOCKET_EVENTS.YOU_WERE_KICKED, { reason: 'Has sido expulsado por el host' });
+
+      // Actualizar la sala para los demás
+      io.to(roomCode).emit(SOCKET_EVENTS.ROOM_UPDATED, result.room.getState());
+      
+      callback?.({ success: true });
+
+    } catch (error) {
+      logger.error('Error al expulsar jugador', error);
+      callback?.({ success: false, error: 'Error interno del servidor' });
+    }
+  });
 }
