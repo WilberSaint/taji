@@ -19,6 +19,7 @@ export function Button({
     primary: 'bg-green-600 hover:bg-green-700 text-white disabled:bg-gray-400',
     secondary: 'bg-blue-600 hover:bg-blue-700 text-white disabled:bg-gray-400',
     danger: 'bg-red-600 hover:bg-red-700 text-white disabled:bg-gray-400',
+    warning: 'bg-amber-500 hover:bg-amber-600 text-white disabled:bg-gray-400',
     outline: 'bg-white hover:bg-gray-100 text-gray-800 border-2 border-gray-300 disabled:bg-gray-100',
     ghost: 'bg-transparent hover:bg-white/10 text-white disabled:opacity-50'
   };

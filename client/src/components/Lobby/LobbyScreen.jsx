@@ -482,14 +482,20 @@ export function LobbyScreen() {
                       <div className="text-3xl shrink-0">✅</div>
                     )}
                     {isHost && player.id !== myPlayer.id && (
-                      <button
-                        type="button"
-                        aria-label={`Expulsar a ${player.name}`}
-                        onClick={() => kickPlayer(player.id)}
-                        className="group ml-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-red-200 bg-red-50 text-red-500 shadow-sm transition-all duration-200 hover:border-red-500 hover:bg-red-500 hover:text-white hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-200"
-                      >
-                        <X size={16} className="transition-transform duration-200 group-hover:scale-110" />
-                      </button>
+                      <div className="group ml-1 relative">
+                        <button
+                          type="button"
+                          aria-label={`Expulsar a ${player.name}`}
+                          onClick={() => kickPlayer(player.id)}
+                          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-red-200 bg-red-50 text-red-500 shadow-sm transition-all duration-200 hover:border-red-500 hover:bg-red-500 hover:text-white hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-200"
+                        >
+                          <X size={16} className="transition-transform duration-200 group-hover:scale-110" />
+                        </button>
+                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none">
+                          Sacar de la sala
+                          <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
+                        </div>
+                      </div>
                     )}
                   </div>
                 </motion.div>
@@ -528,6 +534,7 @@ export function LobbyScreen() {
               <>
                 <Button
                   fullWidth
+                  variant="warning"
                   onClick={addBot}
                   disabled={currentRoom.players.length >= currentRoom.maxPlayers}
                   className="flex-1"

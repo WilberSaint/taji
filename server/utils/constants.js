@@ -146,4 +146,4 @@ export const PLAYER_COLORS = [
 ];
 
 // Avatares por defecto
-export const DEFAULT_AVATARS = ['👤', '🤖', '🎮', '🎯'];
+export const DEFAULT_AVATARS = ['👤', '😹', '🎮', '🎯'];
