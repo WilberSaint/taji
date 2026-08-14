@@ -1,6 +1,8 @@
 import Game from '../models/Game.js';
-import { GAME_STATUS } from '../utils/constants.js';
+import RoomManager from './RoomManager.js';
+import { GAME_STATUS, SOCKET_EVENTS } from '../utils/constants.js';
 import logger from '../utils/logger.js';
+import { selectBotAction } from '../utils/botAI.js';
 
 /**
  * Gestor de partidas del juego
@@ -8,12 +10,202 @@ import logger from '../utils/logger.js';
 class GameManager {
   constructor() {
     this.games = new Map(); // roomCode -> Game
+    this.botTurnTimers = new Map(); // roomCode -> timeoutId
+  }
+
+  emitGameState(io, roomCode) {
+    const game = this.games.get(roomCode);
+    if (!game || !roomCode) {
+      return;
+    }
+
+    const room = RoomManager.getRoom(roomCode);
+    if (!room) {
+      return;
+    }
+
+    room.players.forEach((player) => {
+      const playerState = game.getStateForPlayer(player.id);
+      io.to(player.id).emit(SOCKET_EVENTS.GAME_STATE_UPDATE, playerState);
+    });
+  }
+
+  emitTurnChanged(io, roomCode, nextPlayer, turnCount) {
+    const game = this.games.get(roomCode);
+    if (!game) {
+      return;
+    }
+
+    io.to(roomCode).emit(SOCKET_EVENTS.GAME_TURN_CHANGED, {
+      currentPlayerId: nextPlayer.id,
+      currentPlayerName: nextPlayer.name,
+      turnCount: turnCount ?? game.turnCount
+    });
+  }
+
+  clearBotTimer(roomCode) {
+    const timer = this.botTurnTimers.get(roomCode);
+    if (timer) {
+      clearTimeout(timer);
+      this.botTurnTimers.delete(roomCode);
+    }
+  }
+
+  scheduleBotTurn(roomCode, io) {
+    this.clearBotTimer(roomCode);
+
+    const game = this.games.get(roomCode);
+    if (!game || game.status !== GAME_STATUS.PLAYING) {
+      return;
+    }
+
+    const currentPlayer = game.getCurrentPlayer();
+    if (!currentPlayer || !currentPlayer.isBot) {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      const liveGame = this.games.get(roomCode);
+      if (!liveGame || liveGame.status !== GAME_STATUS.PLAYING) {
+        return;
+      }
+
+      const activePlayer = liveGame.getCurrentPlayer();
+      if (!activePlayer || !activePlayer.isBot) {
+        return;
+      }
+
+      const action = selectBotAction(liveGame, activePlayer);
+
+      try {
+        if (!action || action.type === 'end_turn') {
+          const result = liveGame.endTurn(activePlayer.id);
+          if (result.success) {
+            if (result.victory) {
+              io.to(roomCode).emit(SOCKET_EVENTS.GAME_VICTORY, {
+                winner: result.winner,
+                finalState: result.gameState
+              });
+              return;
+            }
+
+            this.emitTurnChanged(io, roomCode, result.nextPlayer, liveGame.turnCount);
+            this.emitGameState(io, roomCode);
+            this.scheduleBotTurn(roomCode, io);
+          }
+          return;
+        }
+
+        if (action.type === 'discard') {
+          const result = liveGame.discardCards(activePlayer.id, action.cardIds);
+          if (!result.success) {
+            const fallback = liveGame.endTurn(activePlayer.id);
+            if (fallback.success && !fallback.victory) {
+              this.emitTurnChanged(io, roomCode, fallback.nextPlayer, liveGame.turnCount);
+              this.emitGameState(io, roomCode);
+              this.scheduleBotTurn(roomCode, io);
+            }
+            return;
+          }
+
+          io.to(activePlayer.id).emit(SOCKET_EVENTS.GAME_CARDS_DRAWN, { cards: result.drawnCards });
+          this.emitGameState(io, roomCode);
+
+          const endResult = liveGame.endTurn(activePlayer.id);
+          if (endResult.success) {
+            if (endResult.victory) {
+              io.to(roomCode).emit(SOCKET_EVENTS.GAME_VICTORY, {
+                winner: endResult.winner,
+                finalState: endResult.gameState
+              });
+              return;
+            }
+
+            this.emitTurnChanged(io, roomCode, endResult.nextPlayer, liveGame.turnCount);
+            this.emitGameState(io, roomCode);
+            this.scheduleBotTurn(roomCode, io);
+          }
+          return;
+        }
+
+        const result = liveGame.playCard(
+          activePlayer.id,
+          action.cardId,
+          action.targetPlayerId,
+          action.movements || []
+        );
+
+        if (!result.success) {
+          const fallback = liveGame.endTurn(activePlayer.id);
+          if (fallback.success && !fallback.victory) {
+            this.emitTurnChanged(io, roomCode, fallback.nextPlayer, liveGame.turnCount);
+            this.emitGameState(io, roomCode);
+            this.scheduleBotTurn(roomCode, io);
+          }
+          return;
+        }
+
+        io.to(roomCode).emit(SOCKET_EVENTS.GAME_CARD_PLAYED, {
+          playerId: activePlayer.id,
+          card: result.card,
+          target: result.target,
+          effect: result.effect
+        });
+
+        if (result.effect.cancelled) {
+          io.to(roomCode).emit(SOCKET_EVENTS.GAME_CARDS_CANCELLED, {
+            slotType: action.movements?.[0]?.destino?.slot,
+            targetPlayerId: action.targetPlayerId,
+            cardsDiscarded: result.effect.cardsToDiscard
+          });
+        }
+
+        if (result.effect.destroyed) {
+          io.to(roomCode).emit(SOCKET_EVENTS.GAME_PLANT_DESTROYED, {
+            slotType: action.movements?.[0]?.destino?.slot,
+            playerId: action.targetPlayerId,
+            cardsDiscarded: result.effect.cardsToDiscard
+          });
+        }
+
+        if (result.drawnCard) {
+          io.to(activePlayer.id).emit(SOCKET_EVENTS.GAME_CARDS_DRAWN, { cards: [result.drawnCard] });
+        }
+
+        this.emitGameState(io, roomCode);
+
+        const endResult = liveGame.endTurn(activePlayer.id);
+        if (endResult.success) {
+          if (endResult.victory) {
+            io.to(roomCode).emit(SOCKET_EVENTS.GAME_VICTORY, {
+              winner: endResult.winner,
+              finalState: endResult.gameState
+            });
+            return;
+          }
+
+          this.emitTurnChanged(io, roomCode, endResult.nextPlayer, liveGame.turnCount);
+          this.emitGameState(io, roomCode);
+          this.scheduleBotTurn(roomCode, io);
+        }
+      } catch (error) {
+        logger.error(`Error ejecutando turno del bot en ${roomCode}`, error);
+        const fallback = liveGame.endTurn(activePlayer.id);
+        if (fallback.success && !fallback.victory) {
+          this.emitTurnChanged(io, roomCode, fallback.nextPlayer, liveGame.turnCount);
+          this.emitGameState(io, roomCode);
+          this.scheduleBotTurn(roomCode, io);
+        }
+      }
+    }, 800 + Math.random() * 500);
+
+    this.botTurnTimers.set(roomCode, timer);
   }
 
   /**
    * Crea y inicia una nueva partida
    */
-  createGame(room) {
+  createGame(room, io = null) {
     if (!room) {
       logger.error('Intento de crear partida sin sala');
       return null;
@@ -36,6 +228,12 @@ class GameManager {
     // Actualizar estado de la sala
     room.setStatus(GAME_STATUS.PLAYING);
     room.game = game;
+
+    if (io) {
+      this.emitGameState(io, room.code);
+      this.emitTurnChanged(io, room.code, game.getCurrentPlayer(), game.turnCount);
+      this.scheduleBotTurn(room.code, io);
+    }
 
     logger.success(`Partida iniciada en sala ${room.code}`);
 
@@ -186,6 +384,7 @@ class GameManager {
    * Elimina una partida (después de terminada)
    */
   deleteGame(roomCode) {
+    this.clearBotTimer(roomCode);
     const deleted = this.games.delete(roomCode);
 
     if (deleted) {
