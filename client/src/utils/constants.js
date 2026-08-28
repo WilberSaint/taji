@@ -84,21 +84,21 @@ export const SOCKET_EVENTS = {
   ERROR: "error",
 };
 
-// Colores de tipo de carta
+// Colores de tipo de carta (alineados con el sistema de diseño)
 export const CARD_TYPE_COLORS = {
-  [CARD_TYPES.PLANTA]: "#2ecc71",
-  [CARD_TYPES.MANTENIMIENTO]: "#3498db",
-  [CARD_TYPES.RIESGO]: "#f1c40f",
-  [CARD_TYPES.EVENTO]: "#5F358C",
+  [CARD_TYPES.PLANTA]: "#3B9668",
+  [CARD_TYPES.MANTENIMIENTO]: "#3C79BE",
+  [CARD_TYPES.RIESGO]: "#B57F1C",
+  [CARD_TYPES.EVENTO]: "#8E6FB8",
 };
 
-// Colores de energía
+// Colores de energía (alineados con el sistema de diseño)
 export const ENERGY_COLORS = {
-  [ENERGY_TYPES.SOLAR]: "#F39C12",
-  [ENERGY_TYPES.EOLICA]: "#3498DB",
-  [ENERGY_TYPES.HIDROELECTRICA]: "#1ABC9C",
-  [ENERGY_TYPES.GEOTERMICA]: "#E67E22",
-  [ENERGY_TYPES.COMODIN]: "#9B59B6",
+  [ENERGY_TYPES.SOLAR]: "#DF9A34",
+  [ENERGY_TYPES.EOLICA]: "#4F9FD2",
+  [ENERGY_TYPES.HIDROELECTRICA]: "#3A6AAE",
+  [ENERGY_TYPES.GEOTERMICA]: "#C55C3C",
+  [ENERGY_TYPES.COMODIN]: "#8E6FB8",
 };
 
 // Iconos de energía (emojis)
@@ -119,12 +119,12 @@ export const ENERGY_NAMES = {
   [ENERGY_TYPES.COMODIN]: "Comodín",
 };
 
-// Colores de jugador
+// Colores de jugador (alineados con los acentos de energía del sistema de diseño)
 export const PLAYER_COLORS = [
-  "#F4C430", // Amarillo
-  "#4A90E2", // Azul
-  "#E74C3C", // Rojo
-  "#9B59B6", // Púrpura
+  "#DF9A34", // solar
+  "#4F9FD2", // eólica
+  "#C55C3C", // geotérmica
+  "#8E6FB8", // violeta
 ];
 
 // Reglas del juego

@@ -1,19 +1,84 @@
 import { useState, useEffect } from 'react';
 import { useGameStore } from '../../store/gameStore';
 import { useSocket } from '../../hooks/useSocket';
+import { useTheme } from '../../hooks/useTheme';
 import Button from '../UI/Button';
+import Avatar from '../UI/Avatar';
+import AvatarPicker from '../UI/AvatarPicker';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Lock, Globe, LogIn, Plus, Bot, X } from 'lucide-react';
+import {
+  Users, Lock, Globe, LogIn, Plus, Bot, X, Crown,
+  Copy, Check, RefreshCw, ArrowLeft, Loader2, Monitor, Sun, Moon,
+} from 'lucide-react';
+
+/* ---------- piezas compartidas ---------- */
+
+function Brand({ size = 'md' }) {
+  const big = size === 'lg';
+  return (
+    <div className="flex items-center gap-3">
+      <svg width={big ? 40 : 30} height={big ? 40 : 30} viewBox="0 0 32 32" aria-hidden="true">
+        <rect width="32" height="32" rx="9" style={{ fill: 'var(--primary)' }} />
+        <g fill="none" stroke="#fff" strokeWidth="1.9" strokeLinecap="round">
+          <circle cx="11" cy="12" r="2.6" />
+          <circle cx="22" cy="10" r="2.6" />
+          <circle cx="16" cy="22" r="2.6" />
+          <path d="M12.4 13.8 14.6 20M20.6 12 17.4 20M13 10.8 20 9.8" />
+        </g>
+      </svg>
+      <div className="leading-tight">
+        <div className={`font-display font-extrabold tracking-tight ${big ? 'text-3xl' : 'text-xl'}`}>TAJI</div>
+        {big && <div className="text-sm text-ink-soft">Energías renovables · juego de cartas</div>}
+      </div>
+    </div>
+  );
+}
+
+const THEME_CYCLE = { system: 'light', light: 'dark', dark: 'system' };
+const THEME_ICON = { system: Monitor, light: Sun, dark: Moon };
+
+function ThemeButton() {
+  const [theme, setTheme] = useTheme();
+  const Icon = THEME_ICON[theme];
+  return (
+    <button
+      type="button"
+      onClick={() => setTheme(THEME_CYCLE[theme])}
+      aria-label={`Tema: ${theme}. Cambiar.`}
+      title={`Tema: ${theme}`}
+      className="grid h-10 w-10 place-items-center rounded-full border border-line text-ink-soft transition-colors hover:text-ink hover:border-line-strong"
+    >
+      <Icon size={17} />
+    </button>
+  );
+}
+
+function Shell({ children, center = false }) {
+  return (
+    <div className={`min-h-screen bg-paper text-ink ${center ? 'flex items-center justify-center' : ''} p-4 sm:p-6`}>
+      {children}
+    </div>
+  );
+}
+
+const panelBase =
+  'bg-surface border border-line rounded-[var(--r-lg)] shadow-e1';
+
+const fade = { initial: { opacity: 0, y: 10 }, animate: { opacity: 1, y: 0 } };
+
+/* ---------- pantalla ---------- */
 
 export function LobbyScreen() {
-  const { playerName, setPlayerName, currentRoom, publicRooms } = useGameStore();
-  const { createRoom, joinRoom, listRooms, leaveRoom, setReady, startGame, reconnect, addBot, removeBot, kickPlayer } = useSocket();
+  const { playerName, setPlayerName, playerAvatar, setPlayerAvatar, currentRoom, publicRooms, setNotification } = useGameStore();
+  const { createRoom, joinRoom, listRooms, leaveRoom, setReady, startGame, reconnect, addBot, kickPlayer } = useSocket();
   const [view, setView] = useState('home'); // home | create | join | room
+  const [nameInput, setNameInput] = useState('');
   const [roomCode, setRoomCode] = useState('');
   const [isPublic, setIsPublic] = useState(true);
   const [loading, setLoading] = useState(false);
   const [reconnecting, setReconnecting] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   // Cargar salas públicas al inicio
   useEffect(() => {
@@ -31,12 +96,8 @@ export function LobbyScreen() {
       if (savedRoomCode && savedPlayerName && !currentRoom) {
         setReconnecting(true);
         try {
-          console.log('🔄 Intentando reconectar a', savedRoomCode, 'como', savedPlayerName);
           await reconnect(savedRoomCode, savedPlayerName);
-          console.log('✅ Reconexión exitosa!');
         } catch (error) {
-          console.log('❌ No se pudo reconectar:', error.message);
-          // Limpiar datos guardados si falla
           localStorage.removeItem('tajiRoomCode');
           localStorage.removeItem('tajiPlayerName');
         }
@@ -58,298 +119,274 @@ export function LobbyScreen() {
     }
   }, [currentRoom]);
 
-  // Pantalla de ingreso de nombre
+  const handleJoinByCode = async () => {
+    if (!roomCode.trim() || loading) return;
+    setLoading(true);
+    try {
+      await joinRoom(roomCode.trim(), playerName, playerAvatar);
+    } catch (error) {
+      setNotification({ type: 'error', message: error.message });
+    }
+    setLoading(false);
+  };
+
+  const handleJoinPublic = async (code) => {
+    setLoading(true);
+    try {
+      await joinRoom(code, playerName, playerAvatar);
+    } catch (error) {
+      setNotification({ type: 'error', message: error.message });
+    }
+    setLoading(false);
+  };
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await listRooms();
+    } catch (error) {
+      /* la lista simplemente no se actualiza */
+    } finally {
+      setTimeout(() => setIsRefreshing(false), 500);
+    }
+  };
+
+  const handleCopyCode = async () => {
+    try {
+      await navigator.clipboard.writeText(currentRoom.code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      setNotification({ type: 'info', message: `Código: ${currentRoom.code}` });
+    }
+  };
+
+  /* ===== pantalla de nombre ===== */
   if (!playerName) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="bg-white rounded-2xl p-8 shadow-2xl max-w-md w-full"
-        >
-          <div className="text-center mb-6">
-            <h1 className="text-5xl font-bold text-green-800 mb-2">🌱 TAJI</h1>
-            <p className="text-gray-600">Juego de Energías Renovables</p>
+      <Shell center>
+        <motion.div {...fade} className={`${panelBase} w-full max-w-md p-8`}>
+          <div className="mb-6 flex flex-col items-center text-center">
+            <Brand size="lg" />
           </div>
-
+          <label htmlFor="name" className="mb-2 block text-xs font-semibold uppercase tracking-wide text-ink-soft">
+            ¿Cómo te llamas?
+          </label>
           <input
+            id="name"
             type="text"
-            placeholder="Ingresa tu nombre"
+            placeholder="Tu nombre"
             maxLength={20}
-            className="w-full p-3 border-2 border-gray-300 rounded-xl mb-4 text-center text-lg focus:border-green-500 focus:outline-none"
-            onKeyPress={(e) => {
-              if (e.key === 'Enter' && e.target.value.trim()) {
-                setPlayerName(e.target.value.trim());
-              }
+            value={nameInput}
+            onChange={(e) => setNameInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && nameInput.trim()) setPlayerName(nameInput.trim());
             }}
             autoFocus
+            className="mb-5 w-full rounded-[var(--r-sm)] border-[1.5px] border-line-strong bg-surface px-4 py-3 text-lg text-ink outline-none transition-colors placeholder:text-ink-faint focus:border-primary focus:ring-4 focus:ring-primary-soft"
           />
 
-          <Button
-            fullWidth
-            onClick={() => {
-              const input = document.querySelector('input');
-              if (input.value.trim()) {
-                setPlayerName(input.value.trim());
-              }
-            }}
-          >
-            Continuar
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-soft">Elige tu avatar</p>
+          <div className="mb-6">
+            <AvatarPicker value={playerAvatar} onChange={setPlayerAvatar} />
+          </div>
+
+          <Button fullWidth disabled={!nameInput.trim()} onClick={() => nameInput.trim() && setPlayerName(nameInput.trim())}>
+            Entrar
           </Button>
         </motion.div>
-      </div>
+      </Shell>
     );
   }
 
-  // Pantalla de reconexión
+  /* ===== reconexión ===== */
   if (reconnecting) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="bg-white rounded-2xl p-8 shadow-2xl max-w-md w-full text-center"
-        >
-          <div className="text-6xl mb-4 animate-bounce">🔄</div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Reconectando...</h2>
-          <p className="text-gray-600">Intentando volver a tu partida</p>
-          <div className="mt-6">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-          </div>
+      <Shell center>
+        <motion.div {...fade} className={`${panelBase} w-full max-w-md p-8 text-center`}>
+          <Loader2 size={40} className="mx-auto mb-4 animate-spin text-primary" />
+          <h2 className="font-display text-xl font-bold">Reconectando…</h2>
+          <p className="mt-1 text-sm text-ink-soft">Volviendo a tu partida</p>
         </motion.div>
-      </div>
+      </Shell>
     );
   }
 
-  // Vista principal (home)
+  /* ===== home ===== */
   if (view === 'home') {
     return (
-      <div className="min-h-screen p-4">
-        <div className="max-w-6xl mx-auto">
-          {/* Header */}
-          <motion.div
-            initial={{ y: -50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            className="bg-white rounded-2xl p-6 shadow-lg mb-6"
-          >
-            <div className="flex items-center justify-between">
+      <Shell>
+        <div className="mx-auto max-w-5xl">
+          <motion.header {...fade} className={`${panelBase} mb-6 flex items-center justify-between gap-4 p-5`}>
+            <div className="flex items-center gap-3">
+              <Avatar id={playerAvatar} size={44} />
               <div>
-                <h1 className="text-3xl font-bold text-green-800">🌱 TAJI</h1>
-                <p className="text-gray-600">Bienvenido, {playerName}</p>
+                <Brand />
+                <p className="mt-1 text-sm text-ink-soft">Hola, <span className="font-semibold text-ink">{playerName}</span></p>
               </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <ThemeButton />
               <Button
-                variant="outline"
-                onClick={() => {
-                  setPlayerName('');
-                  localStorage.removeItem('playerName');
-                }}
-                className="bg-zinc-100 text-zinc-800 "
+                variant="ghost"
+                size="sm"
+                onClick={() => { setPlayerName(''); localStorage.removeItem('playerName'); }}
               >
-                Cambiar nombre
+                Cambiar nombre y avatar
               </Button>
             </div>
-          </motion.div>
+          </motion.header>
 
-          {/* Botones principales */}
-          <div className="grid md:grid-cols-2 gap-6 mb-6">
-            <motion.div
-              initial={{ x: -50, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
+          <div className="mb-6 grid gap-4 sm:grid-cols-2">
+            <motion.button
+              {...fade}
+              transition={{ delay: 0.05 }}
+              onClick={() => setView('create')}
+              className={`${panelBase} flex flex-col items-start gap-3 p-6 text-left transition-transform hover:-translate-y-0.5 hover:shadow-e2`}
+              style={{ borderColor: 'color-mix(in srgb, var(--primary) 35%, var(--line))' }}
+            >
+              <span className="grid h-11 w-11 place-items-center rounded-[var(--r-md)] bg-primary-soft text-primary">
+                <Plus size={22} />
+              </span>
+              <span className="font-display text-lg font-bold">Crear sala</span>
+              <span className="text-sm text-ink-soft">Inicia una partida nueva, pública o privada.</span>
+            </motion.button>
+
+            <motion.button
+              {...fade}
               transition={{ delay: 0.1 }}
+              onClick={() => setView('join')}
+              className={`${panelBase} flex flex-col items-start gap-3 p-6 text-left transition-transform hover:-translate-y-0.5 hover:shadow-e2`}
             >
-              <button
-                onClick={() => setView('create')}
-                className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all hover:scale-105"
-              >
-                <Plus size={48} className="mx-auto mb-3" />
-                <h2 className="text-2xl font-bold mb-2">Crear Sala</h2>
-                <p className="text-green-100">Inicia una nueva partida</p>
-              </button>
-            </motion.div>
-
-            <motion.div
-              initial={{ x: 50, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.2 }}
-            >
-              <button
-                onClick={() => setView('join')}
-                className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white p-8 rounded-2xl shadow-xl hover:shadow-2xl transition-all hover:scale-105"
-              >
-                <LogIn size={48} className="mx-auto mb-3" />
-                <h2 className="text-2xl font-bold mb-2">Unirse con Código</h2>
-                <p className="text-blue-100">Entra a una sala privada</p>
-              </button>
-            </motion.div>
+              <span className="grid h-11 w-11 place-items-center rounded-[var(--r-md)] bg-surface-2 text-ink-soft">
+                <LogIn size={22} />
+              </span>
+              <span className="font-display text-lg font-bold">Unirse con código</span>
+              <span className="text-sm text-ink-soft">Entra a una sala privada con su código.</span>
+            </motion.button>
           </div>
 
-          {/* Salas públicas */}
-          <motion.div
-            initial={{ y: 50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="bg-white rounded-2xl p-6 shadow-lg"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                <Globe size={24} className="text-green-600" />
-                Salas Públicas
+          <motion.section {...fade} transition={{ delay: 0.15 }} className={`${panelBase} p-6`}>
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="flex items-center gap-2 font-display text-lg font-bold">
+                <Globe size={20} className="text-ink-faint" /> Salas públicas
               </h2>
               <button
-                onClick={async () => {
-                  setIsRefreshing(true);
-                  try {
-                    await listRooms();
-                  } catch (error) {
-                    console.error('Error al actualizar las salas:', error);
-                  } finally {
-                    setTimeout(() => setIsRefreshing(false), 500);
-                  }
-                }}
+                onClick={handleRefresh}
                 disabled={isRefreshing}
-                className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="flex items-center gap-1.5 text-sm font-medium text-ink-soft transition-colors hover:text-ink disabled:opacity-50"
               >
-                <motion.div
-                  animate={{ rotate: isRefreshing ? 360 : 0 }}
-                  transition={{ duration: 1, repeat: isRefreshing ? Infinity : 0, ease: "linear" }}
-                >
-                  🔄
-                </motion.div>
-                {isRefreshing ? 'Actualizando...' : 'Actualizar'}
+                <RefreshCw size={15} className={isRefreshing ? 'animate-spin' : ''} />
+                {isRefreshing ? 'Actualizando…' : 'Actualizar'}
               </button>
             </div>
 
             {publicRooms.length === 0 ? (
-              <div className="text-center py-8 text-gray-400">
-                <Users size={48} className="mx-auto mb-3 opacity-50" />
-                <p>No hay salas públicas disponibles</p>
-                <p className="text-sm">¡Sé el primero en crear una!</p>
+              <div className="flex flex-col items-center gap-2 py-10 text-center text-ink-faint">
+                <Users size={40} className="opacity-50" />
+                <p className="text-sm">No hay salas públicas ahora mismo.</p>
+                <p className="text-xs">Crea una y espera a que se unan.</p>
               </div>
             ) : (
-              <div className="space-y-3">
+              <ul className="flex flex-col gap-2">
                 {publicRooms.map((room) => (
-                  <motion.div
+                  <li
                     key={room.code}
-                    whileHover={{ scale: 1.02 }}
-                    className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+                    className="flex items-center justify-between gap-4 rounded-[var(--r-md)] border border-line bg-surface-2 p-4"
                   >
                     <div>
-                      <div className="font-bold text-gray-800">{room.code}</div>
-                      <div className="text-sm text-gray-600">
-                        {room.playersCount}/{room.maxPlayers} jugadores
-                      </div>
+                      <div className="font-mono text-sm font-semibold tracking-wider">{room.code}</div>
+                      <div className="text-xs text-ink-soft">{room.playersCount}/{room.maxPlayers} jugadores</div>
                     </div>
                     <Button
                       size="sm"
-                      onClick={async () => {
-                        setLoading(true);
-                        try {
-                          await joinRoom(room.code, playerName);
-                        } catch (error) {
-                          console.error(error);
-                        }
-                        setLoading(false);
-                      }}
+                      variant={room.isFull ? 'secondary' : 'primary'}
+                      onClick={() => handleJoinPublic(room.code)}
                       disabled={loading || room.isFull}
                     >
                       {room.isFull ? 'Llena' : 'Unirse'}
                     </Button>
-                  </motion.div>
+                  </li>
                 ))}
-              </div>
+              </ul>
             )}
-          </motion.div>
+          </motion.section>
         </div>
-      </div>
+      </Shell>
     );
   }
 
-  // Vista crear sala
+  /* ===== crear sala ===== */
   if (view === 'create') {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="bg-white rounded-2xl p-8 shadow-2xl max-w-md w-full"
-        >
-          <h2 className="text-2xl font-bold mb-6 text-center">Crear Sala</h2>
+      <Shell center>
+        <motion.div {...fade} className={`${panelBase} w-full max-w-md p-8`}>
+          <button
+            onClick={() => setView('home')}
+            className="mb-4 flex items-center gap-1.5 text-sm text-ink-soft transition-colors hover:text-ink"
+          >
+            <ArrowLeft size={16} /> Volver
+          </button>
+          <h2 className="mb-5 font-display text-2xl font-bold">Crear sala</h2>
 
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Tipo de sala
-            </label>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={() => setIsPublic(true)}
-                className={`p-4 rounded-xl border-2 transition-all ${
-                  isPublic
-                    ? 'border-green-500 bg-green-50'
-                    : 'border-gray-300 hover:border-gray-400'
-                }`}
-              >
-                <Globe className="mx-auto mb-2" />
-                <div className="font-semibold">Pública</div>
-                <div className="text-xs text-gray-600">Visible para todos</div>
-              </button>
-
-              <button
-                onClick={() => setIsPublic(false)}
-                className={`p-4 rounded-xl border-2 transition-all ${
-                  !isPublic
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-300 hover:border-gray-400'
-                }`}
-              >
-                <Lock className="mx-auto mb-2" />
-                <div className="font-semibold">Privada</div>
-                <div className="text-xs text-gray-600">Solo con código</div>
-              </button>
-            </div>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-soft">Tipo de sala</p>
+          <div className="mb-6 grid grid-cols-2 gap-3">
+            {[
+              { pub: true, Icon: Globe, label: 'Pública', hint: 'Aparece en la lista' },
+              { pub: false, Icon: Lock, label: 'Privada', hint: 'Solo con código' },
+            ].map(({ pub, Icon, label, hint }) => {
+              const active = isPublic === pub;
+              return (
+                <button
+                  key={label}
+                  onClick={() => setIsPublic(pub)}
+                  className={`flex flex-col items-center gap-1 rounded-[var(--r-md)] border-[1.5px] p-4 transition-colors ${
+                    active ? 'border-primary bg-primary-soft text-primary' : 'border-line-strong text-ink-soft hover:border-line-strong hover:text-ink'
+                  }`}
+                >
+                  <Icon size={20} />
+                  <span className="text-sm font-semibold">{label}</span>
+                  <span className="text-[11px] opacity-80">{hint}</span>
+                </button>
+              );
+            })}
           </div>
 
           <div className="flex gap-3">
-            <Button
-              variant="outline"
-              fullWidth
-              onClick={() => setView('home')}
-            >
-              Cancelar
-            </Button>
+            <Button variant="secondary" fullWidth onClick={() => setView('home')}>Cancelar</Button>
             <Button
               fullWidth
+              disabled={loading}
               onClick={async () => {
                 setLoading(true);
                 try {
-                  const room = await createRoom(playerName, isPublic);
-                  console.log('✅ Sala creada:', room);
-                  // El useEffect detectará currentRoom y cambiará a vista 'room'
+                  await createRoom(playerName, isPublic, playerAvatar);
                 } catch (error) {
-                  console.error('❌ Error al crear sala:', error);
-                  alert('Error al crear sala: ' + error.message);
+                  setNotification({ type: 'error', message: `Error al crear sala: ${error.message}` });
                 }
                 setLoading(false);
               }}
-              disabled={loading}
             >
-              {loading ? 'Creando...' : 'Crear Sala'}
+              {loading ? 'Creando…' : 'Crear sala'}
             </Button>
           </div>
         </motion.div>
-      </div>
+      </Shell>
     );
   }
 
-  // Vista unirse con código
+  /* ===== unirse con código ===== */
   if (view === 'join') {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="bg-white rounded-2xl p-8 shadow-2xl max-w-md w-full"
-        >
-          <h2 className="text-2xl font-bold mb-6 text-center">Unirse a Sala</h2>
+      <Shell center>
+        <motion.div {...fade} className={`${panelBase} w-full max-w-md p-8`}>
+          <button
+            onClick={() => { setView('home'); setRoomCode(''); }}
+            className="mb-4 flex items-center gap-1.5 text-sm text-ink-soft transition-colors hover:text-ink"
+          >
+            <ArrowLeft size={16} /> Volver
+          </button>
+          <h2 className="mb-5 font-display text-2xl font-bold">Unirse con código</h2>
 
           <input
             type="text"
@@ -357,174 +394,137 @@ export function LobbyScreen() {
             value={roomCode}
             onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
             maxLength={9}
-            className="w-full p-3 border-2 border-gray-300 rounded-xl mb-4 text-center text-lg font-mono focus:border-blue-500 focus:outline-none"
-            onKeyPress={(e) => {
-              if (e.key === 'Enter' && roomCode.trim()) {
-                document.querySelector('button[type="submit"]').click();
-              }
-            }}
             autoFocus
+            onKeyDown={(e) => { if (e.key === 'Enter' && roomCode.trim()) handleJoinByCode(); }}
+            className="mb-4 w-full rounded-[var(--r-sm)] border-[1.5px] border-line-strong bg-surface px-4 py-3 text-center font-mono text-lg tracking-[0.2em] text-ink outline-none transition-colors placeholder:text-ink-faint placeholder:tracking-normal focus:border-primary focus:ring-4 focus:ring-primary-soft"
           />
 
           <div className="flex gap-3">
-            <Button
-              variant="outline"
-              fullWidth
-              onClick={() => {
-                setView('home');
-                setRoomCode('');
-              }}
-            >
-              Cancelar
-            </Button>
-            <Button
-              fullWidth
-              type="submit"
-              onClick={async () => {
-                if (!roomCode.trim()) return;
-                setLoading(true);
-                try {
-                  await joinRoom(roomCode.trim(), playerName);
-                } catch (error) {
-                  console.error(error);
-                  alert(error.message);
-                }
-                setLoading(false);
-              }}
-              disabled={loading || !roomCode.trim()}
-            >
-              {loading ? 'Uniéndose...' : 'Unirse'}
+            <Button variant="secondary" fullWidth onClick={() => { setView('home'); setRoomCode(''); }}>Cancelar</Button>
+            <Button fullWidth onClick={handleJoinByCode} disabled={loading || !roomCode.trim()}>
+              {loading ? 'Uniéndose…' : 'Unirse'}
             </Button>
           </div>
         </motion.div>
-      </div>
+      </Shell>
     );
   }
 
-  // Vista sala de espera
+  /* ===== sala de espera ===== */
   if (view === 'room' && currentRoom) {
-    const myPlayer = currentRoom.players.find(p => p.name === playerName);
+    const myPlayer = currentRoom.players.find((p) => p.name === playerName);
     const isHost = currentRoom.hostId === myPlayer?.id;
     const canStart = currentRoom.canStart.can;
+    const emptySlots = currentRoom.maxPlayers - currentRoom.playersCount;
 
     return (
-      <div className="min-h-screen p-4">
-        <div className="max-w-4xl mx-auto">
-          {/* Header de sala */}
-          <motion.div
-            initial={{ y: -50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            className="bg-white rounded-2xl p-6 shadow-lg mb-6"
-          >
-            <div className="flex items-center justify-between mb-4">
+      <Shell>
+        <div className="mx-auto max-w-3xl">
+          <motion.header {...fade} className={`${panelBase} mb-5 p-5`}>
+            <div className="flex items-start justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-bold text-gray-800">Sala de Espera</h2>
-                <div className="flex items-center gap-4 mt-2">
-                  <span className="text-lg font-mono bg-gray-100 px-4 py-2 rounded-lg">
+                <h2 className="font-display text-xl font-bold">Sala de espera</h2>
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <button
+                    onClick={handleCopyCode}
+                    className="inline-flex items-center gap-2 rounded-[var(--r-sm)] border border-line bg-surface-2 px-3 py-1.5 font-mono text-sm font-semibold tracking-widest text-ink transition-colors hover:border-line-strong"
+                  >
                     {currentRoom.code}
+                    {copied ? <Check size={14} className="text-state-success" /> : <Copy size={14} className="text-ink-faint" />}
+                  </button>
+                  <span
+                    className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium text-ink-soft"
+                    style={{ background: 'var(--surface-2)' }}
+                  >
+                    {currentRoom.isPublic ? <Globe size={13} /> : <Lock size={13} />}
+                    {currentRoom.isPublic ? 'Pública' : 'Privada'}
                   </span>
-                  {currentRoom.isPublic ? (
-                    <span className="text-sm text-gray-600 flex items-center gap-1">
-                      <Globe size={16} /> Pública
-                    </span>
-                  ) : (
-                    <span className="text-sm text-gray-600 flex items-center gap-1">
-                      <Lock size={16} /> Privada
-                    </span>
-                  )}
                 </div>
               </div>
-              <Button
-                variant="outline"
-                onClick={async () => {
-                  await leaveRoom();
-                }}
-              >
-                Salir
-              </Button>
+              <Button variant="secondary" size="sm" onClick={() => leaveRoom()}>Salir</Button>
             </div>
 
             {!canStart && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-800">
+              <div
+                className="mt-4 rounded-[var(--r-sm)] px-3 py-2 text-sm"
+                style={{ background: 'var(--warning-soft)', color: 'var(--warning)' }}
+              >
                 {currentRoom.canStart.reason}
               </div>
             )}
-          </motion.div>
+          </motion.header>
 
-          {/* Jugadores */}
-          <div className="grid md:grid-cols-2 gap-4 mb-6 auto-rows-fr">
+          <div className="mb-5 grid gap-3 sm:grid-cols-2">
             <AnimatePresence mode="popLayout">
               {currentRoom.players.map((player, index) => (
                 <motion.div
                   key={player.id}
                   layout
-                  initial={{ scale: 0.9, opacity: 0, y: 12 }}
-                  animate={{ scale: 1, opacity: 1, y: 0 }}
-                  exit={{ scale: 0.8, opacity: 0, y: -8 }}
-                  transition={{ duration: 0.18, delay: index * 0.04, ease: 'easeOut' }}
-                  className={`bg-white rounded-xl p-6 shadow-lg min-h-[120px] h-full ${
-                    player.isReady ? 'ring-4 ring-green-400' : ''
+                  initial={{ scale: 0.95, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.9, opacity: 0 }}
+                  transition={{ duration: 0.16, delay: index * 0.03 }}
+                  className={`flex items-center gap-3 rounded-[var(--r-md)] border bg-surface p-4 shadow-e1 ${
+                    player.isReady ? 'border-state-success' : 'border-line'
                   }`}
-                  style={{ borderLeft: `8px solid ${player.color}` }}
+                  style={{ borderLeftColor: player.color, borderLeftWidth: 4 }}
                 >
-                  <div className="flex items-center gap-4 h-full">
-                    <div className="text-4xl shrink-0">{player.avatar}</div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-bold text-lg flex items-center gap-2 truncate">
-                        <span className="truncate">{player.name}</span>
-                        {player.isBot && <Bot size={18} className="text-gray-500 shrink-0" />}
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        {player.id === currentRoom.hostId && '👑 Host'}
-                      </div>
-                    </div>
-                    {player.isReady && !player.isBot && (
-                      <div className="text-3xl shrink-0">✅</div>
-                    )}
-                    {isHost && player.id !== myPlayer.id && (
-                      <div className="group ml-1 relative">
-                        <button
-                          type="button"
-                          aria-label={`Expulsar a ${player.name}`}
-                          onClick={() => kickPlayer(player.id)}
-                          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-red-200 bg-red-50 text-red-500 shadow-sm transition-all duration-200 hover:border-red-500 hover:bg-red-500 hover:text-white hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-200"
+                  <Avatar id={player.avatar} size={44} />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 truncate font-semibold">
+                      <span className="truncate">{player.name}</span>
+                      {player.isBot && (
+                        <span
+                          className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-semibold"
+                          style={{ background: 'var(--info-soft)', color: 'var(--info)' }}
                         >
-                          <X size={16} className="transition-transform duration-200 group-hover:scale-110" />
-                        </button>
-                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none">
-                          Sacar de la sala
-                          <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
-                        </div>
-                      </div>
-                    )}
+                          <Bot size={11} /> Bot
+                        </span>
+                      )}
+                    </div>
+                    <div className="mt-0.5 flex items-center gap-1 text-xs text-ink-soft">
+                      {player.id === currentRoom.hostId
+                        ? <><Crown size={12} style={{ color: 'var(--solar)' }} /> Anfitrión</>
+                        : player.isReady ? 'Listo' : 'Esperando…'}
+                    </div>
                   </div>
+
+                  {player.isReady && !player.isBot && (
+                    <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full" style={{ background: 'var(--success-soft)', color: 'var(--success)' }}>
+                      <Check size={14} />
+                    </span>
+                  )}
+
+                  {isHost && player.id !== myPlayer.id && (
+                    <button
+                      type="button"
+                      aria-label={`Sacar a ${player.name} de la sala`}
+                      onClick={() => kickPlayer(player.id)}
+                      className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-line text-ink-faint transition-colors hover:border-state-danger hover:text-state-danger"
+                    >
+                      <X size={15} />
+                    </button>
+                  )}
                 </motion.div>
               ))}
             </AnimatePresence>
 
-            {/* Slots vacíos */}
-            {[...Array(currentRoom.maxPlayers - currentRoom.playersCount)].map((_, i) => (
+            {Array.from({ length: Math.max(0, emptySlots) }).map((_, i) => (
               <div
                 key={`empty-${i}`}
-                className="bg-gray-50 rounded-xl p-6 shadow-lg border-2 border-dashed border-gray-300 flex items-center justify-center min-h-[120px]"
+                className="flex items-center justify-center gap-2 rounded-[var(--r-md)] border-2 border-dashed border-line p-4 text-sm text-ink-faint"
               >
-                <div className="text-center text-gray-400">
-                  <Users size={48} className="mx-auto mb-2 opacity-50" />
-                  <div>Esperando jugador...</div>
-                </div>
+                <Users size={18} className="opacity-60" /> Esperando jugador…
               </div>
             ))}
           </div>
 
-          {/* Acciones */}
-          <div className="flex flex-wrap gap-4">
+          <div className="flex flex-col gap-3 sm:flex-row">
             {myPlayer && !myPlayer.isBot && (
               <Button
                 fullWidth
-                variant={myPlayer.isReady ? 'outline' : 'primary'}
-                onClick={async () => {
-                  await setReady(!myPlayer.isReady);
-                }}
+                variant={myPlayer.isReady ? 'secondary' : 'primary'}
+                onClick={() => setReady(!myPlayer.isReady)}
               >
                 {myPlayer.isReady ? 'No estoy listo' : 'Estoy listo'}
               </Button>
@@ -534,36 +534,33 @@ export function LobbyScreen() {
               <>
                 <Button
                   fullWidth
-                  variant="warning"
+                  variant="secondary"
+                  icon={<Bot size={16} />}
                   onClick={addBot}
                   disabled={currentRoom.players.length >= currentRoom.maxPlayers}
-                  className="flex-1"
                 >
-                  <Bot className="mr-2" /> Agregar Bot
+                  Agregar bot
                 </Button>
                 <Button
                   fullWidth
-                  variant="secondary"
+                  disabled={!canStart || loading}
                   onClick={async () => {
                     setLoading(true);
                     try {
                       await startGame();
                     } catch (error) {
-                      console.error(error);
-                      alert(error.message);
+                      setNotification({ type: 'error', message: error.message });
                     }
                     setLoading(false);
                   }}
-                  disabled={!canStart || loading}
-                  className="flex-1"
                 >
-                  {loading ? 'Iniciando...' : '🎮 Iniciar Partida'}
+                  {loading ? 'Iniciando…' : 'Iniciar partida'}
                 </Button>
               </>
             )}
           </div>
         </div>
-      </div>
+      </Shell>
     );
   }
 

@@ -16,7 +16,8 @@ export function useSocket() {
     setIsMyTurn,
     setAnimatingCard,
     toggleVictory,
-    clearRoom
+    clearRoom,
+    setMaintenanceMessage
   } = useGameStore();
 
   const listRooms = useCallback(() => {
@@ -32,6 +33,27 @@ export function useSocket() {
     });
   }, [setPublicRooms]);
 
+  /**
+   * Re-asocia este socket con su sala/partida tras una reconexión.
+   * Necesario en móvil: al bloquear la pantalla o cambiar de app el socket se
+   * cae y vuelve con un id nuevo; el servidor ya no sabe qué jugador es este.
+   */
+  const rejoinFromStorage = useCallback(() => {
+    const roomCode = localStorage.getItem('tajiRoomCode');
+    const playerName = localStorage.getItem('tajiPlayerName');
+    if (!roomCode || !playerName) return;
+
+    socket.emit(SOCKET_EVENTS.LOBBY_RECONNECT, { roomCode, playerName }, (response) => {
+      if (response?.success) {
+        setCurrentRoom(response.room);
+        if (response.gameState) setGameState(response.gameState);
+      } else {
+        localStorage.removeItem('tajiRoomCode');
+        localStorage.removeItem('tajiPlayerName');
+      }
+    });
+  }, [setCurrentRoom, setGameState]);
+
   // ============ CONEXIÓN ============
   useEffect(() => {
     // Conectar socket
@@ -39,29 +61,48 @@ export function useSocket() {
       socket.connect();
     }
 
-    // Event listeners de conexión
+    let hasConnectedBefore = false;
+
     const handleConnect = () => {
       setConnected(true, socket.id);
-      console.log('✅ Socket conectado:', socket.id);
-      listRooms().catch((error) => {
-        console.error('Error al cargar salas públicas:', error);
-      });
+      listRooms().catch(() => {});
+
+      // En reconexiones (no en la primera conexión) hay que volver a entrar
+      // a la sala: el socket.id cambió y el servidor perdió la asociación.
+      if (hasConnectedBefore) {
+        rejoinFromStorage();
+      }
+      hasConnectedBefore = true;
     };
 
     const handleDisconnect = () => {
       setConnected(false, null);
-      console.log('Socket desconectado');
     };
 
     socket.on('connect', handleConnect);
     socket.on('disconnect', handleDisconnect);
 
-    // Cleanup
+    // Si ya estaba conectado al montar (p. ej. re-render), sincroniza el estado
+    // sin disparar una reconexión.
+    if (socket.connected) {
+      setConnected(true, socket.id);
+      hasConnectedBefore = true;
+    }
+
     return () => {
       socket.off('connect', handleConnect);
       socket.off('disconnect', handleDisconnect);
     };
-  }, [setConnected]);
+  }, [setConnected, listRooms, rejoinFromStorage]);
+
+  // ============ AVISOS DE ADMINISTRADOR ============
+  useEffect(() => {
+    const handleAnnouncement = (state) => {
+      setMaintenanceMessage(state?.enabled ? (state.message || 'El servidor entrará en mantenimiento pronto.') : null);
+    };
+    socket.on('admin:announcement', handleAnnouncement);
+    return () => socket.off('admin:announcement', handleAnnouncement);
+  }, [setMaintenanceMessage]);
 
   // ============ LOBBY EVENTS ============
   useEffect(() => {
@@ -105,8 +146,8 @@ export function useSocket() {
       console.log('🔄 Cambio de turno:', data);
       setNotification({
         type: 'info',
-        message: data.currentPlayerId === socket.id 
-          ? '✨ ¡Es tu turno!' 
+        message: data.currentPlayerId === socket.id
+          ? '¡Es tu turno!'
           : `Turno de ${data.currentPlayerName}`
       });
     };
@@ -137,7 +178,7 @@ export function useSocket() {
       console.log('💥 Planta destruida:', data);
       setNotification({
         type: 'warning',
-        message: '💥 ¡Planta destruida!'
+        message: '¡Planta destruida!'
       });
     };
 
@@ -145,7 +186,7 @@ export function useSocket() {
       console.log('⚖️ Anulación mutua:', data);
       setNotification({
         type: 'info',
-        message: '⚖️ Anulación mutua'
+        message: 'Anulación mutua'
       });
     };
 
@@ -161,7 +202,7 @@ export function useSocket() {
       console.log('🔄 Intercambio de plantas:', data);
       setNotification({
         type: 'info',
-        message: '🔄 Plantas intercambiadas'
+        message: 'Plantas intercambiadas'
       });
     };
     
@@ -169,7 +210,7 @@ export function useSocket() {
       console.log('🔄 Intercambio de terreno:', data);
       setNotification({
         type: 'info',
-        message: '🔄 Terrenos intercambiados'
+        message: 'Terrenos intercambiados'
       });  
     }
 
@@ -195,7 +236,7 @@ export function useSocket() {
       toggleVictory(true, data.winner);
       setNotification({
         type: 'success',
-        message: `🏆 ${data.winner.name} ha ganado!`
+        message: `${data.winner.name} ha ganado!`
       });
     };
 
@@ -289,10 +330,10 @@ export function useSocket() {
   /**
    * Crear una sala
    */
-  const createRoom = useCallback((playerName, isPublic = true) => {
+  const createRoom = useCallback((playerName, isPublic = true, avatar = null) => {
     return new Promise((resolve, reject) => {
-      socket.emit(SOCKET_EVENTS.LOBBY_CREATE_ROOM, 
-        { playerName, isPublic },
+      socket.emit(SOCKET_EVENTS.LOBBY_CREATE_ROOM,
+        { playerName, isPublic, avatar },
         (response) => {
           if (response.success) {
             setCurrentRoom(response.room);
@@ -311,10 +352,10 @@ export function useSocket() {
   /**
    * Unirse a una sala
    */
-  const joinRoom = useCallback((roomCode, playerName) => {
+  const joinRoom = useCallback((roomCode, playerName, avatar = null) => {
     return new Promise((resolve, reject) => {
       socket.emit(SOCKET_EVENTS.LOBBY_JOIN_ROOM,
-        { roomCode, playerName },
+        { roomCode, playerName, avatar },
         (response) => {
           if (response.success) {
             setCurrentRoom(response.room);
@@ -440,118 +481,65 @@ export function useSocket() {
   }, []);
 
   /**
-   * Jugar una carta
+   * Termina el turno reintentando si el servidor aún no está listo
    */
-  const playCard = useCallback(async (cardId, targetPlayerId, movements) => {
-    try {
-      // Jugar la carta
-      const response = await new Promise((resolve, reject) => {
-        socket.emit(SOCKET_EVENTS.GAME_PLAY_CARD,
-          { cardId, targetPlayerId, movements },
-          (response) => {
-            if (response.success) {
-              resolve(response);
-            } else {
-              reject(new Error(response.error));
-            }
-          }
-        );
+  const endTurnWithRetry = useCallback(async (maxAttempts = 3) => {
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      const endResult = await new Promise((resolve) => {
+        socket.emit(SOCKET_EVENTS.GAME_END_TURN, {}, resolve);
       });
 
-      // Esperar tiempo para animaciones y sincronización
-      await new Promise(resolve => setTimeout(resolve, 800));
+      if (endResult?.success) return true;
 
-      // Intentar terminar turno (con retry si falla)
-      let attempts = 0;
-      const maxAttempts = 3;
-      
-      while (attempts < maxAttempts) {
-        attempts++;
-        
-        const endResult = await new Promise((resolve) => {
-          socket.emit(SOCKET_EVENTS.GAME_END_TURN, {}, (endResponse) => {
-            resolve(endResponse);
-          });
-        });
-
-        if (endResult.success) {
-          console.log(`✅ Turno terminado automáticamente (intento ${attempts})`);
-          break;
-        } else {
-          console.warn(`⚠️ Intento ${attempts} falló:`, endResult.error);
-          
-          if (attempts < maxAttempts) {
-            // Esperar 1 segundo antes de reintentar
-            console.log(`🔄 Reintentando en 0.5 segundos...`);
-            await new Promise(resolve => setTimeout(resolve, 500));
-          } else {
-            console.error('❌ No se pudo terminar turno después de', maxAttempts, 'intentos');
-          }
-        }
+      if (attempt < maxAttempts) {
+        await new Promise((resolve) => setTimeout(resolve, 500));
       }
-
-      return response;
-    } catch (error) {
-      throw error;
     }
+
+    console.error('No se pudo terminar el turno automáticamente');
+    return false;
   }, []);
 
   /**
-   * Descartar cartas
+   * Jugar una carta y terminar el turno automáticamente
+   */
+  const playCard = useCallback(async (cardId, targetPlayerId, movements) => {
+    const response = await new Promise((resolve, reject) => {
+      socket.emit(SOCKET_EVENTS.GAME_PLAY_CARD,
+        { cardId, targetPlayerId, movements },
+        (res) => {
+          if (res.success) resolve(res);
+          else reject(new Error(res.error));
+        }
+      );
+    });
+
+    // Esperar a que se propaguen las animaciones y el estado
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    await endTurnWithRetry();
+
+    return response;
+  }, [endTurnWithRetry]);
+
+  /**
+   * Descartar cartas y terminar el turno automáticamente
    */
   const discardCards = useCallback(async (cardIds) => {
-    try {
-      // Descartar las cartas
-      const response = await new Promise((resolve, reject) => {
-        socket.emit(SOCKET_EVENTS.GAME_DISCARD_CARDS,
-          { cardIds },
-          (response) => {
-            if (response.success) {
-              resolve(response);
-            } else {
-              reject(new Error(response.error));
-            }
-          }
-        );
-      });
-
-      // Esperar tiempo para animaciones y sincronización
-      await new Promise(resolve => setTimeout(resolve, 800));
-
-      // Intentar terminar turno (con retry si falla)
-      let attempts = 0;
-      const maxAttempts = 3;
-      
-      while (attempts < maxAttempts) {
-        attempts++;
-        
-        const endResult = await new Promise((resolve) => {
-          socket.emit(SOCKET_EVENTS.GAME_END_TURN, {}, (endResponse) => {
-            resolve(endResponse);
-          });
-        });
-
-        if (endResult.success) {
-          console.log(`✅ Turno terminado automáticamente (intento ${attempts})`);
-          break;
-        } else {
-          console.warn(`⚠️ Intento ${attempts} falló:`, endResult.error);
-          
-          if (attempts < maxAttempts) {
-            // Esperar 1 segundo antes de reintentar
-            console.log(`🔄 Reintentando en 0.5 segundos...`);
-            await new Promise(resolve => setTimeout(resolve, 500));
-          } else {
-            console.error('❌ No se pudo terminar turno después de', maxAttempts, 'intentos');
-          }
+    const response = await new Promise((resolve, reject) => {
+      socket.emit(SOCKET_EVENTS.GAME_DISCARD_CARDS,
+        { cardIds },
+        (res) => {
+          if (res.success) resolve(res);
+          else reject(new Error(res.error));
         }
-      }
+      );
+    });
 
-      return response;
-    } catch (error) {
-      throw error;
-    }
-  }, []);
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    await endTurnWithRetry();
+
+    return response;
+  }, [endTurnWithRetry]);
 
   /**
    * Terminar turno

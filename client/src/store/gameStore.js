@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { DEFAULT_AVATAR_ID } from '../utils/avatars';
 
 /**
  * Store principal del juego con Zustand
@@ -15,7 +16,7 @@ export const useGameStore = create((set, get) => ({
 
   // ============ ESTADO DE USUARIO ============
   playerName: localStorage.getItem('playerName') || '',
-  playerAvatar: localStorage.getItem('playerAvatar') || '👤',
+  playerAvatar: localStorage.getItem('playerAvatar') || DEFAULT_AVATAR_ID,
   
   setPlayerName: (name) => {
     localStorage.setItem('playerName', name);
@@ -60,6 +61,7 @@ export const useGameStore = create((set, get) => ({
   winner: null,
   notification: null,
   isMyTurn: false,
+  maintenanceMessage: null,
   
   setSelectedCard: (card) => set({ selectedCard: card }),
   
@@ -82,6 +84,8 @@ export const useGameStore = create((set, get) => ({
   
   setIsMyTurn: (isMyTurn) => set({ isMyTurn }),
 
+  setMaintenanceMessage: (maintenanceMessage) => set({ maintenanceMessage }),
+
   // ============ ACCIONES DE CARTAS ============
   selectedCardsForDiscard: [],
   
@@ -99,10 +103,7 @@ export const useGameStore = create((set, get) => ({
 
   // ============ ACCIONES ESPECIALES ============
   specialPlay: null,
-  setSpecialPlay: (play) => {
-    console.log('📡 setSpecialPlay llamado:', play ? { subtype: play.card?.subtype, step: play.step } : 'null');
-    set({specialPlay: play});
-  },
+  setSpecialPlay: (play) => set({ specialPlay: play }),
   clearSpecialPlay: () => set({ specialPlay: null }),
 
 

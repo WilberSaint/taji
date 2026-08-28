@@ -1,10 +1,10 @@
 import Deck from "./Deck.js";
 import {
   GAME_STATUS,
-  GAME_RULES,
   CARD_TYPES,
   EVENT_TYPES,
 } from "../utils/constants.js";
+import { getRules } from "../state/adminSettings.js";
 import {
   canPlayCard,
   checkVictoryCondition,
@@ -65,7 +65,7 @@ export default class Game {
    */
   dealInitialCards() {
     this.players.forEach((player) => {
-      const cards = this.deck.drawMultiple(GAME_RULES.INITIAL_HAND_SIZE);
+      const cards = this.deck.drawMultiple(getRules().INITIAL_HAND_SIZE);
       player.addCards(cards);
       logger.debug(`Cartas iniciales repartidas a ${player.name}`, {
         count: cards.length,

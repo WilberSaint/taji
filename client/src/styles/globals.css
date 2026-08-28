@@ -2,55 +2,142 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Estilos globales */
+/* ============================================================
+   TOKENS — fuente única de verdad del sistema de diseño TAJI
+   Ver artefacto "Sistema de diseño TAJI" para la referencia visual.
+   ============================================================ */
+:root {
+  /* neutros (gris con leve sesgo frío-teal) */
+  --paper:        #F9FAFB;
+  --surface:      #FFFFFF;
+  --surface-2:    #EEF2F4;
+  --ink:          #16212A;
+  --ink-soft:     #556470;
+  --ink-faint:    #8794A0;
+  --line:         #E1E7EB;
+  --line-strong:  #C9D1D7;
+
+  /* primario (teal — energía + agua + confianza técnica) */
+  --primary:        #0B7480;
+  --primary-hover:  #095E68;
+  --primary-soft:   #E0F0F1;
+  --on-primary:     #FFFFFF;
+  --accent-bright:  #14A0AE;
+
+  /* acentos de energía — solo para su tipo, nunca decorativos */
+  --solar:  #DF9A34;  --solar-soft:  #FAEFDD;
+  --wind:   #4F9FD2;  --wind-soft:   #E3EFF8;
+  --hydro:  #3A6AAE;  --hydro-soft:  #E4EBF4;
+  --geo:    #C55C3C;  --geo-soft:    #F8E6DF;
+
+  /* semánticos */
+  --success: #3B9668; --success-soft: #E1F1E9;
+  --warning: #B57F1C; --warning-soft: #F7EEDC;
+  --danger:  #C94A40; --danger-soft:  #F9E5E3;
+  --info:    #3C79BE; --info-soft:    #E4EDF8;
+
+  /* jugadores (asignación por orden de entrada) */
+  --player-1: var(--solar);
+  --player-2: var(--wind);
+  --player-3: var(--geo);
+  --player-4: #8E6FB8;
+
+  /* forma */
+  --r-xs: 6px; --r-sm: 10px; --r-md: 14px; --r-lg: 20px; --r-pill: 999px;
+
+  /* profundidad */
+  --sh-1: 0 1px 2px rgba(16,33,42,.06), 0 1px 3px rgba(16,33,42,.09);
+  --sh-2: 0 4px 12px -2px rgba(16,33,42,.10), 0 2px 6px -3px rgba(16,33,42,.10);
+  --sh-3: 0 16px 40px -12px rgba(16,33,42,.20);
+
+  /* movimiento */
+  --dur-fast: 120ms; --dur: 200ms; --dur-slow: 320ms;
+  --ease: cubic-bezier(.2,.6,.2,1);
+  --ease-out: cubic-bezier(0,.7,.3,1);
+
+  /* tipografía */
+  --font-display: "Bricolage Grotesk", "Trebuchet MS", sans-serif;
+  --font-body: "Hanken Grotesk", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper:#0F161B; --surface:#161E24; --surface-2:#202A31;
+    --ink:#E6EBEE; --ink-soft:#9EACB5; --ink-faint:#66747D;
+    --line:#29343B; --line-strong:#3B4851;
+    --primary:#2FB0BE; --primary-hover:#46C0CD; --primary-soft:#143038; --on-primary:#04222A;
+    --accent-bright:#3FBED0;
+    --solar:#E8AE55; --solar-soft:#2C2418;
+    --wind:#74B4E0;  --wind-soft:#172934;
+    --hydro:#6D9AD4; --hydro-soft:#1A2434;
+    --geo:#DC7B57;   --geo-soft:#2D2019;
+    --success:#4EAE7C; --success-soft:#16281F;
+    --warning:#D19B3B; --warning-soft:#2A2213;
+    --danger:#E0655B;  --danger-soft:#2E1917;
+    --info:#5B95D4;    --info-soft:#16212F;
+    --player-4:#A98BD0;
+    --sh-1: 0 1px 2px rgba(0,0,0,.4), 0 1px 3px rgba(0,0,0,.5);
+    --sh-2: 0 4px 14px -2px rgba(0,0,0,.5), 0 2px 6px -3px rgba(0,0,0,.5);
+    --sh-3: 0 18px 44px -12px rgba(0,0,0,.65);
+  }
+}
+:root[data-theme="dark"] {
+  --paper:#0F161B; --surface:#161E24; --surface-2:#202A31;
+  --ink:#E6EBEE; --ink-soft:#9EACB5; --ink-faint:#66747D;
+  --line:#29343B; --line-strong:#3B4851;
+  --primary:#2FB0BE; --primary-hover:#46C0CD; --primary-soft:#143038; --on-primary:#04222A;
+  --accent-bright:#3FBED0;
+  --solar:#E8AE55; --solar-soft:#2C2418;
+  --wind:#74B4E0;  --wind-soft:#172934;
+  --hydro:#6D9AD4; --hydro-soft:#1A2434;
+  --geo:#DC7B57;   --geo-soft:#2D2019;
+  --success:#4EAE7C; --success-soft:#16281F;
+  --warning:#D19B3B; --warning-soft:#2A2213;
+  --danger:#E0655B;  --danger-soft:#2E1917;
+  --info:#5B95D4;    --info-soft:#16212F;
+  --player-4:#A98BD0;
+  --sh-1: 0 1px 2px rgba(0,0,0,.4), 0 1px 3px rgba(0,0,0,.5);
+  --sh-2: 0 4px 14px -2px rgba(0,0,0,.5), 0 2px 6px -3px rgba(0,0,0,.5);
+  --sh-3: 0 18px 44px -12px rgba(0,0,0,.65);
+}
+
+/* ============================================================
+   BASE
+   ============================================================ */
 @layer base {
   body {
-    @apply bg-gradient-to-br from-green-100 via-blue-100 to-teal-100 min-h-screen;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-      'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+    @apply min-h-screen antialiased;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    text-wrap: balance;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent-bright);
+    outline-offset: 2px;
   }
 }
 
-/* Componentes personalizados */
-@layer components {
-  .card-hover {
-    @apply transition-all duration-200 hover:scale-105 hover:shadow-2xl cursor-pointer;
-  }
-
-  .glass-effect {
-    @apply bg-white/80 backdrop-blur-md;
-  }
-
-  .wood-texture {
-    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%238B4513' fill-opacity='0.1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-    @apply bg-gradient-to-br from-amber-900 to-amber-800;
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
-/* Utilidades personalizadas */
+/* ============================================================
+   UTILIDADES
+   ============================================================ */
 @layer utilities {
-  .text-shadow {
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-  }
-
-  .card-shadow {
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-  }
-
-  .glow {
-    box-shadow: 0 0 20px rgba(46, 204, 113, 0.6);
-  }
-}
-
-/* Animaciones de carga */
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.spinner {
-  animation: spin 1s linear infinite;
+  .font-display { font-family: var(--font-display); }
+  .font-mono { font-family: var(--font-mono); }
+  .text-shadow-sm { text-shadow: 0 1px 3px rgba(0, 0, 0, .35); }
 }

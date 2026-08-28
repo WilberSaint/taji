@@ -6,23 +6,26 @@ import PlayerSlot from './PlayerSlot';
 import PlayerHand from './PlayerHand';
 import CenterArea from './CenterArea';
 import VictoryModal from './VictoryModal';
+import RulesModal from './RulesModal';
+import SettingsModal from './SettingsModal';
+import Modal from '../UI/Modal';
 import Button from '../UI/Button';
 import TurnIndicator from '../UI/TurnIndicator';
 import { ENERGY_TYPES, EVENT_TYPES } from '../../utils/constants';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 
 export default function GameBoard() {
   const {
     gameState,
     socketId,
+    showRules,
     toggleRules,
+    showSettings,
     toggleSettings,
     clearRoom,
     clearGameState,
     setNotification,
     specialPlay,
-    setSpecialPlay,
     clearSpecialPlay,
     setSelectedCard,
     showVictory,
@@ -79,26 +82,29 @@ export default function GameBoard() {
         </div>
 
         {/* BOTONES */}
-        <div className="absolute top-4 right-4 flex gap-3 z-50">
+        <div className="absolute top-4 right-4 flex gap-2 z-50">
           <button
+            aria-label="Reglas"
             onClick={() => toggleRules(true)}
-            className="w-12 h-12 rounded-full bg-white shadow-lg flex items-center justify-center"
+            className="w-11 h-11 rounded-full bg-white/95 text-slate-700 shadow-e2 flex items-center justify-center transition-colors hover:bg-white"
           >
-            <HelpCircle />
+            <HelpCircle size={20} />
           </button>
 
           <button
+            aria-label="Ajustes"
             onClick={() => toggleSettings(true)}
-            className="w-12 h-12 rounded-full bg-white shadow-lg flex items-center justify-center"
+            className="w-11 h-11 rounded-full bg-white/95 text-slate-700 shadow-e2 flex items-center justify-center transition-colors hover:bg-white"
           >
-            <Settings />
+            <Settings size={20} />
           </button>
 
           <button
+            aria-label="Salir de la partida"
             onClick={() => setShowExitConfirm(true)}
-            className="w-12 h-12 rounded-full bg-white shadow-lg flex items-center justify-center text-red-500"
+            className="w-11 h-11 rounded-full bg-white/95 text-red-600 shadow-e2 flex items-center justify-center transition-colors hover:bg-white"
           >
-            <LogOut />
+            <LogOut size={20} />
           </button>
         </div>
 
@@ -119,7 +125,8 @@ export default function GameBoard() {
               orientation="landscape"
               small
             />
-          </div>)};
+          </div>
+        )}
 
         {gameState.players.length > 3 && (
           /* OPONENTE DERECHO (SIMÉTRICO REAL) */
@@ -129,7 +136,8 @@ export default function GameBoard() {
               orientation="landscape"
               small
             />
-          </div>)};
+          </div>
+        )}
 
         {/* CENTRO */}
         <div className="absolute inset-0 flex items-center justify-center z-10 top-8">
@@ -143,13 +151,11 @@ export default function GameBoard() {
           </div>
         )}
 
-        {/* OVERLAY CARTA ESPECIAL*/ }
-
-        {specialPlay && console.log('🎭 Overlay specialPlay renderizando')}
+        {/* OVERLAY CARTA ESPECIAL */}
         {specialPlay && (
           <div className="absolute bottom-1/5 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2">
             {/* Instrucción actual */}
-            <div className='bg-black/80 text-white px-4 py-2 rounded-xl font-bold text-sm text-center backdrop-blur-sm border border-white/20'>
+            <div className='bg-black/80 text-white px-4 py-2 rounded-full font-semibold text-sm text-center backdrop-blur-md border border-white/20 shadow-lg'>
               {specialPlay.card.subtype === EVENT_TYPES.COMPRA && 'Selecciona la planta que quieres comprar'}
               {specialPlay.card.subtype === EVENT_TYPES.INTERCAMBIO_PLANTA && specialPlay.step === 'origen' && 'Selecciona tu planta'}
               {specialPlay.card.subtype === EVENT_TYPES.INTERCAMBIO_PLANTA && specialPlay.step === 'destino' && 'Selecciona la planta del oponente'}
@@ -171,7 +177,8 @@ export default function GameBoard() {
                   clearSpecialPlay();
                   setSelectedCard(null);
                 }}
-                className='bg-emerald-500 hover:bg-emerald-400 text-white font-black px-6 py-2 rounded-xl shadow-lg select-none'
+                className='text-white font-bold px-6 py-2 rounded-full shadow-lg select-none transition-colors hover:brightness-110'
+                style={{ background: '#14A0AE' }}
               >
                 Confirmar contagio ({specialPlay.movimientos.length})
               </button>
@@ -189,7 +196,8 @@ export default function GameBoard() {
                   clearSpecialPlay();
                   setSelectedCard(null);
                 }}
-                className='bg-emerald-500 hover:bg-emerald-400 text-white font-black px-6 py-2 rounded-xl shadow-lg select-none'
+                className='text-white font-bold px-6 py-2 rounded-full shadow-lg select-none transition-colors hover:brightness-110'
+                style={{ background: '#14A0AE' }}
               >
                 Confirmar descarte
               </button>
@@ -210,32 +218,36 @@ export default function GameBoard() {
       </div>
 
       {/* MODAL SALIR */}
-      <AnimatePresence>
-        {showExitConfirm && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[999]">
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-2xl p-6 max-w-sm w-full"
-            >
-              <h3 className="font-black text-xl mb-4">
-                ¿Salir de la partida?
-              </h3>
+      <Modal
+        isOpen={showExitConfirm}
+        onClose={() => setShowExitConfirm(false)}
+        title="¿Salir de la partida?"
+        size="sm"
+      >
+        <p className="text-sm text-ink-soft">
+          Perderás tu lugar en la mesa y no podrás volver a esta ronda.
+        </p>
+        <div className="mt-5 flex gap-3">
+          <Button variant="secondary" fullWidth onClick={() => setShowExitConfirm(false)}>
+            Cancelar
+          </Button>
+          <Button variant="danger" fullWidth onClick={handleLeaveGame}>
+            Salir
+          </Button>
+        </div>
+      </Modal>
 
-              <div className="flex gap-3">
-                <Button fullWidth onClick={() => setShowExitConfirm(false)}>
-                  Cancelar
-                </Button>
+      <RulesModal isOpen={showRules} onClose={() => toggleRules(false)} />
 
-                <Button variant="danger" fullWidth onClick={handleLeaveGame}>
-                  Salir
-                </Button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+      <SettingsModal
+        isOpen={showSettings}
+        onClose={() => toggleSettings(false)}
+        onOpenRules={() => {
+          toggleSettings(false);
+          toggleRules(true);
+        }}
+        onLeaveGame={handleLeaveGame}
+      />
 
       <VictoryModal
         isOpen={showVictory}
@@ -253,7 +265,7 @@ export default function GameBoard() {
 /* ================= OPONENT BOARD ================= */
 
 function OpponentBoard({ player, small, orientation }) {
-  const { specialPlay, setSpecialPlay, clearSpecialPlay, setSelectedCard, socketId } = useGameStore();
+  const { specialPlay, clearSpecialPlay, setSelectedCard } = useGameStore();
   const { playCard } = useSocket();
 
   const isClickableForTerrainSwap =

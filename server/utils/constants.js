@@ -137,13 +137,14 @@ export const SOCKET_EVENTS = {
   ERROR: 'error'
 };
 
-// Colores de jugadores (para el frontend)
+// Colores de jugadores (alineados con los acentos de energía del sistema de diseño)
 export const PLAYER_COLORS = [
-  '#F4C430', // Amarillo
-  '#4A90E2', // Azul
-  '#E74C3C', // Rojo
-  '#9B59B6'  // Púrpura
+  '#DF9A34', // solar
+  '#4F9FD2', // eólica
+  '#C55C3C', // geotérmica
+  '#8E6FB8'  // violeta
 ];
 
-// Avatares por defecto
-export const DEFAULT_AVATARS = ['👤', '😹', '🎮', '🎯'];
+// Avatares por defecto (ids de ícono — se resuelven a SVG en el cliente,
+// ver client/src/utils/avatars.js). Solo se usan si el cliente no manda uno.
+export const DEFAULT_AVATARS = ['sun', 'wind', 'droplets', 'flame'];

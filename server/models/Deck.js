@@ -1,4 +1,5 @@
 import { buildDeck, shuffleArray } from '../utils/deckBuilder.js';
+import { getDeckConfig } from '../state/adminSettings.js';
 import logger from '../utils/logger.js';
 
 /**
@@ -14,7 +15,7 @@ export default class Deck {
    * Inicializa el mazo construyendo y mezclando las cartas
    */
   initialize() {
-    this.cards = buildDeck();
+    this.cards = buildDeck(getDeckConfig());
     this.shuffle();
     logger.debug('Mazo inicializado', { totalCards: this.cards.length });
   }

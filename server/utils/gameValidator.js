@@ -2,9 +2,9 @@ import {
   CARD_TYPES,
   ENERGY_TYPES,
   EVENT_TYPES,
-  GAME_RULES,
   SLOT_STATUS,
 } from "./constants.js";
+import { getRules } from "../state/adminSettings.js";
 
 /**
  * Valida si una carta puede ser jugada en un slot específico
@@ -420,11 +420,12 @@ export function getSlotStatus(slot) {
  * Verifica si un jugador cumple la condición de victoria
  */
 export function checkVictoryCondition(player) {
+  const rules = getRules();
   const slots = Object.values(player.board);
 
   // Debe tener exactamente 4 plantas
   const plantsCount = slots.filter((slot) => slot.plant).length;
-  if (plantsCount !== GAME_RULES.PLANTS_TO_WIN) {
+  if (plantsCount !== rules.PLANTS_TO_WIN) {
     return false;
   }
 
@@ -441,7 +442,7 @@ export function checkVictoryCondition(player) {
     }
   }
 
-  if (plantTypes.size !== GAME_RULES.PLANTS_TO_WIN) {
+  if (plantTypes.size !== rules.PLANTS_TO_WIN) {
     return false;
   }
 
@@ -462,6 +463,8 @@ export function checkVictoryCondition(player) {
  * Valida si un jugador puede terminar su turno
  */
 export function canEndTurn(player, hasPlayedCard, hasDiscarded) {
+  const rules = getRules();
+
   // El jugador debe haber realizado una acción (jugar carta o descartar)
   if (!hasPlayedCard && !hasDiscarded) {
     return {
@@ -471,11 +474,11 @@ export function canEndTurn(player, hasPlayedCard, hasDiscarded) {
     };
   }
 
-  // El jugador debe tener exactamente 3 cartas (límite)
-  if (player.hand.length !== GAME_RULES.HAND_LIMIT) {
+  // El jugador debe tener exactamente el límite de cartas
+  if (player.hand.length !== rules.HAND_LIMIT) {
     return {
       valid: false,
-      error: `Debes tener exactamente ${GAME_RULES.HAND_LIMIT} cartas para terminar tu turno`,
+      error: `Debes tener exactamente ${rules.HAND_LIMIT} cartas para terminar tu turno`,
     };
   }
 
@@ -486,13 +489,15 @@ export function canEndTurn(player, hasPlayedCard, hasDiscarded) {
  * Valida la acción de descarte
  */
 export function validateDiscard(cardsToDiscard, playerHand) {
+  const rules = getRules();
+
   if (
-    cardsToDiscard.length < GAME_RULES.DISCARD_MIN ||
-    cardsToDiscard.length > GAME_RULES.DISCARD_MAX
+    cardsToDiscard.length < rules.DISCARD_MIN ||
+    cardsToDiscard.length > rules.DISCARD_MAX
   ) {
     return {
       valid: false,
-      error: `Debes descartar entre ${GAME_RULES.DISCARD_MIN} y ${GAME_RULES.DISCARD_MAX} cartas`,
+      error: `Debes descartar entre ${rules.DISCARD_MIN} y ${rules.DISCARD_MAX} cartas`,
     };
   }
 

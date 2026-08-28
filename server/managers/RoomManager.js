@@ -10,25 +10,25 @@ class RoomManager {
   constructor() {
     this.rooms = new Map(); // roomCode -> Room
     this.botNames = [
-      "NoobMaster69",
-      "xXProGamerXx",
-      "ShadowKiller99",
-      "TryHard420",
-      "EpicSniper",
-      "BotDestroyer",
-      "LaggyLegend",
-      "CamperKing",
-      "OneTapGod",
-      "SweatyNoob",
+      "Robo-Tesla",
+      "Ada Voltios",
+      "Capitán Solaris",
+      "Doña Eólica",
+      "Chispa",
+      "Ingeniera Marie",
+      "Turbina Turbo",
+      "Profe Fotón",
+      "Geo la Geóloga",
+      "Kilovatio Kid",
     ];
   }
 
   /**
    * Crea una nueva sala
    */
-  createRoom(hostSocketId, hostName, isPublic = true) {
+  createRoom(hostSocketId, hostName, isPublic = true, avatar = null) {
     // Crear jugador host
-    const host = new Player(hostSocketId, hostName);
+    const host = new Player(hostSocketId, hostName, avatar);
 
     // Crear sala
     const room = new Room(hostSocketId, isPublic);
@@ -48,7 +48,7 @@ class RoomManager {
   /**
    * Une un jugador a una sala existente
    */
-  joinRoom(roomCode, socketId, playerName) {
+  joinRoom(roomCode, socketId, playerName, avatar = null) {
     const room = this.rooms.get(roomCode);
 
     if (!room) {
@@ -65,7 +65,7 @@ class RoomManager {
     }
 
     // Crear jugador
-    const player = new Player(socketId, playerName);
+    const player = new Player(socketId, playerName, avatar);
 
     // Agregar a la sala
     const added = room.addPlayer(player);
@@ -172,7 +172,7 @@ class RoomManager {
     const botName = this.getUniqueBotName(roomCode);
     const botId = `bot_${Date.now()}`;
 
-    const bot = new Player(botId, botName, "🤖", null, true);
+    const bot = new Player(botId, botName, "bot", null, true);
     bot.setReady(true);
 
     const added = room.addPlayer(bot);
@@ -254,6 +254,52 @@ class RoomManager {
    */
   getRoom(roomCode) {
     return this.rooms.get(roomCode);
+  }
+
+  /**
+   * Obtiene el estado de todas las salas (uso exclusivo del panel de administrador)
+   */
+  getAllRooms() {
+    return [...this.rooms.values()].map((room) => room.getState());
+  }
+
+  /**
+   * Expulsa a un jugador sin importar quién lo pida (uso del panel de administrador)
+   */
+  adminRemovePlayer(roomCode, playerId) {
+    const room = this.rooms.get(roomCode);
+
+    if (!room) {
+      return { success: false, error: "Sala no encontrada" };
+    }
+
+    const player = room.removePlayer(playerId);
+    if (!player) {
+      return { success: false, error: "Jugador no encontrado" };
+    }
+
+    const roomDeleted = room.isEmpty();
+    if (roomDeleted) {
+      this.deleteRoom(roomCode);
+    } else {
+      this.reassignColors(room);
+    }
+
+    return { success: true, room, roomDeleted, player };
+  }
+
+  /**
+   * Cierra una sala por completo (uso del panel de administrador)
+   */
+  adminCloseRoom(roomCode) {
+    const room = this.rooms.get(roomCode);
+
+    if (!room) {
+      return { success: false, error: "Sala no encontrada" };
+    }
+
+    this.deleteRoom(roomCode);
+    return { success: true, room };
   }
 
   /**

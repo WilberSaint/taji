@@ -1,15 +1,17 @@
 import { v4 as uuidv4 } from 'uuid';
-import { CARD_TYPES, ENERGY_TYPES, DECK_CONFIG, EVENT_TYPES } from './constants.js';
+import { CARD_TYPES, ENERGY_TYPES, DECK_CONFIG as DEFAULT_DECK_CONFIG, EVENT_TYPES } from './constants.js';
 
 /**
  * Construye el mazo completo del juego con todas las cartas
+ * @param {object} [deckConfig] Configuración de cantidades por tipo (por defecto,
+ *   la del panel de administrador si fue ajustada; si no, DECK_CONFIG estático)
  * @returns {Array} Array de objetos carta
  */
-export function buildDeck() {
+export function buildDeck(deckConfig = DEFAULT_DECK_CONFIG) {
   const deck = [];
 
   // Construir plantas
-  Object.entries(DECK_CONFIG.PLANTAS).forEach(([subtype, count]) => {
+  Object.entries(deckConfig.PLANTAS).forEach(([subtype, count]) => {
     for (let i = 0; i < count; i++) {
       deck.push({
         id: uuidv4(),
@@ -23,7 +25,7 @@ export function buildDeck() {
   });
 
   // Construir mantenimientos
-  Object.entries(DECK_CONFIG.MANTENIMIENTOS).forEach(([subtype, count]) => {
+  Object.entries(deckConfig.MANTENIMIENTOS).forEach(([subtype, count]) => {
     for (let i = 0; i < count; i++) {
       deck.push({
         id: uuidv4(),
@@ -37,7 +39,7 @@ export function buildDeck() {
   });
 
   // Construir riesgos
-  Object.entries(DECK_CONFIG.RIESGOS).forEach(([subtype, count]) => {
+  Object.entries(deckConfig.RIESGOS).forEach(([subtype, count]) => {
     for (let i = 0; i < count; i++) {
       deck.push({
         id: uuidv4(),
@@ -51,7 +53,7 @@ export function buildDeck() {
   });
 
   //Construir eventos
-  Object.entries(DECK_CONFIG.EVENTOS).forEach(([subtype, count]) => {
+  Object.entries(deckConfig.EVENTOS).forEach(([subtype, count]) => {
     for(let i = 0; i < count; i++){
       deck.push({
         id: uuidv4(),
@@ -112,15 +114,15 @@ function getCardDescription(type, subtype) {
 
   if(type === CARD_TYPES.EVENTO) {
     switch(subtype){
-      case(DECK_CONFIG.EVENTOS.compra): 
+      case 'compra':
         return 'Compra una planta a uno de los otros jugadores';
-      case(DECK_CONFIG.EVENTOS.intercambio_planta):
+      case 'intercambio_planta':
         return 'Intercambia una de tus plantas con la de otro jugador';
-      case(DECK_CONFIG.EVENTOS.esparcimiento):
+      case 'esparcimiento':
         return 'Esparce los riesgos de tus plantas a las plantas de otros jugadores';
-      case(DECK_CONFIG.EVENTOS.descarte):
+      case 'descarte':
         return 'Haz que todos descarten sus cartas y vuelve a jugar';
-      case(DECK_CONFIG.EVENTOS.intercambio_terreno):
+      case 'intercambio_terreno':
         return 'Intercambia todas tus plantas con las de otro jugador';
     }
   }
