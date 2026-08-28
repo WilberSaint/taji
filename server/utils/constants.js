@@ -2,7 +2,8 @@
 export const CARD_TYPES = {
   PLANTA: 'planta',
   MANTENIMIENTO: 'mantenimiento',
-  RIESGO: 'riesgo'
+  RIESGO: 'riesgo',
+  EVENTO: 'evento',
 };
 
 export const ENERGY_TYPES = {
@@ -12,6 +13,14 @@ export const ENERGY_TYPES = {
   GEOTERMICA: 'geotermica',
   COMODIN: 'comodin'
 };
+
+export const EVENT_TYPES = {
+  COMPRA: 'compra',
+  INTERCAMBIO_PLANTA: 'intercambio_planta',
+  ESPARCIMIENTO: 'esparcimiento',
+  INTERCAMBIO_TERRENO: 'intercambio_terreno',
+  DESCARTE: 'descarte',
+}
 
 export const GAME_STATUS = {
   LOBBY: 'lobby',
@@ -58,6 +67,13 @@ export const DECK_CONFIG = {
     hidroelectrica: 3,
     geotermica: 3,
     comodin: 2
+  },
+  EVENTOS: {
+    compra: 3,
+    intercambio_planta: 3,
+    esparcimiento: 2,
+    intercambio_terreno: 1,
+    descarte: 1,
   }
 };
 
@@ -98,6 +114,11 @@ export const SOCKET_EVENTS = {
   GAME_CARDS_DRAWN: 'game:cards_drawn',
   GAME_PLANT_DESTROYED: 'game:plant_destroyed',
   GAME_CARDS_CANCELLED: 'game:cards_cancelled',
+  GAME_PLANT_BOUGHT: "game:plant_bought",
+  GAME_PLANTS_SWAPPED: "game:plants_swapped", 
+  GAME_TERRAIN_SWAPPED: "game:terrain_swapped", 
+  GAME_RISK_SPREAD: "game:risk_spread", 
+  GAME_ALL_DISCARDED: "game:all_discarded",
   GAME_VICTORY: 'game:victory',
   GAME_ERROR: 'game:error',
   ROOM_UPDATED: 'room:updated',

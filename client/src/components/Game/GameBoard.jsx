@@ -7,7 +7,7 @@ import PlayerHand from './PlayerHand';
 import CenterArea from './CenterArea';
 import VictoryModal from './VictoryModal';
 import Button from '../UI/Button';
-import { ENERGY_TYPES } from '../../utils/constants';
+import { ENERGY_TYPES, EVENT_TYPES } from '../../utils/constants';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 
@@ -20,12 +20,16 @@ export default function GameBoard() {
     clearRoom,
     clearGameState,
     setNotification,
+    specialPlay,
+    setSpecialPlay,
+    clearSpecialPlay,
+    setSelectedCard,
     showVictory,
     winner,
     toggleVictory
   } = useGameStore();
 
-  const { leaveRoom } = useSocket();
+  const { leaveRoom, playCard } = useSocket();
   const [showExitConfirm, setShowExitConfirm] = useState(false);
 
   if (!gameState) return null;
@@ -92,6 +96,7 @@ export default function GameBoard() {
           </button>
         </div>
 
+
         {/* OPONENTE SUPERIOR */}
         <div className="absolute top-[4%] left-1/2 -translate-x-1/2 z-20">
           <OpponentBoard
@@ -100,26 +105,28 @@ export default function GameBoard() {
           />
         </div>
 
-        {/* OPONENTE IZQUIERDO */}
-        <div className="absolute top-1/2 left-[18%] -translate-y-1/2 z-20">
-          <OpponentBoard
-            player={visualOpponents[1]}
-            orientation="landscape"
-            small
-          />
-        </div>
+        {gameState.players.length > 2 && (
+          /* OPONENTE IZQUIERDO */
+          <div className="absolute top-1/2 left-[18%] -translate-y-1/2 z-20">
+            <OpponentBoard
+              player={visualOpponents[1]}
+              orientation="landscape"
+              small
+            />
+          </div>)};
 
-        {/* OPONENTE DERECHO (SIMÉTRICO REAL) */}
-        <div className="absolute top-1/2 right-[18%] -translate-y-1/2 z-20">
-          <OpponentBoard
-            player={visualOpponents[2]}
-            orientation="landscape"
-            small
-          />
-        </div>
+        {gameState.players.length > 3 && (
+          /* OPONENTE DERECHO (SIMÉTRICO REAL) */
+          <div className="absolute top-1/2 right-[18%] -translate-y-1/2 z-20">
+            <OpponentBoard
+              player={visualOpponents[2]}
+              orientation="landscape"
+              small
+            />
+          </div>)};
 
         {/* CENTRO */}
-        <div className="absolute inset-0 flex items-center justify-center z-10">
+        <div className="absolute inset-0 flex items-center justify-center z-10 top-8">
           <CenterArea currentPlayer={currentPlayer} />
         </div>
 
@@ -127,6 +134,71 @@ export default function GameBoard() {
         {currentPlayer && (
           <div className="absolute bottom-[4%] left-1/2 -translate-x-1/2 w-[75%] max-w-[900px] z-30">
             <PlayerHand cards={currentPlayer.hand} />
+          </div>
+        )}
+
+        {/* OVERLAY CARTA ESPECIAL*/ }
+
+        {specialPlay && console.log('🎭 Overlay specialPlay renderizando')}
+        {specialPlay && (
+          <div className="absolute bottom-1/5 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2">
+            {/* Instrucción actual */}
+            <div className='bg-black/80 text-white px-4 py-2 rounded-xl font-bold text-sm text-center backdrop-blur-sm border border-white/20'>
+              {specialPlay.card.subtype === EVENT_TYPES.COMPRA && 'Selecciona la planta que quieres comprar'}
+              {specialPlay.card.subtype === EVENT_TYPES.INTERCAMBIO_PLANTA && specialPlay.step === 'origen' && 'Selecciona tu planta'}
+              {specialPlay.card.subtype === EVENT_TYPES.INTERCAMBIO_PLANTA && specialPlay.step === 'destino' && 'Selecciona la planta del oponente'}
+              {specialPlay.card.subtype === EVENT_TYPES.INTERCAMBIO_TERRENO && 'Selecciona al jugador con quien intercambiar'}
+              {specialPlay.card.subtype === EVENT_TYPES.ESPARCIMIENTO && specialPlay.step === 'origen' && `Selecciona tu riesgo (${specialPlay.movimientos.length} seleccionados)`}
+              {specialPlay.card.subtype === EVENT_TYPES.ESPARCIMIENTO && specialPlay.step === 'destino' && 'Selecciona la planta del oponente'}
+              {specialPlay.card.subtype === EVENT_TYPES.DESCARTE && 'Harás que todos los jugadores descarten sus cartas'}
+            </div>
+
+            {/* Botón para confirmar (solo contagio con al menos 1 par) */}
+            {specialPlay.card.subtype === EVENT_TYPES.ESPARCIMIENTO && specialPlay.movimientos.length > 0 && (
+              <button
+                onClick={ async () => {
+                  await playCard(
+                    specialPlay.card.id,
+                    socketId,
+                    specialPlay.movimientos
+                  );
+                  clearSpecialPlay();
+                  setSelectedCard(null);
+                }}
+                className='bg-emerald-500 hover:bg-emerald-400 text-white font-black px-6 py-2 rounded-xl shadow-lg'
+              >
+                Confirmar contagio ({specialPlay.movimientos.length})
+              </button>
+            )}
+
+            {/* Botón para confirmar descarte */}
+            {specialPlay.card.subtype === EVENT_TYPES.DESCARTE && (
+              <button
+                onClick={ async () => {
+                  await playCard(
+                    specialPlay.card.id,
+                    socketId,
+                    specialPlay.movimientos
+                  );
+                  clearSpecialPlay();
+                  setSelectedCard(null);
+                }}
+                className='bg-emerald-500 hover:bg-emerald-400 text-white font-black px-6 py-2 rounded-xl shadow-lg'
+              >
+                Confirmar descarte
+              </button>
+            )}
+
+            {/* Botón para cancelar */}
+            <button
+              onClick={() => {
+                clearSpecialPlay();
+                setSelectedCard(null);
+              }}
+              className="text-white/60 hover:text-white text-xs underline"
+            >
+              Cancelar
+            </button>
           </div>
         )}
       </div>
@@ -175,6 +247,23 @@ export default function GameBoard() {
 /* ================= OPONENT BOARD ================= */
 
 function OpponentBoard({ player, small, orientation }) {
+  const { specialPlay, setSpecialPlay, clearSpecialPlay, setSelectedCard, socketId } = useGameStore();
+  const { playCard } = useSocket();
+
+  const isClickableForTerrainSwap =
+    specialPlay?.card?.subtype === EVENT_TYPES.INTERCAMBIO_TERRENO &&
+    !player?.isEpmty;
+
+  const handleBoardClick = async () => {
+    if(!isClickableForTerrainSwap) return;
+    await playCard(
+      specialPlay.card.id,
+      player.id,
+      [{destino: { jugador: player.id } }]
+    );
+    clearSpecialPlay();
+    setSelectedCard(null);
+  }
   const BOARD_ENERGIES = [
     ENERGY_TYPES.SOLAR,
     ENERGY_TYPES.EOLICA,
@@ -186,23 +275,25 @@ function OpponentBoard({ player, small, orientation }) {
 
   return (
     <div
+      onClick={handleBoardClick}
       className={`
         bg-white/30 backdrop-blur-xl rounded-2xl p-2 shadow-xl
         border border-white/40
         ${isEmpty ? 'opacity-30 grayscale' : ''}
         ${small ? 'scale-95' : ''}
+        ${isClickableForTerrainSwap ? 'cursor-pointer ring-2 ring-purple-400': ''}
       `}
     >
       <PlayerFrame player={player} />
 
       <div
-        className={`mt-1 flex gap-1 ${
-          orientation === 'landscape' ? 'flex-col' : 'flex-row'
-        }`}
+        className={`mt-1 flex gap-1 ${orientation === 'landscape' ? 'flex-col' : 'flex-row'
+          }`}
       >
         {BOARD_ENERGIES.map(type => (
           <PlayerSlot
             key={type}
+            variant="opponent"
             slotType={type}
             slot={player.board?.[type]}
             isMySlot={false}

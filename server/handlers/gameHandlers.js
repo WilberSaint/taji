@@ -86,7 +86,7 @@ export function setupGameHandlers(io, socket) {
    */
   socket.on(SOCKET_EVENTS.GAME_PLAY_CARD, (data, callback) => {
     try {
-      const { cardId, targetPlayerId, slotType } = data;
+      const { cardId, targetPlayerId, movements } = data;
       const roomCode = socket.roomCode;
 
       if (!roomCode) {
@@ -104,7 +104,7 @@ export function setupGameHandlers(io, socket) {
         socket.id,
         cardId,
         targetPlayerId,
-        slotType
+        movements
       );
 
       if (!result.success) {
@@ -126,10 +126,12 @@ export function setupGameHandlers(io, socket) {
         effect: result.effect
       });
 
+      const slotType = movements?.[0]?.destino?.slot;
+
       // Si hubo anulación mutua
       if (result.effect.cancelled) {
         io.to(roomCode).emit(SOCKET_EVENTS.GAME_CARDS_CANCELLED, {
-          slotType: slotType,
+          slotType,
           targetPlayerId: targetPlayerId,
           cardsDiscarded: result.effect.cardsToDiscard
         });
@@ -138,9 +140,43 @@ export function setupGameHandlers(io, socket) {
       // Si hubo destrucción
       if (result.effect.destroyed) {
         io.to(roomCode).emit(SOCKET_EVENTS.GAME_PLANT_DESTROYED, {
-          slotType: slotType,
+          slotType,
           playerId: targetPlayerId,
           cardsDiscarded: result.effect.cardsToDiscard
+        });
+      }
+
+      //EFECTOS DE EVENTOS ESPECIALES
+      
+      if (result.effect.stolen) {
+        io.to(roomCode).emit(SOCKET_EVENTS.GAME_PLANT_BOUGHT, {
+          fromPlayer: result.effect.stolen.from,
+          slotType: result.effect.stolen.slot,
+          toPlayer: socket.id
+        });
+      }
+
+      if (result.effect.allDiscarded) {
+        io.to(roomCode).emit(SOCKET_EVENTS.GAME_ALL_DISCARDED, {
+          hands: result.effect.handsDiscarded
+        });
+      }
+
+      if (result.effect.swapped) {
+        io.to(roomCode).emit(SOCKET_EVENTS.GAME_PLANTS_SWAPPED, {
+          swapped: result.effect.swapped
+        });
+      }
+
+      if (result.effect.swappedBoards) {
+        io.to(roomCode).emit(SOCKET_EVENTS.GAME_TERRAIN_SWAPPED, {
+          playerId: targetPlayerId,
+        });
+      }
+
+      if (result.effect.spreads.length > 0) {
+        io.to(roomCode).emit(SOCKET_EVENTS.GAME_RISK_SPREAD, {
+          spreads: result.effect.spreads
         });
       }
 
@@ -150,6 +186,7 @@ export function setupGameHandlers(io, socket) {
           cards: [result.drawnCard]
         });
       }
+
 
       // Actualizar estado del juego para todos
       room.players.forEach(player => {

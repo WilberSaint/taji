@@ -127,6 +127,46 @@ export function useSocket() {
       });
     };
 
+    const handlePlantBought = (data) => {
+      console.log('Carta comprada: ', data);
+      setNotification({
+        type: 'warning',
+        message: `¡Te compraron la planta ${data.slot}!`
+      })
+    }
+
+    const handlePlantsSwapped = (data) => {
+      console.log('🔄 Intercambio de plantas:', data);
+      setNotification({
+        type: 'info',
+        message: '🔄 Plantas intercambiadas'
+      });
+    };
+    
+    const handleTerrainSwap = (data) => {
+      console.log('🔄 Intercambio de terreno:', data);
+      setNotification({
+        type: 'info',
+        message: '🔄 Terrenos intercambiados'
+      });  
+    }
+
+    const handleSpread = (data) => {
+      console.log(`¡Esparcimiento! ${data.spreads.length} riesgos propagados: `, data);
+      setNotification({
+        type: 'warning',
+        message: `¡Esparcimiento! ${data.spreads.length} riesgos propagados`
+      });
+    }
+
+    const handleAllDiscard = (data) =>{
+      console.log('¡Todos descartan su mano!', data);
+      setNotification({
+        type: 'warning',
+        message: '¡Todos descartan su mano!'
+      });
+    }
+
     const handleVictory = (data) => {
       console.log('🏆 Victoria:', data);
       setGameState(data.finalState);
@@ -151,9 +191,14 @@ export function useSocket() {
     socket.on(SOCKET_EVENTS.GAME_CARDS_DRAWN, handleCardsDrawn);
     socket.on(SOCKET_EVENTS.GAME_PLANT_DESTROYED, handlePlantDestroyed);
     socket.on(SOCKET_EVENTS.GAME_CARDS_CANCELLED, handleCardsCancelled);
+    socket.on(SOCKET_EVENTS.GAME_PLANT_BOUGHT, handlePlantBought);
+    socket.on(SOCKET_EVENTS.GAME_PLANTS_SWAPPED, handlePlantsSwapped);
+    socket.on(SOCKET_EVENTS.GAME_TERRAIN_SWAPPED, handleTerrainSwap);
+    socket.on(SOCKET_EVENTS.GAME_RISK_SPREAD, handleSpread);
+    socket.on(SOCKET_EVENTS.GAME_ALL_DISCARDED, handleAllDiscard);
     socket.on(SOCKET_EVENTS.GAME_VICTORY, handleVictory);
     socket.on(SOCKET_EVENTS.GAME_ERROR, handleGameError);
-
+    
     return () => {
       socket.off(SOCKET_EVENTS.GAME_STATE_UPDATE, handleGameStateUpdate);
       socket.off(SOCKET_EVENTS.GAME_TURN_CHANGED, handleTurnChanged);
@@ -161,6 +206,11 @@ export function useSocket() {
       socket.off(SOCKET_EVENTS.GAME_CARDS_DRAWN, handleCardsDrawn);
       socket.off(SOCKET_EVENTS.GAME_PLANT_DESTROYED, handlePlantDestroyed);
       socket.off(SOCKET_EVENTS.GAME_CARDS_CANCELLED, handleCardsCancelled);
+      socket.off(SOCKET_EVENTS.GAME_PLANT_BOUGHT, handlePlantBought);
+      socket.off(SOCKET_EVENTS.GAME_PLANTS_SWAPPED, handlePlantsSwapped);
+      socket.off(SOCKET_EVENTS.GAME_TERRAIN_SWAPPED, handleTerrainSwap);
+      socket.off(SOCKET_EVENTS.GAME_RISK_SPREAD, handleSpread);
+      socket.off(SOCKET_EVENTS.GAME_ALL_DISCARDED, handleAllDiscard);
       socket.off(SOCKET_EVENTS.GAME_VICTORY, handleVictory);
       socket.off(SOCKET_EVENTS.GAME_ERROR, handleGameError);
     };
@@ -330,12 +380,12 @@ export function useSocket() {
   /**
    * Jugar una carta
    */
-  const playCard = useCallback(async (cardId, targetPlayerId, slotType) => {
+  const playCard = useCallback(async (cardId, targetPlayerId, movements) => {
     try {
       // Jugar la carta
       const response = await new Promise((resolve, reject) => {
         socket.emit(SOCKET_EVENTS.GAME_PLAY_CARD,
-          { cardId, targetPlayerId, slotType },
+          { cardId, targetPlayerId, movements },
           (response) => {
             if (response.success) {
               resolve(response);

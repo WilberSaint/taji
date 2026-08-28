@@ -128,7 +128,6 @@ export default class Player {
     }
 
     slot.plant = card;
-    this.hasPlayedThisTurn = true;
     logger.game(`${this.name} jugó planta ${card.name} en ${slotType}`);
     return true;
   }
@@ -186,6 +185,15 @@ export default class Player {
 
     logger.game(`Modificadores limpiados en ${slotType} de ${this.name}`);
     return removedModifiers;
+  }
+
+  /**
+   * Verifica si el jugador ya tiene una planta del tipo especificado
+   * @param {*} plantType Tipo de planta que se desea saber si se tiene 
+   * @returns True si la tiene, false si no
+   */
+  hasPlant(plantType){
+    return this.board[plantType].plant
   }
 
   /**

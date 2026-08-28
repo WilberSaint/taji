@@ -4,6 +4,7 @@ import { useGameStore } from '../../store/gameStore';
 import { useSocket } from '../../hooks/useSocket';
 import { Trash2 } from 'lucide-react';
 import { useState } from 'react';
+import { CARD_TYPES } from '../../utils/constants';
 
 export default function PlayerHand({ cards = [] }) {
   const {
@@ -13,6 +14,8 @@ export default function PlayerHand({ cards = [] }) {
     toggleCardForDiscard,
     clearSelectedCardsForDiscard,
     isMyTurn,
+    setSpecialPlay,
+    clearSpecialPlay,
     gameState
   } = useGameStore();
 
@@ -20,15 +23,45 @@ export default function PlayerHand({ cards = [] }) {
   const [discardMode, setDiscardMode] = useState(false);
   const [hoverHand, setHoverHand] = useState(false);
 
+  const rotations = [
+    '-rotate-6',
+    '',
+    'rotate-6'
+  ]
   /* ===== ACCIONES ===== */
   const handleCardClick = (card) => {
-    if (!isMyTurn) return;
+    console.log('🃏 handleCardClick:', { cardType: card.type, cardName: card.name, isMyTurn, discardMode, selectedCardId: selectedCard?.id });
+    if (!isMyTurn) {
+      console.warn('⚠️ BLOQUEADO: No es mi turno');
+      return;
+    }
 
     if (discardMode) {
       toggleCardForDiscard(card.id);
-    } else {
-      setSelectedCard(selectedCard?.id === card.id ? null : card);
+      return;
     }
+
+    //Si ya está seleccionada la misma carta, deseleccionar
+    if (selectedCard?.id === card.id) {
+      setSelectedCard(null);
+      clearSpecialPlay();
+      return;
+    }
+
+    if (card.type === CARD_TYPES.EVENTO) {
+      console.log('🎯 EVENTO detectado, entrando a flujo especial');
+      setSpecialPlay({
+        card,
+        step: 'origen',
+        movimientos: [],
+        pendiente: null,
+      });
+      setSelectedCard(card);
+      console.log('✅ specialPlay y selectedCard seteados');
+      return;
+    }
+
+    setSelectedCard(card);
   };
 
   const handleDiscard = async () => {
@@ -52,47 +85,46 @@ export default function PlayerHand({ cards = [] }) {
 
   return (
     <div className="absolute bottom-[4%] left-1/2 -translate-x-1/2 w-[90%] pointer-events-none">
-      
-      <div className="flex justify-center items-end gap-[3%]">
+
+      <div className="flex justify-center items-end gap-28">
 
         {/* ===== MANO CENTRAL ===== */}
         <div className="flex justify-center pointer-events-auto">
           <div
-            className="flex items-end gap-6"
-            onMouseEnter={() => setHoverHand(true)}
-            onMouseLeave={() => setHoverHand(false)}
+            className="flex items-end gap-12 lg:gap-6"
           >
             {cards.map((card, index) => {
               const isSelected = discardMode
                 ? selectedCardsForDiscard.includes(card.id)
                 : selectedCard?.id === card.id;
 
-              const isRevealed = isMyTurn && hoverHand;
+              const isRevealed = isMyTurn;
 
               return (
                 <motion.div
                   key={card.id}
-                  className="relative cursor-pointer"
+                  className='relative cursor-pointer'
                   style={{ zIndex: isSelected ? 50 : index }}
                   onClick={() => handleCardClick(card)}
-                  animate={{ y: hoverHand ? (isSelected ? -22 : -12) : 0 }}
+                  whileHover={{
+                    y: isSelected ? -22 : -12,
+                    zIndex: 50,
+                  }}
+                  animate={{ y: isSelected ? -22 : 0 }}
                   transition={{ type: 'spring', stiffness: 260, damping: 22 }}
                 >
-<div className="w-[clamp(70px,7vw,110px)] aspect-[7/10] relative">
-                    <motion.div
-                      className="absolute inset-0 rounded-2xl bg-card-back bg-cover bg-center border-2 border-white shadow-xl"
-                      animate={{ opacity: isRevealed ? 0 : 1 }}
-                    />
+                  <div className="w-[clamp(70px,7vw,110px)] aspect-[7/10] relative">
 
-                    {isMyTurn && (
+                    {(
                       <motion.div
                         className="absolute inset-0"
-                        animate={{ opacity: isRevealed ? 1 : 0 }}
+                        animate={{ opacity: isRevealed ? 1 : 1 }}
                       >
                         <Card
                           card={card}
                           selected={isSelected}
                           disabled={!isMyTurn}
+                          className={`${rotations[index]} ${index == 1 ? '-translate-y-12' : '-translate-y-10'}`}
                         />
                       </motion.div>
                     )}
@@ -111,11 +143,10 @@ export default function PlayerHand({ cards = [] }) {
             <motion.div
               animate={{ y: [0, -4, 0] }}
               transition={{ repeat: Infinity, duration: 2 }}
-              className={`px-[8%] py-[3%] rounded-xl font-black italic shadow-xl border whitespace-nowrap text-[0.75rem] tracking-tight ${
-                isMyTurn
-                  ? 'bg-emerald-500/90 text-white border-emerald-300'
-                  : 'bg-slate-800/80 text-slate-400 border-slate-600'
-              }`}
+              className={`px-[8%] py-[3%] rounded-xl font-black italic shadow-xl border whitespace-nowrap text-[0.75rem] tracking-tight ${isMyTurn
+                ? 'bg-emerald-500/90 text-white border-emerald-300'
+                : 'bg-slate-800/80 text-slate-400 border-slate-600'
+                }`}
             >
               {isMyTurn ? '¡TU TURNO!' : 'ESPERANDO...'}
             </motion.div>
@@ -147,11 +178,10 @@ export default function PlayerHand({ cards = [] }) {
                       setSelectedCard(null);
                     }
                   }}
-                  className={`w-[70%] aspect-[7/10] rounded-2xl flex flex-col items-center justify-center border-2 border-dashed transition-colors ${
-                    discardMode
-                      ? 'border-red-400 bg-red-500/20'
-                      : 'border-white/20 bg-white/5 hover:bg-white/10'
-                  }`}
+                  className={`w-[70%] aspect-[7/10] rounded-2xl flex flex-col items-center justify-center border-2 border-dashed transition-colors ${discardMode
+                    ? 'border-red-400 bg-red-500/20'
+                    : 'border-white/20 bg-white/5 hover:bg-white/10'
+                    }`}
                 >
                   <Trash2
                     size={24}

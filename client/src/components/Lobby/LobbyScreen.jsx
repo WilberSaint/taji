@@ -136,11 +136,12 @@ export function LobbyScreen() {
                 <p className="text-gray-600">Bienvenido, {playerName}</p>
               </div>
               <Button
-                variant="ghost"
+                variant="outline"
                 onClick={() => {
                   setPlayerName('');
                   localStorage.removeItem('playerName');
                 }}
+                className="bg-zinc-100 text-zinc-800 "
               >
                 Cambiar nombre
               </Button>

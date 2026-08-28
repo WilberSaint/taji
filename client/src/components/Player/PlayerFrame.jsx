@@ -36,7 +36,7 @@ export function PlayerFrame({
         </div>
 
         {/* Nombre */}
-        <div className="font-black text-[13px] text-gray-800 leading-none">
+        <div className="font-black text-[13px] text-slate-200 leading-none">
           {isEmpty ? 'Esperando' : player?.name}
           {isMe && !isEmpty && (
             <span className="ml-1 text-[9px] text-emerald-600 font-black">
@@ -46,38 +46,12 @@ export function PlayerFrame({
         </div>
       </div>
 
-      {/* === MINI BOARD === */}
-      {!isEmpty && (
-        <div
-          className={`
-            flex ${isVertical ? 'flex-col' : 'flex-row'}
-            gap-[3px] mt-[3px]
-          `}
-        >
-          {(player?.board
-            ? Object.values(player.board)
-            : new Array(4).fill(null)
-          ).map((slot, i) => (
-            <div
-              key={i}
-              className={`
-                w-3.5 h-3.5 rounded-sm
-                transition-all
-                ${slot?.plant
-                  ? 'bg-emerald-400/90 shadow-sm'
-                  : 'border border-gray-400/40'}
-              `}
-            />
-          ))}
-        </div>
-      )}
-
       {/* === TURNO ACTUAL (GLOW) === */}
       {isCurrentTurn && !isEmpty && (
         <motion.div
           animate={{ opacity: [0.4, 0.9, 0.4] }}
           transition={{ repeat: Infinity, duration: 1.6 }}
-          className="absolute -inset-1 rounded-lg "
+          className="absolute -inset-1 rounded-lg"
         />
       )}
     </motion.div>
