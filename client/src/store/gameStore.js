@@ -99,10 +99,7 @@ export const useGameStore = create((set, get) => ({
 
   // ============ ACCIONES ESPECIALES ============
   specialPlay: null,
-  setSpecialPlay: (play) => {
-    console.log('📡 setSpecialPlay llamado:', play ? { subtype: play.card?.subtype, step: play.step } : 'null');
-    set({specialPlay: play});
-  },
+  setSpecialPlay: (play) => set({ specialPlay: play }),
   clearSpecialPlay: () => set({ specialPlay: null }),
 
 

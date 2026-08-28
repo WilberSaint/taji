@@ -6,7 +6,11 @@ const socket = io(SERVER_URL, {
   autoConnect: false, // No conectar automáticamente
   reconnection: true,
   reconnectionDelay: 1000,
-  reconnectionAttempts: 5
+  reconnectionDelayMax: 4000,
+  // Sin límite: en móvil la conexión se cae al bloquear la pantalla o cambiar de
+  // app y debe recuperarse sola al volver.
+  reconnectionAttempts: Infinity,
+  timeout: 15000,
 });
 
 // Event listeners para debugging

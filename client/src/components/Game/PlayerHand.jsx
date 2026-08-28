@@ -15,13 +15,11 @@ export default function PlayerHand({ cards = [] }) {
     clearSelectedCardsForDiscard,
     isMyTurn,
     setSpecialPlay,
-    clearSpecialPlay,
-    gameState
+    clearSpecialPlay
   } = useGameStore();
 
   const { discardCards } = useSocket();
   const [discardMode, setDiscardMode] = useState(false);
-  const [hoverHand, setHoverHand] = useState(false);
 
   const rotations = [
     '-rotate-6',
@@ -30,11 +28,7 @@ export default function PlayerHand({ cards = [] }) {
   ]
   /* ===== ACCIONES ===== */
   const handleCardClick = (card) => {
-    console.log('🃏 handleCardClick:', { cardType: card.type, cardName: card.name, isMyTurn, discardMode, selectedCardId: selectedCard?.id });
-    if (!isMyTurn) {
-      console.warn('⚠️ BLOQUEADO: No es mi turno');
-      return;
-    }
+    if (!isMyTurn) return;
 
     if (discardMode) {
       toggleCardForDiscard(card.id);
@@ -49,7 +43,6 @@ export default function PlayerHand({ cards = [] }) {
     }
 
     if (card.type === CARD_TYPES.EVENTO) {
-      console.log('🎯 EVENTO detectado, entrando a flujo especial');
       setSpecialPlay({
         card,
         step: 'origen',
@@ -57,7 +50,6 @@ export default function PlayerHand({ cards = [] }) {
         pendiente: null,
       });
       setSelectedCard(card);
-      console.log('✅ specialPlay y selectedCard seteados');
       return;
     }
 
@@ -84,7 +76,7 @@ export default function PlayerHand({ cards = [] }) {
   };
 
   return (
-    <div className="absolute bottom-[4%] left-1/2 -translate-x-1/2 w-[90%] pointer-events-none">
+    <div className="relative w-full pointer-events-none">
 
       <div className="flex justify-center items-end gap-28">
 
@@ -143,12 +135,14 @@ export default function PlayerHand({ cards = [] }) {
             <motion.div
               animate={{ y: [0, -4, 0] }}
               transition={{ repeat: Infinity, duration: 2 }}
-              className={`px-[8%] py-[3%] rounded-xl font-black italic shadow-xl border whitespace-nowrap text-[0.75rem] tracking-tight ${isMyTurn
-                ? 'bg-emerald-500/90 text-white border-emerald-300'
-                : 'bg-slate-800/80 text-slate-400 border-slate-600'
-                }`}
+              className="px-[9%] py-[3.5%] rounded-full font-display font-extrabold uppercase shadow-lg border whitespace-nowrap text-[0.7rem] tracking-wide"
+              style={
+                isMyTurn
+                  ? { background: 'rgba(20,160,174,0.95)', color: '#fff', borderColor: 'rgba(207,243,245,0.7)' }
+                  : { background: 'rgba(30,41,59,0.85)', color: '#94A3B8', borderColor: 'rgba(100,116,139,0.5)' }
+              }
             >
-              {isMyTurn ? '¡TU TURNO!' : 'ESPERANDO...'}
+              {isMyTurn ? 'Tu turno' : 'Esperando'}
             </motion.div>
           </div>
 
@@ -179,13 +173,13 @@ export default function PlayerHand({ cards = [] }) {
                     }
                   }}
                   className={`w-[70%] aspect-[7/10] rounded-2xl flex flex-col items-center justify-center border-2 border-dashed transition-colors ${discardMode
-                    ? 'border-red-400 bg-red-500/20'
+                    ? 'border-[#E0655B] bg-[#C94A40]/25'
                     : 'border-white/20 bg-white/5 hover:bg-white/10'
                     }`}
                 >
                   <Trash2
                     size={24}
-                    className={discardMode ? 'text-red-400' : 'text-white/30'}
+                    className={discardMode ? 'text-[#E0655B]' : 'text-white/30'}
                   />
                   <span className="mt-1 text-[0.55rem] font-bold text-white/40 uppercase select-none">
                     {discardMode ? 'Confirmar' : 'Vacío'}
@@ -195,7 +189,7 @@ export default function PlayerHand({ cards = [] }) {
                 {discardMode && (
                   <button
                     onClick={cancelDiscard}
-                    className="text-[0.55rem] font-bold text-red-400 underline uppercase tracking-tight select-none"
+                    className="text-[0.55rem] font-bold text-[#E0655B] underline uppercase tracking-tight select-none"
                   >
                     Cancelar
                   </button>

@@ -1,59 +1,45 @@
 import { motion } from 'framer-motion';
+import { Bot, Crown } from 'lucide-react';
 
-export function PlayerFrame({
-  player,
-  isMe = false,
-  orientation = 'horizontal', // 'horizontal' | 'vertical'
-}) {
+/**
+ * Cabecera de un tablero de jugador (usada sobre el panel de vidrio del oponente).
+ * Colores fijos claros: vive sobre vidrio traslúcido encima de la foto del tablero.
+ */
+export function PlayerFrame({ player, isMe = false, isHost = false, orientation = 'horizontal' }) {
   const isEmpty = player?.isEmpty;
   const isCurrentTurn = player?.isCurrentTurn;
-
   const isVertical = orientation === 'vertical';
+  const color = player?.color || '#0B7480';
 
   return (
     <motion.div
-      whileHover={!isEmpty ? { scale: 1.02 } : {}}
+      whileHover={!isEmpty ? { scale: 1.02 } : undefined}
       className={`
-        relative
-        flex ${isVertical ? 'flex-col items-center' : 'items-center'}
-        gap-1
-        px-2 py-[4px]
-        transition-all
+        relative flex items-center gap-2 rounded-lg px-2 py-1 transition-all
+        ${isVertical ? 'flex-col' : ''}
         ${isEmpty ? 'opacity-40 grayscale' : ''}
       `}
+      style={
+        isCurrentTurn && !isEmpty
+          ? { boxShadow: `0 0 0 2px ${color}, 0 0 14px -2px ${color}` }
+          : undefined
+      }
     >
-      {/* === AVATAR + NOMBRE === */}
       <div
-        className={`
-          flex items-center
-          gap-1
-          ${isVertical ? 'flex-col' : ''}
-        `}
+        className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-base"
+        style={{ background: 'rgba(255,255,255,0.7)' }}
       >
-        {/* Avatar */}
-        <div className="text-xl leading-none">
-          {isEmpty ? '👤' : player?.avatar || '🧑'}
-        </div>
-
-        {/* Nombre */}
-        <div className="font-black text-[13px] text-slate-200 leading-none">
-          {isEmpty ? 'Esperando' : player?.name}
-          {isMe && !isEmpty && (
-            <span className="ml-1 text-[9px] text-emerald-600 font-black">
-              (Tú)
-            </span>
-          )}
-        </div>
+        {isEmpty ? '·' : player?.avatar || '🙂'}
       </div>
 
-      {/* === TURNO ACTUAL (GLOW) === */}
-      {isCurrentTurn && !isEmpty && (
-        <motion.div
-          animate={{ opacity: [0.4, 0.9, 0.4] }}
-          transition={{ repeat: Infinity, duration: 1.6 }}
-          className="absolute -inset-1 rounded-lg"
-        />
-      )}
+      <div className={`min-w-0 ${isVertical ? 'text-center' : ''}`}>
+        <div className="flex items-center gap-1 truncate text-[13px] font-bold text-slate-800">
+          <span className="truncate">{isEmpty ? 'Libre' : player?.name}</span>
+          {isMe && !isEmpty && <span className="text-[10px] font-bold" style={{ color: '#0B7480' }}>(tú)</span>}
+          {player?.isBot && <Bot size={12} className="shrink-0 text-slate-500" />}
+          {isHost && !isEmpty && <Crown size={12} className="shrink-0" style={{ color: '#DF9A34' }} />}
+        </div>
+      </div>
     </motion.div>
   );
 }

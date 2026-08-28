@@ -1,77 +1,51 @@
 import { motion } from 'framer-motion';
-import {
-  CARD_TYPE_COLORS,
-  ENERGY_COLORS,
-  ENERGY_ICONS,
-  ENERGY_NAMES
-} from '../../utils/constants';
+import { CARD_TYPES, CARD_TYPE_COLORS } from '../../utils/constants';
 
+/**
+ * Carta de la mano.
+ *
+ * Las plantas, mantenimientos y riesgos ya vienen con su marco dibujado en la
+ * imagen: solo se recorta y se muestra. Los eventos llegan como ilustración sin
+ * marco, así que se les añade uno (borde + franja con el nombre).
+ */
 export function Card({
   card,
-  size = 'normal',
-  variant = 'default',
-  onClick,
   selected = false,
   disabled = false,
-  faceDown = false,
-  className = ''
+  className = '',
 }) {
-  const sizes = {
-    small: 'w-20',
-    normal: 'w-20 md:w-36 lg:w-40',
-    large: 'w-44'
-  };
-
-  const borderColor = CARD_TYPE_COLORS[card.type] || '#2ecc71';
-  const energyColor = ENERGY_COLORS[card.subtype] || borderColor;
-  const isSlot = variant === 'slot';
+  const isEvent = card.type === CARD_TYPES.EVENTO;
+  const typeColor = CARD_TYPE_COLORS[card.type] || '#0B7480';
 
   return (
     <motion.div
       className={`
-    ${sizes[size]}
-    aspect-[6/10]
-    relative
-    overflow-hidden
-    transition-all
-    ${isSlot ? '' : 'rounded-2xl bg-white shadow-xl'}
-    ${selected && !isSlot ? 'ring-4 ring-yellow-400' : ''}
-    ${disabled ? 'brightness-50' : ''}
-    ${className}
-  `}
-      style={!isSlot ? { borderWidth: '4px', borderColor } : {}}
+        relative h-full w-full overflow-hidden rounded-[10px]
+        shadow-[0_8px_18px_-6px_rgba(16,33,42,.45)]
+        ${selected ? 'ring-[3px] ring-[#14A0AE] ring-offset-1 ring-offset-transparent' : ''}
+        ${disabled ? 'brightness-[.7] saturate-[.75]' : ''}
+        ${className}
+      `}
+      style={isEvent ? { border: `3px solid ${typeColor}`, background: '#0b1220' } : undefined}
     >
-      {/* HEADER */}
-      {!isSlot && (
-        <div
-          className={`
-      flex items-center justify-center text-white font-bold text-center
-      ${size === 'small' ? 'h-5 text-[8px]' : 'h-9 text-[10px]'}
-    `}
-          style={{ backgroundColor: energyColor }}
-        >
-          {card.name}
+      <img
+        src={card.image}
+        alt={card.name}
+        draggable={false}
+        className="h-full w-full object-cover object-center"
+        onError={(e) => { e.currentTarget.style.opacity = '0'; }}
+      />
+
+      {isEvent && (
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/45 to-transparent px-1.5 pb-1 pt-4">
+          <span
+            className="block text-center text-[9px] font-bold uppercase leading-tight tracking-wide text-white"
+            style={{ textShadow: '0 1px 3px rgba(0,0,0,.6)' }}
+          >
+            {card.name}
+          </span>
         </div>
       )}
-
-      {/* ILUSTRACIÓN */}
-      <div
-        className={`
-    ${isSlot
-            ? 'absolute inset-0'
-            : 'flex-1 flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50'}
-  `}
-      >
-        <img
-          src={card.image}
-          alt={card.name}
-          className={`
-      w-full h-full
-      ${isSlot ? 'object-cover' : 'object-contain scale-x-[1.06]'}
-    `}
-          onError={(e) => (e.target.style.display = 'none')}
-        />
-      </div>
     </motion.div>
   );
 }

@@ -171,6 +171,7 @@ export default class Room {
         avatar: p.avatar,
         color: p.color,
         isReady: p.isReady,
+        isBot: p.isBot,
         status: p.status
       })),
       playersCount: this.players.length,

@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { useGameStore } from './store/gameStore';
 import { useSocket } from './hooks/useSocket';
 import Toast from './components/UI/Toast';

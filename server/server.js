@@ -117,11 +117,16 @@ io.on('connection', (socket) => {
  * Limpieza periódica de salas y partidas antiguas
  */
 setInterval(() => {
-  const roomsDeleted = RoomManager.cleanupOldRooms(3600000); // 1 hora
-  const gamesDeleted = GameManager.cleanupFinishedGames(1800000); // 30 minutos
+  try {
+    const roomsDeleted = RoomManager.cleanupOldRooms(3600000); // 1 hora
+    const gamesDeleted = GameManager.cleanupFinishedGames(1800000); // 30 minutos
 
-  if (roomsDeleted > 0 || gamesDeleted > 0) {
-    logger.info(`Mantenimiento: ${roomsDeleted} salas y ${gamesDeleted} partidas eliminadas`);
+    if (roomsDeleted > 0 || gamesDeleted > 0) {
+      logger.info(`Mantenimiento: ${roomsDeleted} salas y ${gamesDeleted} partidas eliminadas`);
+    }
+  } catch (err) {
+    logger.error('Error en tarea de mantenimiento (ignorado):');
+    console.error(err);
   }
 }, 600000); // Cada 10 minutos
 
@@ -148,15 +153,18 @@ httpServer.listen(PORT, '0.0.0.0', () => {
 // ============================================
 
 /**
- * Manejo de errores no capturados
+ * Manejo de errores no capturados.
+ * NO cerramos el proceso: un paquete raro de un cliente (típico en móvil con
+ * conexión intermitente) no debe tumbar la partida de todos. Se registra y sigue.
  */
 process.on('uncaughtException', (error) => {
-  logger.error('Uncaught Exception:', error);
-  process.exit(1);
+  logger.error('Excepción no capturada (el servidor sigue en pie):');
+  console.error(error);
 });
 
-process.on('unhandledRejection', (reason, promise) => {
-  logger.error('Unhandled Rejection at:', { promise, reason });
+process.on('unhandledRejection', (reason) => {
+  logger.error('Promesa rechazada sin manejar (ignorada):');
+  console.error(reason);
 });
 
 /**

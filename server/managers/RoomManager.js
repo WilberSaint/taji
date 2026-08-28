@@ -10,16 +10,16 @@ class RoomManager {
   constructor() {
     this.rooms = new Map(); // roomCode -> Room
     this.botNames = [
-      "NoobMaster69",
-      "xXProGamerXx",
-      "ShadowKiller99",
-      "TryHard420",
-      "EpicSniper",
-      "BotDestroyer",
-      "LaggyLegend",
-      "CamperKing",
-      "OneTapGod",
-      "SweatyNoob",
+      "Robo-Tesla",
+      "Ada Voltios",
+      "Capitán Solaris",
+      "Doña Eólica",
+      "Chispa",
+      "Ingeniera Marie",
+      "Turbina Turbo",
+      "Profe Fotón",
+      "Geo la Geóloga",
+      "Kilovatio Kid",
     ];
   }
 
