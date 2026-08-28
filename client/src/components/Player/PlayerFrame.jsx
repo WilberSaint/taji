@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
-import { Bot, Crown } from 'lucide-react';
+import { Bot, Crown, User } from 'lucide-react';
+import Avatar from '../UI/Avatar';
 
 /**
  * Cabecera de un tablero de jugador (usada sobre el panel de vidrio del oponente).
@@ -25,12 +26,13 @@ export function PlayerFrame({ player, isMe = false, isHost = false, orientation 
           : undefined
       }
     >
-      <div
-        className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-base"
-        style={{ background: 'rgba(255,255,255,0.7)' }}
-      >
-        {isEmpty ? '·' : player?.avatar || '🙂'}
-      </div>
+      {isEmpty ? (
+        <div className="grid h-7 w-7 shrink-0 place-items-center rounded-full text-slate-400" style={{ background: 'rgba(255,255,255,0.7)' }}>
+          <User size={14} />
+        </div>
+      ) : (
+        <Avatar id={player?.avatar} size={28} />
+      )}
 
       <div className={`min-w-0 ${isVertical ? 'text-center' : ''}`}>
         <div className="flex items-center gap-1 truncate text-[13px] font-bold text-slate-800">

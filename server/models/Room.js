@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
-import { GAME_STATUS, GAME_RULES, PLAYER_COLORS } from '../utils/constants.js';
+import { GAME_STATUS, PLAYER_COLORS } from '../utils/constants.js';
+import { getRules } from '../state/adminSettings.js';
 import logger from '../utils/logger.js';
 
 /**
@@ -11,7 +12,7 @@ export default class Room {
     this.hostId = hostId;
     this.isPublic = isPublic;
     this.players = [];
-    this.maxPlayers = GAME_RULES.MAX_PLAYERS;
+    this.maxPlayers = getRules().MAX_PLAYERS;
     this.status = GAME_STATUS.LOBBY;
     this.game = null;
     this.createdAt = Date.now();
@@ -107,7 +108,7 @@ export default class Room {
    * Verifica si todos los jugadores están listos
    */
   allPlayersReady() {
-    if (this.players.length < GAME_RULES.MIN_PLAYERS) {
+    if (this.players.length < getRules().MIN_PLAYERS) {
       return false;
     }
     return this.players.every(p => p.isReady);
@@ -118,10 +119,10 @@ export default class Room {
    */
   canStart() {
     // Mínimo de jugadores
-    if (this.players.length < GAME_RULES.MIN_PLAYERS) {
+    if (this.players.length < getRules().MIN_PLAYERS) {
       return { 
         can: false, 
-        reason: `Se necesitan al menos ${GAME_RULES.MIN_PLAYERS} jugadores` 
+        reason: `Se necesitan al menos ${getRules().MIN_PLAYERS} jugadores` 
       };
     }
 

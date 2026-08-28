@@ -145,5 +145,6 @@ export const PLAYER_COLORS = [
   '#8E6FB8'  // violeta
 ];
 
-// Avatares por defecto
-export const DEFAULT_AVATARS = ['☀️', '🌪️', '🌊', '🌋'];
+// Avatares por defecto (ids de ícono — se resuelven a SVG en el cliente,
+// ver client/src/utils/avatars.js). Solo se usan si el cliente no manda uno.
+export const DEFAULT_AVATARS = ['sun', 'wind', 'droplets', 'flame'];

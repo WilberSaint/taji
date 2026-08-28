@@ -1,9 +1,10 @@
 import { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Trophy, Home, RotateCcw, Sparkles } from 'lucide-react';
+import { Trophy, Home, RotateCcw, Sparkles, Check, Minus } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import Modal from '../UI/Modal';
 import Button from '../UI/Button';
+import Avatar from '../UI/Avatar';
 import { ENERGY_NAMES } from '../../utils/constants';
 
 const ENERGY_VARS = {
@@ -36,7 +37,7 @@ function BoardSummary({ board }) {
             >
               {(ENERGY_NAMES[type] || type).slice(0, 5)}
             </span>
-            <span className="text-lg leading-none">{active ? '✓' : '·'}</span>
+            {active ? <Check size={16} /> : <Minus size={16} className="opacity-50" />}
           </div>
         );
       })}
@@ -94,8 +95,8 @@ export function VictoryModal({ isOpen, winner, onClose, onNewGame, isWinner }) {
         </h2>
 
         {!isWinner && winner?.name && (
-          <p className="mt-2 text-sm text-ink-soft">
-            {winner.avatar && <span className="mr-1">{winner.avatar}</span>}
+          <p className="mt-2 flex items-center justify-center gap-1.5 text-sm text-ink-soft">
+            {winner.avatar && <Avatar id={winner.avatar} size={20} />}
             {winner.name} conectó las cuatro fuentes sin riesgos.
           </p>
         )}

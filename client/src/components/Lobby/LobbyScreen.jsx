@@ -3,6 +3,8 @@ import { useGameStore } from '../../store/gameStore';
 import { useSocket } from '../../hooks/useSocket';
 import { useTheme } from '../../hooks/useTheme';
 import Button from '../UI/Button';
+import Avatar from '../UI/Avatar';
+import AvatarPicker from '../UI/AvatarPicker';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Users, Lock, Globe, LogIn, Plus, Bot, X, Crown,
@@ -67,7 +69,7 @@ const fade = { initial: { opacity: 0, y: 10 }, animate: { opacity: 1, y: 0 } };
 /* ---------- pantalla ---------- */
 
 export function LobbyScreen() {
-  const { playerName, setPlayerName, currentRoom, publicRooms, setNotification } = useGameStore();
+  const { playerName, setPlayerName, playerAvatar, setPlayerAvatar, currentRoom, publicRooms, setNotification } = useGameStore();
   const { createRoom, joinRoom, listRooms, leaveRoom, setReady, startGame, reconnect, addBot, kickPlayer } = useSocket();
   const [view, setView] = useState('home'); // home | create | join | room
   const [nameInput, setNameInput] = useState('');
@@ -121,7 +123,7 @@ export function LobbyScreen() {
     if (!roomCode.trim() || loading) return;
     setLoading(true);
     try {
-      await joinRoom(roomCode.trim(), playerName);
+      await joinRoom(roomCode.trim(), playerName, playerAvatar);
     } catch (error) {
       setNotification({ type: 'error', message: error.message });
     }
@@ -131,7 +133,7 @@ export function LobbyScreen() {
   const handleJoinPublic = async (code) => {
     setLoading(true);
     try {
-      await joinRoom(code, playerName);
+      await joinRoom(code, playerName, playerAvatar);
     } catch (error) {
       setNotification({ type: 'error', message: error.message });
     }
@@ -181,8 +183,14 @@ export function LobbyScreen() {
               if (e.key === 'Enter' && nameInput.trim()) setPlayerName(nameInput.trim());
             }}
             autoFocus
-            className="mb-4 w-full rounded-[var(--r-sm)] border-[1.5px] border-line-strong bg-surface px-4 py-3 text-lg text-ink outline-none transition-colors placeholder:text-ink-faint focus:border-primary focus:ring-4 focus:ring-primary-soft"
+            className="mb-5 w-full rounded-[var(--r-sm)] border-[1.5px] border-line-strong bg-surface px-4 py-3 text-lg text-ink outline-none transition-colors placeholder:text-ink-faint focus:border-primary focus:ring-4 focus:ring-primary-soft"
           />
+
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-soft">Elige tu avatar</p>
+          <div className="mb-6">
+            <AvatarPicker value={playerAvatar} onChange={setPlayerAvatar} />
+          </div>
+
           <Button fullWidth disabled={!nameInput.trim()} onClick={() => nameInput.trim() && setPlayerName(nameInput.trim())}>
             Entrar
           </Button>
@@ -210,9 +218,12 @@ export function LobbyScreen() {
       <Shell>
         <div className="mx-auto max-w-5xl">
           <motion.header {...fade} className={`${panelBase} mb-6 flex items-center justify-between gap-4 p-5`}>
-            <div>
-              <Brand />
-              <p className="mt-1 text-sm text-ink-soft">Hola, <span className="font-semibold text-ink">{playerName}</span></p>
+            <div className="flex items-center gap-3">
+              <Avatar id={playerAvatar} size={44} />
+              <div>
+                <Brand />
+                <p className="mt-1 text-sm text-ink-soft">Hola, <span className="font-semibold text-ink">{playerName}</span></p>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <ThemeButton />
@@ -221,7 +232,7 @@ export function LobbyScreen() {
                 size="sm"
                 onClick={() => { setPlayerName(''); localStorage.removeItem('playerName'); }}
               >
-                Cambiar nombre
+                Cambiar nombre y avatar
               </Button>
             </div>
           </motion.header>
@@ -349,7 +360,7 @@ export function LobbyScreen() {
               onClick={async () => {
                 setLoading(true);
                 try {
-                  await createRoom(playerName, isPublic);
+                  await createRoom(playerName, isPublic, playerAvatar);
                 } catch (error) {
                   setNotification({ type: 'error', message: `Error al crear sala: ${error.message}` });
                 }
@@ -458,9 +469,7 @@ export function LobbyScreen() {
                   }`}
                   style={{ borderLeftColor: player.color, borderLeftWidth: 4 }}
                 >
-                  <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-surface-2 text-xl">
-                    {player.avatar}
-                  </div>
+                  <Avatar id={player.avatar} size={44} />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 truncate font-semibold">
                       <span className="truncate">{player.name}</span>

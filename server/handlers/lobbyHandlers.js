@@ -1,6 +1,7 @@
 import RoomManager from '../managers/RoomManager.js';
 import GameManager from '../managers/GameManager.js';
 import { SOCKET_EVENTS } from '../utils/constants.js';
+import { getMaintenance } from '../state/adminSettings.js';
 import logger from '../utils/logger.js';
 
 /**
@@ -107,12 +108,20 @@ export function setupLobbyHandlers(io, socket) {
    */
   socket.on(SOCKET_EVENTS.LOBBY_CREATE_ROOM, (data, callback) => {
     try {
-      const { playerName, isPublic = true } = data;
+      const maintenance = getMaintenance();
+      if (maintenance.enabled) {
+        if (callback) {
+          callback({ success: false, error: maintenance.message || 'El servidor está en mantenimiento, vuelve en unos minutos.' });
+        }
+        return;
+      }
+
+      const { playerName, isPublic = true, avatar = null } = data;
 
       logger.info(`${socket.id} creando sala`, { playerName, isPublic });
 
       // Crear sala
-      const room = RoomManager.createRoom(socket.id, playerName, isPublic);
+      const room = RoomManager.createRoom(socket.id, playerName, isPublic, avatar);
 
       // Unir al jugador a la sala de Socket.io
       socket.join(room.code);
@@ -143,12 +152,20 @@ export function setupLobbyHandlers(io, socket) {
    */
   socket.on(SOCKET_EVENTS.LOBBY_JOIN_ROOM, (data, callback) => {
     try {
-      const { roomCode, playerName } = data;
+      const maintenance = getMaintenance();
+      if (maintenance.enabled) {
+        if (callback) {
+          callback({ success: false, error: maintenance.message || 'El servidor está en mantenimiento, vuelve en unos minutos.' });
+        }
+        return;
+      }
+
+      const { roomCode, playerName, avatar = null } = data;
 
       logger.info(`${socket.id} uniéndose a sala ${roomCode}`, { playerName });
 
       // Unirse a la sala
-      const result = RoomManager.joinRoom(roomCode, socket.id, playerName);
+      const result = RoomManager.joinRoom(roomCode, socket.id, playerName, avatar);
 
       if (!result.success) {
         logger.warn(`${socket.id} no pudo unirse a ${roomCode}: ${result.error}`);

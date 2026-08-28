@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import { setupLobbyHandlers } from './handlers/lobbyHandlers.js';
 import { setupGameHandlers } from './handlers/gameHandlers.js';
 import { setupConnectionHandlers } from './handlers/connectionHandlers.js';
+import { setupAdminHandlers } from './handlers/adminHandlers.js';
 import RoomManager from './managers/RoomManager.js';
 import GameManager from './managers/GameManager.js';
 import logger from './utils/logger.js';
@@ -91,6 +92,7 @@ io.on('connection', (socket) => {
   setupConnectionHandlers(io, socket);
   setupLobbyHandlers(io, socket);
   setupGameHandlers(io, socket);
+  setupAdminHandlers(io, socket);
 
   /**
    * Evento de prueba para verificar conexión

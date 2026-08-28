@@ -16,7 +16,8 @@ export function useSocket() {
     setIsMyTurn,
     setAnimatingCard,
     toggleVictory,
-    clearRoom
+    clearRoom,
+    setMaintenanceMessage
   } = useGameStore();
 
   const listRooms = useCallback(() => {
@@ -94,6 +95,15 @@ export function useSocket() {
     };
   }, [setConnected, listRooms, rejoinFromStorage]);
 
+  // ============ AVISOS DE ADMINISTRADOR ============
+  useEffect(() => {
+    const handleAnnouncement = (state) => {
+      setMaintenanceMessage(state?.enabled ? (state.message || 'El servidor entrará en mantenimiento pronto.') : null);
+    };
+    socket.on('admin:announcement', handleAnnouncement);
+    return () => socket.off('admin:announcement', handleAnnouncement);
+  }, [setMaintenanceMessage]);
+
   // ============ LOBBY EVENTS ============
   useEffect(() => {
     const handleRoomUpdated = (room) => {
@@ -136,8 +146,8 @@ export function useSocket() {
       console.log('🔄 Cambio de turno:', data);
       setNotification({
         type: 'info',
-        message: data.currentPlayerId === socket.id 
-          ? '✨ ¡Es tu turno!' 
+        message: data.currentPlayerId === socket.id
+          ? '¡Es tu turno!'
           : `Turno de ${data.currentPlayerName}`
       });
     };
@@ -168,7 +178,7 @@ export function useSocket() {
       console.log('💥 Planta destruida:', data);
       setNotification({
         type: 'warning',
-        message: '💥 ¡Planta destruida!'
+        message: '¡Planta destruida!'
       });
     };
 
@@ -176,7 +186,7 @@ export function useSocket() {
       console.log('⚖️ Anulación mutua:', data);
       setNotification({
         type: 'info',
-        message: '⚖️ Anulación mutua'
+        message: 'Anulación mutua'
       });
     };
 
@@ -192,7 +202,7 @@ export function useSocket() {
       console.log('🔄 Intercambio de plantas:', data);
       setNotification({
         type: 'info',
-        message: '🔄 Plantas intercambiadas'
+        message: 'Plantas intercambiadas'
       });
     };
     
@@ -200,7 +210,7 @@ export function useSocket() {
       console.log('🔄 Intercambio de terreno:', data);
       setNotification({
         type: 'info',
-        message: '🔄 Terrenos intercambiados'
+        message: 'Terrenos intercambiados'
       });  
     }
 
@@ -226,7 +236,7 @@ export function useSocket() {
       toggleVictory(true, data.winner);
       setNotification({
         type: 'success',
-        message: `🏆 ${data.winner.name} ha ganado!`
+        message: `${data.winner.name} ha ganado!`
       });
     };
 
@@ -320,10 +330,10 @@ export function useSocket() {
   /**
    * Crear una sala
    */
-  const createRoom = useCallback((playerName, isPublic = true) => {
+  const createRoom = useCallback((playerName, isPublic = true, avatar = null) => {
     return new Promise((resolve, reject) => {
-      socket.emit(SOCKET_EVENTS.LOBBY_CREATE_ROOM, 
-        { playerName, isPublic },
+      socket.emit(SOCKET_EVENTS.LOBBY_CREATE_ROOM,
+        { playerName, isPublic, avatar },
         (response) => {
           if (response.success) {
             setCurrentRoom(response.room);
@@ -342,10 +352,10 @@ export function useSocket() {
   /**
    * Unirse a una sala
    */
-  const joinRoom = useCallback((roomCode, playerName) => {
+  const joinRoom = useCallback((roomCode, playerName, avatar = null) => {
     return new Promise((resolve, reject) => {
       socket.emit(SOCKET_EVENTS.LOBBY_JOIN_ROOM,
-        { roomCode, playerName },
+        { roomCode, playerName, avatar },
         (response) => {
           if (response.success) {
             setCurrentRoom(response.room);
