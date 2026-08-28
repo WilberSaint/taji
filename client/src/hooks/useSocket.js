@@ -19,6 +19,19 @@ export function useSocket() {
     clearRoom
   } = useGameStore();
 
+  const listRooms = useCallback(() => {
+    return new Promise((resolve, reject) => {
+      socket.emit(SOCKET_EVENTS.LOBBY_LIST_ROOMS, {}, (response) => {
+        if (response.success) {
+          setPublicRooms(response.rooms);
+          resolve(response.rooms);
+        } else {
+          reject(new Error(response.error));
+        }
+      });
+    });
+  }, [setPublicRooms]);
+
   // ============ CONEXIÓN ============
   useEffect(() => {
     // Conectar socket
@@ -30,11 +43,14 @@ export function useSocket() {
     const handleConnect = () => {
       setConnected(true, socket.id);
       console.log('✅ Socket conectado:', socket.id);
+      listRooms().catch((error) => {
+        console.error('Error al cargar salas públicas:', error);
+      });
     };
 
     const handleDisconnect = () => {
       setConnected(false, null);
-      console.log('❌ Socket desconectado');
+      console.log('Socket desconectado');
     };
 
     socket.on('connect', handleConnect);
@@ -51,6 +67,12 @@ export function useSocket() {
   useEffect(() => {
     const handleRoomUpdated = (room) => {
       console.log('🏠 Sala actualizada:', room);
+
+      if (!room || !room.players?.some((player) => player.id === socket.id)) {
+        setCurrentRoom(null);
+        return;
+      }
+
       setCurrentRoom(room);
     };
 
@@ -237,11 +259,30 @@ export function useSocket() {
     socket.on(SOCKET_EVENTS.PLAYER_DISCONNECTED, handlePlayerDisconnected);
     socket.on(SOCKET_EVENTS.PLAYER_RECONNECTED, handlePlayerReconnected);
 
+    const handleYouWereKicked = (data) => {
+      console.log('😹🫵 Has sido expulsado:', data);
+      setNotification({
+        type: 'error',
+        message: data.reason || 'Has sido expulsado de la sala'
+      });
+
+      setCurrentRoom(null);
+      clearRoom();
+      localStorage.removeItem('tajiRoomCode');
+      localStorage.removeItem('tajiPlayerName');
+
+      listRooms().catch((error) => {
+        console.error('Error al recargar salas públicas tras expulsión:', error);
+      });
+    };
+    socket.on(SOCKET_EVENTS.YOU_WERE_KICKED, handleYouWereKicked);
+
     return () => {
       socket.off(SOCKET_EVENTS.PLAYER_DISCONNECTED, handlePlayerDisconnected);
       socket.off(SOCKET_EVENTS.PLAYER_RECONNECTED, handlePlayerReconnected);
+      socket.off(SOCKET_EVENTS.YOU_WERE_KICKED, handleYouWereKicked);
     };
-  }, [setNotification]);
+  }, [setNotification, clearRoom]);
 
   // ============ ACCIONES ============
   
@@ -333,21 +374,6 @@ export function useSocket() {
   }, []);
 
   /**
-   * Listar salas públicas
-   */
-  const listRooms = useCallback(() => {
-    return new Promise((resolve, reject) => {
-      socket.emit(SOCKET_EVENTS.LOBBY_LIST_ROOMS, {}, (response) => {
-        if (response.success) {
-          resolve(response.rooms);
-        } else {
-          reject(new Error(response.error));
-        }
-      });
-    });
-  }, []);
-
-  /**
    * Marcar como listo
    */
   const setReady = useCallback((ready = true) => {
@@ -368,6 +394,42 @@ export function useSocket() {
   const startGame = useCallback(() => {
     return new Promise((resolve, reject) => {
       socket.emit(SOCKET_EVENTS.LOBBY_START_GAME, {}, (response) => {
+        if (response.success) {
+          resolve();
+        } else {
+          reject(new Error(response.error));
+        }
+      });
+    });
+  }, []);
+
+  const addBot = useCallback(() => {
+    return new Promise((resolve, reject) => {
+      socket.emit(SOCKET_EVENTS.LOBBY_ADD_BOT, {}, (response) => {
+        if (response.success) {
+          resolve();
+        } else {
+          reject(new Error(response.error));
+        }
+      });
+    });
+  }, []);
+
+  const removeBot = useCallback((botId) => {
+    return new Promise((resolve, reject) => {
+      socket.emit(SOCKET_EVENTS.LOBBY_REMOVE_BOT, { botId }, (response) => {
+        if (response.success) {
+          resolve();
+        } else {
+          reject(new Error(response.error));
+        }
+      });
+    });
+  }, []);
+
+  const kickPlayer = useCallback((playerId) => {
+    return new Promise((resolve, reject) => {
+      socket.emit(SOCKET_EVENTS.LOBBY_KICK_PLAYER, { playerId }, (response) => {
         if (response.success) {
           resolve();
         } else {
@@ -516,6 +578,9 @@ export function useSocket() {
     listRooms,
     setReady,
     startGame,
+    addBot,
+    removeBot,
+    kickPlayer,
     // Acciones de juego
     playCard,
     discardCards,

@@ -6,11 +6,12 @@ import logger from '../utils/logger.js';
  * Clase que representa un jugador
  */
 export default class Player {
-  constructor(socketId, name, avatar = null, color = null) {
+  constructor(socketId, name, avatar = null, color = null, isBot = false) {
     this.id = socketId;
     this.name = name || `Jugador ${socketId.substring(0, 4)}`;
     this.avatar = avatar || this.getRandomAvatar();
     this.color = color;
+    this.isBot = isBot;
     this.hand = [];
     this.board = this.initializeBoard();
     this.status = PLAYER_STATUS.CONNECTED;
@@ -229,6 +230,7 @@ export default class Player {
       name: this.name,
       avatar: this.avatar,
       color: this.color,
+      isBot: this.isBot,
       hand: hideHand ? this.hand.map(() => ({ id: 'hidden', hidden: true })) : this.hand,
       handCount: this.hand.length,
       board: this.board,

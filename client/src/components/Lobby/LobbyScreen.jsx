@@ -3,11 +3,11 @@ import { useGameStore } from '../../store/gameStore';
 import { useSocket } from '../../hooks/useSocket';
 import Button from '../UI/Button';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Lock, Globe, LogIn, Plus } from 'lucide-react';
+import { Users, Lock, Globe, LogIn, Plus, Bot, X } from 'lucide-react';
 
 export function LobbyScreen() {
   const { playerName, setPlayerName, currentRoom, publicRooms } = useGameStore();
-  const { createRoom, joinRoom, listRooms, leaveRoom, setReady, startGame, reconnect } = useSocket();
+  const { createRoom, joinRoom, listRooms, leaveRoom, setReady, startGame, reconnect, addBot, removeBot, kickPlayer } = useSocket();
   const [view, setView] = useState('home'); // home | create | join | room
   const [roomCode, setRoomCode] = useState('');
   const [isPublic, setIsPublic] = useState(true);
@@ -53,6 +53,8 @@ export function LobbyScreen() {
   useEffect(() => {
     if (currentRoom) {
       setView('room');
+    } else {
+      setView('home');
     }
   }, [currentRoom]);
 
@@ -69,7 +71,7 @@ export function LobbyScreen() {
             <h1 className="text-5xl font-bold text-green-800 mb-2">🌱 TAJI</h1>
             <p className="text-gray-600">Juego de Energías Renovables</p>
           </div>
-          
+
           <input
             type="text"
             placeholder="Ingresa tu nombre"
@@ -82,8 +84,8 @@ export function LobbyScreen() {
             }}
             autoFocus
           />
-          
-          <Button 
+
+          <Button
             fullWidth
             onClick={() => {
               const input = document.querySelector('input');
@@ -401,8 +403,8 @@ export function LobbyScreen() {
 
   // Vista sala de espera
   if (view === 'room' && currentRoom) {
-    const isHost = currentRoom.hostId === currentRoom.players.find(p => p.name === playerName)?.id;
     const myPlayer = currentRoom.players.find(p => p.name === playerName);
+    const isHost = currentRoom.hostId === myPlayer?.id;
     const canStart = currentRoom.canStart.can;
 
     return (
@@ -436,7 +438,6 @@ export function LobbyScreen() {
                 variant="outline"
                 onClick={async () => {
                   await leaveRoom();
-                  setView('home');
                 }}
               >
                 Salir
@@ -451,38 +452,61 @@ export function LobbyScreen() {
           </motion.div>
 
           {/* Jugadores */}
-          <div className="grid md:grid-cols-2 gap-4 mb-6">
-            {currentRoom.players.map((player, index) => (
-              <motion.div
-                key={player.id}
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: index * 0.1 }}
-                className={`bg-white rounded-xl p-6 shadow-lg ${
-                  player.isReady ? 'ring-4 ring-green-400' : ''
-                }`}
-                style={{ borderLeft: `8px solid ${player.color}` }}
-              >
-                <div className="flex items-center gap-4">
-                  <div className="text-4xl">{player.avatar}</div>
-                  <div className="flex-1">
-                    <div className="font-bold text-lg">{player.name}</div>
-                    <div className="text-sm text-gray-600">
-                      {player.id === currentRoom.hostId && '👑 Host'}
+          <div className="grid md:grid-cols-2 gap-4 mb-6 auto-rows-fr">
+            <AnimatePresence mode="popLayout">
+              {currentRoom.players.map((player, index) => (
+                <motion.div
+                  key={player.id}
+                  layout
+                  initial={{ scale: 0.9, opacity: 0, y: 12 }}
+                  animate={{ scale: 1, opacity: 1, y: 0 }}
+                  exit={{ scale: 0.8, opacity: 0, y: -8 }}
+                  transition={{ duration: 0.18, delay: index * 0.04, ease: 'easeOut' }}
+                  className={`bg-white rounded-xl p-6 shadow-lg min-h-[120px] h-full ${
+                    player.isReady ? 'ring-4 ring-green-400' : ''
+                  }`}
+                  style={{ borderLeft: `8px solid ${player.color}` }}
+                >
+                  <div className="flex items-center gap-4 h-full">
+                    <div className="text-4xl shrink-0">{player.avatar}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-bold text-lg flex items-center gap-2 truncate">
+                        <span className="truncate">{player.name}</span>
+                        {player.isBot && <Bot size={18} className="text-gray-500 shrink-0" />}
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        {player.id === currentRoom.hostId && '👑 Host'}
+                      </div>
                     </div>
+                    {player.isReady && !player.isBot && (
+                      <div className="text-3xl shrink-0">✅</div>
+                    )}
+                    {isHost && player.id !== myPlayer.id && (
+                      <div className="group ml-1 relative">
+                        <button
+                          type="button"
+                          aria-label={`Expulsar a ${player.name}`}
+                          onClick={() => kickPlayer(player.id)}
+                          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-red-200 bg-red-50 text-red-500 shadow-sm transition-all duration-200 hover:border-red-500 hover:bg-red-500 hover:text-white hover:shadow-md focus:outline-none focus:ring-2 focus:ring-red-200"
+                        >
+                          <X size={16} className="transition-transform duration-200 group-hover:scale-110" />
+                        </button>
+                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none">
+                          Sacar de la sala
+                          <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  {player.isReady && (
-                    <div className="text-3xl">✅</div>
-                  )}
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              ))}
+            </AnimatePresence>
 
             {/* Slots vacíos */}
             {[...Array(currentRoom.maxPlayers - currentRoom.playersCount)].map((_, i) => (
               <div
                 key={`empty-${i}`}
-                className="bg-gray-50 rounded-xl p-6 shadow-lg border-2 border-dashed border-gray-300 flex items-center justify-center"
+                className="bg-gray-50 rounded-xl p-6 shadow-lg border-2 border-dashed border-gray-300 flex items-center justify-center min-h-[120px]"
               >
                 <div className="text-center text-gray-400">
                   <Users size={48} className="mx-auto mb-2 opacity-50" />
@@ -493,8 +517,8 @@ export function LobbyScreen() {
           </div>
 
           {/* Acciones */}
-          <div className="flex gap-4">
-            {myPlayer && (
+          <div className="flex flex-wrap gap-4">
+            {myPlayer && !myPlayer.isBot && (
               <Button
                 fullWidth
                 variant={myPlayer.isReady ? 'outline' : 'primary'}
@@ -507,23 +531,35 @@ export function LobbyScreen() {
             )}
 
             {isHost && (
-              <Button
-                fullWidth
-                variant="secondary"
-                onClick={async () => {
-                  setLoading(true);
-                  try {
-                    await startGame();
-                  } catch (error) {
-                    console.error(error);
-                    alert(error.message);
-                  }
-                  setLoading(false);
-                }}
-                disabled={!canStart || loading}
-              >
-                {loading ? 'Iniciando...' : '🎮 Iniciar Partida'}
-              </Button>
+              <>
+                <Button
+                  fullWidth
+                  variant="warning"
+                  onClick={addBot}
+                  disabled={currentRoom.players.length >= currentRoom.maxPlayers}
+                  className="flex-1"
+                >
+                  <Bot className="mr-2" /> Agregar Bot
+                </Button>
+                <Button
+                  fullWidth
+                  variant="secondary"
+                  onClick={async () => {
+                    setLoading(true);
+                    try {
+                      await startGame();
+                    } catch (error) {
+                      console.error(error);
+                      alert(error.message);
+                    }
+                    setLoading(false);
+                  }}
+                  disabled={!canStart || loading}
+                  className="flex-1"
+                >
+                  {loading ? 'Iniciando...' : '🎮 Iniciar Partida'}
+                </Button>
+              </>
             )}
           </div>
         </div>

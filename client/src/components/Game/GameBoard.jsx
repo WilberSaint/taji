@@ -7,6 +7,7 @@ import PlayerHand from './PlayerHand';
 import CenterArea from './CenterArea';
 import VictoryModal from './VictoryModal';
 import Button from '../UI/Button';
+import TurnIndicator from '../UI/TurnIndicator';
 import { ENERGY_TYPES, EVENT_TYPES } from '../../utils/constants';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
@@ -71,6 +72,11 @@ export default function GameBoard() {
 
         {/* Overlay */}
         <div className="absolute inset-0 bg-black/40 rounded-2xl z-0" />
+
+        {/* INDICADOR DE TURNO */}
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40">
+          <TurnIndicator />
+        </div>
 
         {/* BOTONES */}
         <div className="absolute top-4 right-4 flex gap-3 z-50">
@@ -165,7 +171,7 @@ export default function GameBoard() {
                   clearSpecialPlay();
                   setSelectedCard(null);
                 }}
-                className='bg-emerald-500 hover:bg-emerald-400 text-white font-black px-6 py-2 rounded-xl shadow-lg'
+                className='bg-emerald-500 hover:bg-emerald-400 text-white font-black px-6 py-2 rounded-xl shadow-lg select-none'
               >
                 Confirmar contagio ({specialPlay.movimientos.length})
               </button>
@@ -183,7 +189,7 @@ export default function GameBoard() {
                   clearSpecialPlay();
                   setSelectedCard(null);
                 }}
-                className='bg-emerald-500 hover:bg-emerald-400 text-white font-black px-6 py-2 rounded-xl shadow-lg'
+                className='bg-emerald-500 hover:bg-emerald-400 text-white font-black px-6 py-2 rounded-xl shadow-lg select-none'
               >
                 Confirmar descarte
               </button>
@@ -195,7 +201,7 @@ export default function GameBoard() {
                 clearSpecialPlay();
                 setSelectedCard(null);
               }}
-              className="text-white/60 hover:text-white text-xs underline"
+              className="text-white/60 hover:text-white text-xs underline select-none"
             >
               Cancelar
             </button>

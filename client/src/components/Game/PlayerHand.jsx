@@ -187,7 +187,7 @@ export default function PlayerHand({ cards = [] }) {
                     size={24}
                     className={discardMode ? 'text-red-400' : 'text-white/30'}
                   />
-                  <span className="mt-1 text-[0.55rem] font-bold text-white/40 uppercase">
+                  <span className="mt-1 text-[0.55rem] font-bold text-white/40 uppercase select-none">
                     {discardMode ? 'Confirmar' : 'Vacío'}
                   </span>
                 </motion.div>
@@ -195,13 +195,13 @@ export default function PlayerHand({ cards = [] }) {
                 {discardMode && (
                   <button
                     onClick={cancelDiscard}
-                    className="text-[0.55rem] font-bold text-red-400 underline uppercase tracking-tight"
+                    className="text-[0.55rem] font-bold text-red-400 underline uppercase tracking-tight select-none"
                   >
                     Cancelar
                   </button>
                 )}
 
-                <span className="text-[0.65rem] text-white/70 font-black uppercase tracking-widest">
+                <span className="text-[0.65rem] text-white/70 font-black uppercase tracking-widest select-none">
                   DESCARTE
                 </span>
               </div>

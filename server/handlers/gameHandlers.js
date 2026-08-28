@@ -43,7 +43,7 @@ export function setupGameHandlers(io, socket) {
       }
 
       // Crear y iniciar partida
-      const game = GameManager.createGame(room);
+      const game = GameManager.createGame(room, io);
       if (!game) {
         if (callback) {
           callback({ success: false, error: 'No se pudo iniciar la partida' });
@@ -316,6 +316,10 @@ export function setupGameHandlers(io, socket) {
         const playerState = game.getStateForPlayer(player.id);
         io.to(player.id).emit(SOCKET_EVENTS.GAME_STATE_UPDATE, playerState);
       });
+
+      if (!result.victory && result.nextPlayer && result.nextPlayer.isBot) {
+        GameManager.scheduleBotTurn(roomCode, io);
+      }
 
       // Responder al cliente
       if (callback) {
