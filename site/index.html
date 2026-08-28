@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Juegos multilingües sobre energías renovables. Proyecto de divulgación del Instituto Tecnológico de Sonora, con apoyo de SECIHTI." />
+  <title>LudoEnergía</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesk:opsz,wght@12..96,400..800&family=Hanken+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" />
+  <script type="module" src="/src/main.js"></script>
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="#top">
+      <span class="quad" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+      LudoEnergía
+    </a>
+    <nav class="main">
+      <a href="#juegos" data-i18n="nav_games">Los juegos</a>
+      <a href="#energias" data-i18n="nav_energy">Las energías</a>
+      <a href="#comunidades" data-i18n="nav_comm">Con las comunidades</a>
+      <a href="#descargas" data-i18n="nav_dl">Acceso abierto</a>
+      <a href="#proyecto" data-i18n="nav_proj">El proyecto</a>
+    </nav>
+    <div class="langbar" role="group" aria-label="Idioma">
+      <button data-lang="es" aria-pressed="true">ES</button>
+      <button data-lang="en" aria-pressed="false">EN</button>
+      <button data-lang="mayo" aria-pressed="false">Yoreme</button>
+      <button data-lang="yaqui" aria-pressed="false">Yoeme</button>
+    </div>
+    <button class="icon-btn" id="theme" aria-label="Cambiar tema" title="Cambiar tema">
+      <svg class="i-sun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      <svg class="i-moon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+    </button>
+  </div>
+</header>
+
+<main id="top">
+
+  <section class="hero">
+    <div class="wrap">
+      <div class="hero__text">
+        <span class="eyebrow" data-i18n="hero_eyebrow">Divulgación científica · Instituto Tecnológico de Sonora</span>
+        <h1 data-i18n="hero_title">Conocer las energías renovables jugando.</h1>
+        <p class="lead" data-i18n="hero_lead">LudoEnergía diseña y comparte juegos —físicos y digitales— sobre energías limpias, riesgos del clima y tecnologías del futuro. Se crean junto a comunidades de Sonora, se publican en varios idiomas y todo el material es de descarga libre.</p>
+        <div class="cta">
+          <a class="btn btn--primary" href="#juegos" data-i18n="hero_cta1">Ver los juegos</a>
+          <a class="btn btn--ghost" href="#descargas" data-i18n="hero_cta2">Descargar e imprimir</a>
+        </div>
+        <div class="meta">
+          <span data-i18n="hero_m1">Para <b>5 a 99 años</b></span>
+          <span data-i18n="hero_m2"><b>Español</b> · Inglés · Yoreme · Yoeme</span>
+          <span data-i18n="hero_m3"><b>Acceso abierto</b></span>
+        </div>
+      </div>
+      <div class="hero__art" aria-hidden="true">
+        <span class="quad quad--hero">
+          <i data-e="solar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.6 4.6l1.8 1.8M17.6 17.6l1.8 1.8M4.6 19.4l1.8-1.8M17.6 6.4l1.8-1.8"/></svg></i>
+          <i data-e="wind"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h9a3 3 0 1 0-3-3M3 14h13a3.5 3.5 0 1 1-3.5 3.5"/></svg></i>
+          <i data-e="geo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c1.6 3 1 5-.5 6.5S9 13 9 15a3 3 0 0 0 6 0c0-1-.4-2-1-2.6 2 .4 3.5 2 3.5 4.1A6 6 0 0 1 6 16.5C6 11 12 8 12 3Z"/></svg></i>
+          <i data-e="hydro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11Z"/></svg></i>
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="juegos">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <span class="eyebrow" data-i18n="games_eyebrow">Los juegos</span>
+        <h2 data-i18n="games_title">Para el aula, la casa y la feria de ciencias</h2>
+        <p data-i18n="games_lead">El juego de cartas es una puerta de entrada rápida; el de estrategia entra en el detalle de planear un sistema energético. Los dos existen en versión física para imprimir y en versión digital.</p>
+      </div>
+
+      <article class="game-full game-full--live reveal">
+        <div class="game-full__media">
+          <div class="card-fan">
+            <img src="/img/cards/riesgo-eolica.png" alt="Carta de riesgo del juego TAJI" loading="lazy" style="--i:-1" />
+            <img src="/img/cards/planta-solar.png" alt="Carta de planta solar del juego TAJI" loading="lazy" style="--i:0" />
+            <img src="/img/cards/mantenimiento-hidro.png" alt="Carta de mantenimiento del juego TAJI" loading="lazy" style="--i:1" />
+          </div>
+        </div>
+        <div class="game-full__body">
+          <span class="badge badge--live" data-i18n="games_live">Jugable ahora</span>
+          <h3 data-i18n="game1_title">TAJI</h3>
+          <p class="game-full__kind" data-i18n="game1_kind">Juego de cartas · 2–4 jugadores · desde 5 años</p>
+          <p data-i18n="game1_p1">Cada jugador arma su propia red con cuatro tipos de planta: solar, eólica, hidroeléctrica y geotérmica. Las cartas de mantenimiento protegen tus plantas; las de riesgo amenazan las de los demás. Gana quien primero tenga las cuatro fuentes funcionando sin riesgos.</p>
+          <p data-i18n="game1_p2">Pensado para jugarse en familia o en el aula desde los cinco años. En 15 minutos ya se nombraron y compararon las cuatro renovables.</p>
+
+          <div class="howto">
+            <span class="howto__label" data-i18n="game1_howto_label">Cómo se juega</span>
+            <ol>
+              <li data-i18n="game1_s1">Cada quien recibe tres cartas.</li>
+              <li data-i18n="game1_s2">En tu turno juegas una carta o cambias cartas de tu mano.</li>
+              <li data-i18n="game1_s3">Colocas plantas en tu red; pones riesgos en las redes ajenas.</li>
+              <li data-i18n="game1_s4">Ganas al reunir las cuatro fuentes sin ningún riesgo activo.</li>
+            </ol>
+          </div>
+
+          <dl class="ficha">
+            <div><dt data-i18n="ficha_players">Jugadores</dt><dd>2–4</dd></div>
+            <div><dt data-i18n="ficha_age">Edad</dt><dd data-i18n="game1_age">5 años en adelante</dd></div>
+            <div><dt data-i18n="ficha_time">Duración</dt><dd>10–20 min</dd></div>
+            <div><dt data-i18n="ficha_learn">Aprendes</dt><dd data-i18n="game1_learn">Las cuatro renovables, sus riesgos y su mantenimiento</dd></div>
+          </dl>
+
+          <div class="game-full__formats">
+            <span class="chip" data-i18n="game1_fmt1">Jugar en línea</span>
+            <span class="chip" data-i18n="game1_fmt2">App sin internet (PC y Android)</span>
+            <span class="chip" data-i18n="game1_fmt3">Imprimir en casa</span>
+          </div>
+
+          <div class="cta">
+            <a class="btn btn--primary" href="#" data-i18n="game1_play">Jugar ahora</a>
+            <a class="btn btn--ghost" href="#descargas" data-i18n="game1_print">Descargar e imprimir</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="game-full game-full--rev game-full--soon reveal">
+        <div class="game-full__media">
+          <div class="soon-art">
+            <span class="quad" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+            <span class="soon-art__label" data-i18n="game2_media">Prototipo en diseño</span>
+          </div>
+        </div>
+        <div class="game-full__body">
+          <span class="badge badge--soon" data-i18n="games_soon">En desarrollo · 2026</span>
+          <h3 data-i18n="game2_title">El juego de estrategia</h3>
+          <p class="game-full__kind" data-i18n="game2_kind">Tablero modular + simulador web · desde 12 años</p>
+          <p data-i18n="game2_p1">Para adolescentes y personas adultas. Con un tablero modular, fichas de tecnología y cartas de evento se simula la transición energética: dónde conviene cada planta, cómo responder a los riesgos socioambientales y cómo mantener el sistema en equilibrio.</p>
+          <p data-i18n="game2_p2">Tendrá además un simulador web para jugarlo desde el navegador, solo o en equipo, en los idiomas del proyecto.</p>
+
+          <dl class="ficha">
+            <div><dt data-i18n="ficha_players">Jugadores</dt><dd data-i18n="game2_players">2–5 · individual o en equipo</dd></div>
+            <div><dt data-i18n="ficha_age">Edad</dt><dd data-i18n="game2_age">12 años en adelante</dd></div>
+            <div><dt data-i18n="ficha_format">Formato</dt><dd data-i18n="game2_format">Tablero modular + simulador web</dd></div>
+            <div><dt data-i18n="ficha_learn">Aprendes</dt><dd data-i18n="game2_learn">Transición energética, planeación de sistemas y justicia climática</dd></div>
+          </dl>
+
+          <div class="cta">
+            <span class="btn btn--ghost btn--disabled" aria-disabled="true" data-i18n="game2_cta">Disponible en 2026</span>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="band alt" id="energias">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <span class="eyebrow" data-i18n="energy_eyebrow">Las energías</span>
+        <h2 data-i18n="energy_title">La ingeniería detrás de cada carta</h2>
+        <p data-i18n="energy_lead">En los juegos, cada fuente es una carta. En la vida real, cada una es una rama de la ingeniería con sus retos. Estas son las cuatro con más peso en el noroeste de México.</p>
+      </div>
+      <div class="energies">
+        <div class="energy e-solar reveal">
+          <span class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.6 4.6l1.8 1.8M17.6 17.6l1.8 1.8M4.6 19.4l1.8-1.8M17.6 6.4l1.8-1.8"/></svg></span>
+          <div><h3 data-i18n="e1_t">Solar fotovoltaica</h3><p data-i18n="e1_d">Paneles que convierten la luz del sol en electricidad. Sonora tiene de la radiación solar más alta del país: pura materia prima.</p></div>
+        </div>
+        <div class="energy e-wind reveal">
+          <span class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h9a3 3 0 1 0-3-3M3 14h13a3.5 3.5 0 1 1-3.5 3.5"/></svg></span>
+          <div><h3 data-i18n="e2_t">Eólica</h3><p data-i18n="e2_d">El viento gira las aspas de una turbina y un generador produce corriente. Es intermitente: hay que saber cuándo sopla.</p></div>
+        </div>
+        <div class="energy e-hydro reveal">
+          <span class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11Z"/></svg></span>
+          <div><h3 data-i18n="e3_t">Hidroeléctrica</h3><p data-i18n="e3_d">El agua que cae mueve turbinas. Además de generar, guarda energía y ayuda a mantener el suministro cuando falla el sol o el viento.</p></div>
+        </div>
+        <div class="energy e-geo reveal">
+          <span class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c1.6 3 1 5-.5 6.5S9 13 9 15a3 3 0 0 0 6 0c0-1-.4-2-1-2.6 2 .4 3.5 2 3.5 4.1A6 6 0 0 1 6 16.5C6 11 12 8 12 3Z"/></svg></span>
+          <div><h3 data-i18n="e4_t">Geotérmica</h3><p data-i18n="e4_d">Aprovecha el calor del interior de la Tierra para hacer vapor y mover turbinas. Funciona de día y de noche, llueva o truene.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="comunidades">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <span class="eyebrow" data-i18n="comm_eyebrow">Con las comunidades</span>
+        <h2 data-i18n="comm_title">Se diseña jugando, se valida en comunidad</h2>
+        <p data-i18n="comm_lead">Los juegos no llegan terminados desde una oficina. Se prueban y se ajustan en talleres con infancias, jóvenes y personas mayores de comunidades rurales e indígenas de Sonora, donde la ciencia y los saberes locales se ponen a conversar.</p>
+      </div>
+      <div class="two-col">
+        <div class="prose reveal">
+          <p data-i18n="comm_p1">En cada taller se revisa todo: si las reglas se entienden, si las ilustraciones tienen sentido para la comunidad, si la traducción suena natural. Lo que se aprende ahí cambia el juego antes de imprimirlo.</p>
+          <p data-i18n="comm_p2">También se forma a docentes y promotores como facilitadores, para que los juegos sigan usándose en escuelas, casas de cultura y ferias mucho después de que termine el proyecto.</p>
+          <p data-i18n="comm_p3">Y se lleva a ferias de ciencia y caravanas, donde cualquiera puede sentarse a jugar y llevarse una copia.</p>
+        </div>
+        <div class="interculture reveal">
+          <span class="quad" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+          <h3 data-i18n="comm_ic_t">Cuatro idiomas, de raíz</h3>
+          <p data-i18n="comm_ic_d">Todo el material —cartas, reglas, manuales y versiones digitales— se traduce y adapta a español, inglés, yoreme (mayo) y yoeme (yaqui), con hablantes nativos. Las versiones en lenguas originarias se construyen dentro de los talleres, no en un escritorio.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band alt" id="descargas">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <span class="eyebrow" data-i18n="dl_eyebrow">Acceso abierto</span>
+        <h2 data-i18n="dl_title">Descarga, imprime y juega</h2>
+        <p data-i18n="dl_lead">Todo el material es libre y está hecho para funcionar en conexiones lentas y equipos modestos.</p>
+      </div>
+
+      <a class="dl-hero reveal" href="#">
+        <span class="dl-hero__icon">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v5M6 18H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-1M7 15h10v6H7z"/></svg>
+        </span>
+        <span class="dl-hero__body">
+          <b data-i18n="dlh_t">Imprime y juega — kit completo</b>
+          <span data-i18n="dlh_d">Cartas listas para imprimir, <b>reglas completas</b> y una guía rápida de una página, en un solo PDF y en los cuatro idiomas.</span>
+        </span>
+        <span class="dl-hero__cta" data-i18n="dlh_cta">Descargar PDF →</span>
+      </a>
+
+      <div class="dl-groups">
+        <div class="dl-group reveal">
+          <h3 data-i18n="dlg1">Para jugar en casa</h3>
+          <a class="dl" href="#">
+            <span class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg></span>
+            <span><b data-i18n="dl1_t">Reglas del juego</b><span data-i18n="dl1_d">PDF · 4 idiomas</span></span>
+          </a>
+          <a class="dl" href="#">
+            <span class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 5v14"/></svg></span>
+            <span><b data-i18n="dl2_t">Guía pedagógica</b><span data-i18n="dl2_d">Para docentes y facilitadores</span></span>
+          </a>
+          <a class="dl" href="#">
+            <span class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="12" height="16" rx="2"/><path d="M9 8l9 2.5a2 2 0 0 1 1.4 2.5l-2.6 7.5"/></svg></span>
+            <span><b data-i18n="dl3_t">Plantillas de cartas</b><span data-i18n="dl3_d">Archivos de impresión en alta calidad</span></span>
+          </a>
+        </div>
+        <div class="dl-group reveal">
+          <h3 data-i18n="dlg2">Versiones digitales</h3>
+          <a class="dl" href="#">
+            <span class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></span>
+            <span><b data-i18n="dl4_t">Jugar TAJI en línea</b><span data-i18n="dl4_d">Multijugador, desde el navegador</span></span>
+          </a>
+          <a class="dl" href="#">
+            <span class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/></svg></span>
+            <span><b data-i18n="dl5_t">App del juego de cartas</b><span data-i18n="dl5_d">PC y Android · funciona sin internet</span></span>
+          </a>
+          <a class="dl" href="#">
+            <span class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.8-.9 1.8-2 0-.5-.2-1-.5-1.3-.3-.4-.5-.8-.5-1.2 0-1 .8-1.8 1.8-1.8H16a5 5 0 0 0 5-5c0-4.4-4-6.5-9-6.5Z"/><circle cx="7.5" cy="11.5" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="8" r="1.2" fill="currentColor" stroke="none"/><circle cx="16.5" cy="11.5" r="1.2" fill="currentColor" stroke="none"/></svg></span>
+            <span><b data-i18n="dl6_t">Recursos gráficos</b><span data-i18n="dl6_d">Ilustraciones y plantillas editables</span></span>
+          </a>
+        </div>
+      </div>
+
+      <p class="license reveal" data-i18n="dl_license">Todos los materiales se publican bajo una licencia abierta: puedes descargarlos, imprimirlos, jugarlos y adaptarlos a tu contexto, dando crédito al proyecto.</p>
+    </div>
+  </section>
+
+  <section class="band" id="proyecto">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <span class="eyebrow" data-i18n="proj_eyebrow">El proyecto</span>
+        <h2 data-i18n="proj_title">Divulgación científica, intercultural y de acceso abierto</h2>
+      </div>
+      <div class="proj">
+        <div class="prose reveal">
+          <p data-i18n="proj_p1">LudoEnergía es un proyecto de divulgación del <b>Instituto Tecnológico de Sonora (ITSON)</b>. Busca acercar el conocimiento sobre energías renovables y transición energética justa a públicos diversos, con especial atención a las comunidades rurales e indígenas del noroeste de México.</p>
+          <p data-i18n="proj_p2">Se desarrolla en dos etapas (2025–2026) de forma participativa. Articula divulgación científica, inclusión lingüística, equidad territorial y de género, y el fomento de vocaciones en ciencia, tecnología e ingeniería. Está alineado con el <b>Plan Sonora de Energías Sostenibles</b>.</p>
+        </div>
+        <div class="factbox reveal">
+          <dl>
+            <dt data-i18n="fact_inst">Institución</dt><dd>Instituto Tecnológico de Sonora</dd>
+            <dt data-i18n="fact_fund">Financiamiento</dt><dd data-i18n="fact_fund_v">SECIHTI · Ciencia y Tecnología (Divulgación 2025)</dd>
+            <dt data-i18n="fact_period">Periodo</dt><dd>2025–2026 · 2 etapas</dd>
+            <dt data-i18n="fact_langs">Idiomas</dt><dd>Español · Inglés · Yoreme · Yoeme</dd>
+            <dt data-i18n="fact_place">Territorio</dt><dd data-i18n="fact_place_v">Sonora y regiones vecinas, México</dd>
+            <dt data-i18n="fact_license">Licencia</dt><dd data-i18n="fact_license_v">Abierta · acceso libre</dd>
+          </dl>
+        </div>
+      </div>
+
+      <div class="team reveal" id="equipo">
+        <h3 data-i18n="team_title">Quién lo hace</h3>
+
+        <div class="team__grid team__grid--core">
+          <div class="person person--lead">
+            <span class="person__role" data-i18n="team_r1">Responsable del proyecto</span>
+            <b class="person__name">Dr. Ian Sosa Tinoco</b>
+            <span class="person__note" data-i18n="team_n1">Divulgación de la ciencia · Instituto Tecnológico de Sonora</span>
+          </div>
+          <div class="person person--lead">
+            <span class="person__role" data-i18n="team_r2">Investigación</span>
+            <b class="person__name">Dr. Mario Suzuki</b>
+            <span class="person__note" data-i18n="team_n2">Energías renovables · Instituto Tecnológico de Sonora</span>
+          </div>
+          <div class="person">
+            <span class="person__role" data-i18n="team_r3">Desarrollo digital</span>
+            <b class="person__name">Wilber Flores Preciado</b>
+            <span class="person__note" data-i18n="team_n3">Juego digital y sitio web</span>
+          </div>
+        </div>
+
+        <h4 class="team__sub" data-i18n="team_dev">Colaboración en desarrollo</h4>
+        <div class="team__grid">
+          <div class="person person--slot"><span class="person__role" data-i18n="team_student">Estudiante</span><b class="person__name">⟨por confirmar⟩</b></div>
+          <div class="person person--slot"><span class="person__role" data-i18n="team_student">Estudiante</span><b class="person__name">⟨por confirmar⟩</b></div>
+          <div class="person person--slot"><span class="person__role" data-i18n="team_student">Estudiante</span><b class="person__name">⟨por confirmar⟩</b></div>
+        </div>
+
+        <h4 class="team__sub" data-i18n="team_design">Diseño gráfico e ilustración</h4>
+        <div class="team__grid">
+          <div class="person person--slot"><span class="person__role" data-i18n="team_student">Estudiante</span><b class="person__name">⟨por confirmar⟩</b></div>
+          <div class="person person--slot"><span class="person__role" data-i18n="team_student">Estudiante</span><b class="person__name">⟨por confirmar⟩</b></div>
+        </div>
+
+        <h4 class="team__sub" data-i18n="team_trans">Traducción a lenguas originarias</h4>
+        <div class="team__grid">
+          <div class="person person--slot"><span class="person__role">Yoreme · mayo</span><b class="person__name">⟨traductor/a por confirmar⟩</b></div>
+          <div class="person person--slot"><span class="person__role">Yoeme · yaqui</span><b class="person__name">⟨traductor/a por confirmar⟩</b></div>
+        </div>
+
+        <p class="team__more" data-i18n="team_more">El proyecto reúne a un equipo interdisciplinario del ITSON en energías renovables, recursos hídricos, materiales fotovoltaicos, sistemas eléctricos, psicología experimental y divulgación de la ciencia, junto con traductores y facilitadores de las comunidades.</p>
+        <p class="team__contact" data-i18n="team_contact">Contacto: Dr. Ian Sosa Tinoco · Instituto Tecnológico de Sonora</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <div class="foot-top">
+      <div class="foot-brand">
+        <a class="brand" href="#top"><span class="quad" aria-hidden="true"><i></i><i></i><i></i><i></i></span>LudoEnergía</a>
+        <p data-i18n="foot_desc">Juegos multilingües sobre energías renovables. Un proyecto de divulgación del Instituto Tecnológico de Sonora, con apoyo de SECIHTI.</p>
+      </div>
+      <nav class="foot-nav" aria-label="Pie de página">
+        <a href="#juegos" data-i18n="nav_games">Los juegos</a>
+        <a href="#energias" data-i18n="nav_energy">Las energías</a>
+        <a href="#descargas" data-i18n="nav_dl">Acceso abierto</a>
+        <a href="#equipo" data-i18n="foot_team">Equipo</a>
+        <a href="#proyecto" data-i18n="nav_proj">El proyecto</a>
+      </nav>
+    </div>
+    <div class="foot-bottom">
+      <span data-i18n="foot_credit">Instituto Tecnológico de Sonora · SECIHTI</span>
+      <span data-i18n="foot_license">Materiales bajo licencia abierta</span>
+      <span data-i18n="foot_year">2025 · Año de la Mujer Indígena</span>
+    </div>
+  </div>
+</footer>
+
+<div class="langnote" id="langnote" role="status"></div>
+
+</body>
+</html>

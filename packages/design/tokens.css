@@ -1,0 +1,91 @@
+/* ============================================================
+   LudoEnergía — tokens de diseño (fuente única de verdad)
+   Usado por site/ y (a futuro) por client/.
+   ============================================================ */
+:root {
+  /* neutros (gris con leve sesgo frío-teal) */
+  --paper:        #F9FAFB;
+  --surface:      #FFFFFF;
+  --surface-2:    #EEF2F4;
+  --ink:          #16212A;
+  --ink-soft:     #556470;
+  --ink-faint:    #8794A0;
+  --line:         #E1E7EB;
+  --line-strong:  #C9D1D7;
+
+  /* primario (teal — energía + agua + confianza técnica) */
+  --primary:        #0B7480;
+  --primary-hover:  #095E68;
+  --primary-soft:   #E0F0F1;
+  --on-primary:     #FFFFFF;
+  --accent-bright:  #14A0AE;
+
+  /* acentos de energía — solo para su tipo, nunca decorativos */
+  --solar:  #DF9A34;  --solar-soft:  #FAEFDD;
+  --wind:   #4F9FD2;  --wind-soft:   #E3EFF8;
+  --hydro:  #3A6AAE;  --hydro-soft:  #E4EBF4;
+  --geo:    #C55C3C;  --geo-soft:    #F8E6DF;
+
+  /* semánticos */
+  --success: #3B9668; --success-soft: #E1F1E9;
+  --warning: #B57F1C; --warning-soft: #F7EEDC;
+  --danger:  #C94A40; --danger-soft:  #F9E5E3;
+  --info:    #3C79BE; --info-soft:    #E4EDF8;
+
+  /* forma */
+  --r-sm: 10px; --r-md: 14px; --r-lg: 20px; --r-xl: 28px; --pill: 999px;
+
+  /* profundidad */
+  --sh-1: 0 1px 2px rgba(16,33,42,.06), 0 1px 3px rgba(16,33,42,.09);
+  --sh-2: 0 6px 20px -6px rgba(16,33,42,.14), 0 2px 6px -3px rgba(16,33,42,.10);
+  --sh-3: 0 22px 50px -14px rgba(16,33,42,.22);
+
+  /* movimiento */
+  --dur-fast: 120ms; --dur: 200ms; --dur-slow: 320ms;
+  --ease: cubic-bezier(.2,.6,.2,1);
+  --ease-out: cubic-bezier(0,.7,.3,1);
+
+  /* tipografía */
+  --font-display: "Bricolage Grotesk", "Trebuchet MS", sans-serif;
+  --font-body: "Hanken Grotesk", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper:#0F161B; --surface:#161E24; --surface-2:#202A31;
+    --ink:#E6EBEE; --ink-soft:#9EACB5; --ink-faint:#66747D;
+    --line:#29343B; --line-strong:#3B4851;
+    --primary:#2FB0BE; --primary-hover:#46C0CD; --primary-soft:#143038; --on-primary:#04222A;
+    --accent-bright:#3FBED0;
+    --solar:#E8AE55; --solar-soft:#2C2418;
+    --wind:#74B4E0;  --wind-soft:#172934;
+    --hydro:#6D9AD4; --hydro-soft:#1A2434;
+    --geo:#DC7B57;   --geo-soft:#2D2019;
+    --success:#4EAE7C; --success-soft:#16281F;
+    --warning:#D19B3B; --warning-soft:#2A2213;
+    --danger:#E0655B;  --danger-soft:#2E1917;
+    --info:#5B95D4;    --info-soft:#16212F;
+    --sh-1: 0 1px 2px rgba(0,0,0,.4), 0 1px 3px rgba(0,0,0,.5);
+    --sh-2: 0 6px 22px -6px rgba(0,0,0,.55), 0 2px 6px -3px rgba(0,0,0,.5);
+    --sh-3: 0 24px 54px -14px rgba(0,0,0,.65);
+  }
+}
+:root[data-theme="dark"] {
+  --paper:#0F161B; --surface:#161E24; --surface-2:#202A31;
+  --ink:#E6EBEE; --ink-soft:#9EACB5; --ink-faint:#66747D;
+  --line:#29343B; --line-strong:#3B4851;
+  --primary:#2FB0BE; --primary-hover:#46C0CD; --primary-soft:#143038; --on-primary:#04222A;
+  --accent-bright:#3FBED0;
+  --solar:#E8AE55; --solar-soft:#2C2418;
+  --wind:#74B4E0;  --wind-soft:#172934;
+  --hydro:#6D9AD4; --hydro-soft:#1A2434;
+  --geo:#DC7B57;   --geo-soft:#2D2019;
+  --success:#4EAE7C; --success-soft:#16281F;
+  --warning:#D19B3B; --warning-soft:#2A2213;
+  --danger:#E0655B;  --danger-soft:#2E1917;
+  --info:#5B95D4;    --info-soft:#16212F;
+  --sh-1: 0 1px 2px rgba(0,0,0,.4), 0 1px 3px rgba(0,0,0,.5);
+  --sh-2: 0 6px 22px -6px rgba(0,0,0,.55), 0 2px 6px -3px rgba(0,0,0,.5);
+  --sh-3: 0 24px 54px -14px rgba(0,0,0,.65);
+}

@@ -1,0 +1,15 @@
+{
+  "name": "ludoenergia-site",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Sitio de acceso abierto de LudoEnergía",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^5.1.0"
+  }
+}
