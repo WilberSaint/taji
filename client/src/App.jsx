@@ -5,6 +5,7 @@ import Toast from './components/UI/Toast';
 import LobbyScreen from './components/Lobby/LobbyScreen';
 import GameBoard from './components/Game/GameBoard';
 import AdminPanel from './admin/AdminPanel';
+import { prepararSonido } from './utils/sonido';
 import { AlertTriangle } from 'lucide-react';
 
 function useIsAdminRoute() {
@@ -23,9 +24,12 @@ function useIsAdminRoute() {
  * Componente principal de la aplicación
  */
 function App() {
-  const { gameState, isConnected, maintenanceMessage } = useGameStore();
+  const { gameState, isConnected, huboConexion, maintenanceMessage } = useGameStore();
   useSocket(); // Inicializar listeners de Socket.io
   const isAdminRoute = useIsAdminRoute();
+
+  // El navegador no deja sonar nada hasta el primer toque: dejarlo listo
+  useEffect(() => { prepararSonido(); }, []);
 
   if (isAdminRoute) {
     return <AdminPanel />;
@@ -55,11 +59,15 @@ function App() {
         </div>
       )}
 
-      {/* Indicador de conexión */}
+      {/* Indicador de conexión: neutro mientras conecta por primera vez
+          (es normal), en alerta solo si se cae una conexión que ya existía */}
       {!isConnected && (
-        <div className="fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 flex items-center gap-2">
-          <div className="w-3 h-3 bg-white rounded-full animate-pulse"></div>
-          <span className="font-semibold">Conectando...</span>
+        <div
+          className="fixed top-4 right-4 z-50 flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-lg"
+          style={{ background: huboConexion ? "var(--danger)" : "var(--ink-soft)" }}
+        >
+          <div className="h-3 w-3 animate-pulse rounded-full bg-white" />
+          <span>{huboConexion ? "Se perdió la conexión..." : "Conectando..."}</span>
         </div>
       )}
 

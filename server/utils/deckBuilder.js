@@ -19,7 +19,7 @@ export function buildDeck(deckConfig = DEFAULT_DECK_CONFIG) {
         subtype: subtype,
         name: getCardName(CARD_TYPES.PLANTA, subtype),
         description: getCardDescription(CARD_TYPES.PLANTA, subtype),
-        image: `/assets/cards/plantas/${subtype}.png`
+        image: `/assets/cards/plantas/${subtype}.webp`
       });
     }
   });
@@ -33,7 +33,7 @@ export function buildDeck(deckConfig = DEFAULT_DECK_CONFIG) {
         subtype: subtype,
         name: getCardName(CARD_TYPES.MANTENIMIENTO, subtype),
         description: getCardDescription(CARD_TYPES.MANTENIMIENTO, subtype),
-        image: `/assets/cards/mantenimientos/${subtype}.png`
+        image: `/assets/cards/mantenimientos/${subtype}.webp`
       });
     }
   });
@@ -47,7 +47,7 @@ export function buildDeck(deckConfig = DEFAULT_DECK_CONFIG) {
         subtype: subtype,
         name: getCardName(CARD_TYPES.RIESGO, subtype),
         description: getCardDescription(CARD_TYPES.RIESGO, subtype),
-        image: `/assets/cards/riesgos/${subtype}.png`
+        image: `/assets/cards/riesgos/${subtype}.webp`
       });
     }
   });
@@ -61,7 +61,7 @@ export function buildDeck(deckConfig = DEFAULT_DECK_CONFIG) {
         subtype: subtype,
         name: getCardName(CARD_TYPES.EVENTO, subtype),
         description: getCardDescription(CARD_TYPES.EVENTO, subtype),
-        image: `/assets/cards/eventos/${subtype}.png`
+        image: `/assets/cards/eventos/${subtype}.webp`
       })
     }
   })

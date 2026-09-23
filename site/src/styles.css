@@ -291,6 +291,21 @@ html.js .reveal.in { opacity: 1; transform: none; }
 .dl b { font-size: .92rem; font-weight: 600; display: block; }
 .dl span span { display: block; font-size: .76rem; color: var(--ink-faint); font-weight: 400; }
 
+.dl-hero--disabled, .dl--disabled {
+  cursor: not-allowed; pointer-events: none;
+}
+.dl-hero--disabled { opacity: .6; border-color: var(--line); }
+.dl--disabled { opacity: .55; }
+.dl-hero--disabled:hover { transform: none; box-shadow: var(--sh-1); }
+.dl--disabled:hover { transform: none; border-color: var(--line); }
+.dl-hero--disabled .dl-hero__cta { color: var(--ink-faint); }
+.dl__soon {
+  font-family: var(--font-mono); font-size: .68rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--ink-faint); background: var(--surface-2);
+  border: 1px solid var(--line); border-radius: var(--pill); padding: 4px 10px; white-space: nowrap;
+}
+.dl__soon { flex: none; margin-left: auto; }
+
 .license { margin-top: 22px; font-size: .85rem; color: var(--ink-soft); border-left: 3px solid var(--line-strong); padding-left: 14px; }
 
 /* ============================================================

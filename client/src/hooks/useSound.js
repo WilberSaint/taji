@@ -11,8 +11,8 @@ function read() {
 }
 
 /**
- * Preferencia de sonido (persistida). El sistema de audio se conectará más
- * adelante; por ahora solo guarda la elección del jugador.
+ * Preferencia de sonido (persistida). La lee `utils/sonido.js`, que es quien
+ * genera los tonos del juego; aquí solo se guarda la elección del jugador.
  */
 export function useSound() {
   const [enabled, setEnabledState] = useState(read);

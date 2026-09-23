@@ -21,7 +21,8 @@ const VARIANTS = {
 const ALIASES = { outline: 'secondary', success: 'primary' };
 
 const SIZES = {
-  sm: 'px-3 py-2 text-xs gap-1.5',
+  // min-h de 38px: un botón de 30px es difícil de atinar con el dedo
+  sm: 'min-h-[38px] px-3 py-2 text-xs gap-1.5',
   md: 'px-[18px] py-3 text-sm gap-2',
   lg: 'px-6 py-[15px] text-base gap-2',
 };

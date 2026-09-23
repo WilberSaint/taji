@@ -5,10 +5,11 @@ import { useTheme } from '../../hooks/useTheme';
 import Button from '../UI/Button';
 import Avatar from '../UI/Avatar';
 import AvatarPicker from '../UI/AvatarPicker';
+import RulesModal from '../Game/RulesModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Users, Lock, Globe, LogIn, Plus, Bot, X, Crown,
-  Copy, Check, RefreshCw, ArrowLeft, Loader2, Monitor, Sun, Moon,
+  Copy, Check, RefreshCw, ArrowLeft, Loader2, Monitor, Sun, Moon, HelpCircle,
 } from 'lucide-react';
 
 /* ---------- piezas compartidas ---------- */
@@ -46,9 +47,24 @@ function ThemeButton() {
       onClick={() => setTheme(THEME_CYCLE[theme])}
       aria-label={`Tema: ${theme}. Cambiar.`}
       title={`Tema: ${theme}`}
-      className="grid h-10 w-10 place-items-center rounded-full border border-line text-ink-soft transition-colors hover:text-ink hover:border-line-strong"
+      className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-line text-ink-soft transition-colors hover:text-ink hover:border-line-strong"
     >
       <Icon size={17} />
+    </button>
+  );
+}
+
+function RulesButton() {
+  const toggleRules = useGameStore((s) => s.toggleRules);
+  return (
+    <button
+      type="button"
+      onClick={() => toggleRules(true)}
+      aria-label="Cómo se juega"
+      title="Cómo se juega"
+      className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-line text-ink-soft transition-colors hover:text-ink hover:border-line-strong"
+    >
+      <HelpCircle size={18} />
     </button>
   );
 }
@@ -57,8 +73,15 @@ function Shell({ children, center = false }) {
   return (
     <div className={`min-h-screen bg-paper text-ink ${center ? 'flex items-center justify-center' : ''} p-4 sm:p-6`}>
       {children}
+      <LobbyRules />
     </div>
   );
+}
+
+function LobbyRules() {
+  const showRules = useGameStore((s) => s.showRules);
+  const toggleRules = useGameStore((s) => s.toggleRules);
+  return <RulesModal isOpen={showRules} onClose={() => toggleRules(false)} />;
 }
 
 const panelBase =
@@ -217,8 +240,8 @@ export function LobbyScreen() {
     return (
       <Shell>
         <div className="mx-auto max-w-5xl">
-          <motion.header {...fade} className={`${panelBase} mb-6 flex items-center justify-between gap-4 p-5`}>
-            <div className="flex items-center gap-3">
+          <motion.header {...fade} className={`${panelBase} mb-6 flex flex-wrap items-center justify-between gap-3 p-4 sm:p-5`}>
+            <div className="flex min-w-0 items-center gap-3">
               <Avatar id={playerAvatar} size={44} />
               <div>
                 <Brand />
@@ -226,13 +249,16 @@ export function LobbyScreen() {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <RulesButton />
               <ThemeButton />
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => { setPlayerName(''); localStorage.removeItem('playerName'); }}
               >
-                Cambiar nombre y avatar
+                {/* En celular el texto completo partía el encabezado en tres líneas */}
+                <span className="sm:hidden">Cambiar</span>
+                <span className="hidden sm:inline">Cambiar nombre y avatar</span>
               </Button>
             </div>
           </motion.header>
@@ -274,7 +300,7 @@ export function LobbyScreen() {
               <button
                 onClick={handleRefresh}
                 disabled={isRefreshing}
-                className="flex items-center gap-1.5 text-sm font-medium text-ink-soft transition-colors hover:text-ink disabled:opacity-50"
+                className="-mr-2 flex min-h-[44px] shrink-0 items-center gap-1.5 rounded-[var(--r-sm)] px-2 text-sm font-medium text-ink-soft transition-colors hover:text-ink disabled:opacity-50"
               >
                 <RefreshCw size={15} className={isRefreshing ? 'animate-spin' : ''} />
                 {isRefreshing ? 'Actualizando…' : 'Actualizar'}
@@ -323,7 +349,7 @@ export function LobbyScreen() {
         <motion.div {...fade} className={`${panelBase} w-full max-w-md p-8`}>
           <button
             onClick={() => setView('home')}
-            className="mb-4 flex items-center gap-1.5 text-sm text-ink-soft transition-colors hover:text-ink"
+            className="-ml-2 mb-3 flex min-h-[44px] items-center gap-1.5 rounded-[var(--r-sm)] px-2 text-sm text-ink-soft transition-colors hover:text-ink"
           >
             <ArrowLeft size={16} /> Volver
           </button>
@@ -382,7 +408,7 @@ export function LobbyScreen() {
         <motion.div {...fade} className={`${panelBase} w-full max-w-md p-8`}>
           <button
             onClick={() => { setView('home'); setRoomCode(''); }}
-            className="mb-4 flex items-center gap-1.5 text-sm text-ink-soft transition-colors hover:text-ink"
+            className="-ml-2 mb-3 flex min-h-[44px] items-center gap-1.5 rounded-[var(--r-sm)] px-2 text-sm text-ink-soft transition-colors hover:text-ink"
           >
             <ArrowLeft size={16} /> Volver
           </button>
@@ -427,7 +453,7 @@ export function LobbyScreen() {
                 <div className="mt-2 flex flex-wrap items-center gap-2">
                   <button
                     onClick={handleCopyCode}
-                    className="inline-flex items-center gap-2 rounded-[var(--r-sm)] border border-line bg-surface-2 px-3 py-1.5 font-mono text-sm font-semibold tracking-widest text-ink transition-colors hover:border-line-strong"
+                    className="inline-flex min-h-[40px] items-center gap-2 rounded-[var(--r-sm)] border border-line bg-surface-2 px-3 py-2 font-mono text-sm font-semibold tracking-widest text-ink transition-colors hover:border-line-strong"
                   >
                     {currentRoom.code}
                     {copied ? <Check size={14} className="text-state-success" /> : <Copy size={14} className="text-ink-faint" />}
@@ -441,7 +467,10 @@ export function LobbyScreen() {
                   </span>
                 </div>
               </div>
-              <Button variant="secondary" size="sm" onClick={() => leaveRoom()}>Salir</Button>
+              <div className="flex items-center gap-2">
+                <RulesButton />
+                <Button variant="secondary" size="sm" onClick={() => leaveRoom()}>Salir</Button>
+              </div>
             </div>
 
             {!canStart && (

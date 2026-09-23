@@ -618,6 +618,9 @@ export default class Game {
       winner: this.winner ? this.winner.getState() : null,
       turnCount: this.turnCount,
       startedAt: this.startedAt,
+      // Las reglas vigentes de esta partida: el panel de administrador puede
+      // cambiarlas, y el cliente necesita conocerlas para no fijar topes a mano.
+      rules: getRules(),
     };
   }
 

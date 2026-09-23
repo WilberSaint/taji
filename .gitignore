@@ -35,3 +35,9 @@ coverage/
 # Temporary files
 tmp/
 temp/
+
+# Caché de Vite
+.vite/
+
+# Entregables e insumos para el equipo (viven en Drive, no en el repo)
+entregables/

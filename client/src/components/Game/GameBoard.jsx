@@ -1,16 +1,21 @@
 import { useGameStore } from '../../store/gameStore';
 import { useSocket } from '../../hooks/useSocket';
+import { useOrientacion } from '../../hooks/useOrientacion';
 import { Settings, HelpCircle, LogOut } from 'lucide-react';
 import PlayerFrame from '../Player/PlayerFrame';
+import Avatar from '../UI/Avatar';
 import PlayerSlot from './PlayerSlot';
 import PlayerHand from './PlayerHand';
 import CenterArea from './CenterArea';
 import VictoryModal from './VictoryModal';
+import CardDetailModal from '../Card/CardDetailModal';
 import RulesModal from './RulesModal';
 import SettingsModal from './SettingsModal';
 import Modal from '../UI/Modal';
 import Button from '../UI/Button';
 import TurnIndicator from '../UI/TurnIndicator';
+import RegistroJugadas from './RegistroJugadas';
+import LucesPueblo from './LucesPueblo';
 import { ENERGY_TYPES, EVENT_TYPES } from '../../utils/constants';
 import { useState } from 'react';
 
@@ -30,11 +35,15 @@ export default function GameBoard() {
     setSelectedCard,
     showVictory,
     winner,
-    toggleVictory
+    toggleVictory,
+    showCardDetail,
+    cardForDetail,
+    closeCardDetail
   } = useGameStore();
 
   const { leaveRoom, playCard } = useSocket();
   const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const esVertical = useOrientacion();
 
   if (!gameState) return null;
 
@@ -44,12 +53,7 @@ export default function GameBoard() {
   const EMPTY_PLAYER = {
     id: 'empty',
     name: 'Esperando jugador',
-    board: {
-      SOLAR: null,
-      EOLICA: null,
-      HIDROELECTRICA: null,
-      GEOTERMICA: null
-    },
+    board: { SOLAR: null, EOLICA: null, HIDROELECTRICA: null, GEOTERMICA: null },
     isEmpty: true
   };
 
@@ -67,157 +71,88 @@ export default function GameBoard() {
     setNotification({ type: 'info', message: 'Has salido de la partida' });
   };
 
-  return (
-    <div className="w-full h-screen bg-game-bg bg-cover bg-center flex items-center justify-center overflow-hidden">
+  /* ============ PIEZAS COMPARTIDAS ENTRE LOS DOS ACOMODOS ============ */
 
-      {/* CONTENEDOR PRINCIPAL RESPONSIVO */}
-      <div className="relative w-full max-w-[1600px] aspect-[16/9]">
+  const botonControl = 'rounded-full bg-white/95 shadow-e2 flex items-center justify-center transition-colors hover:bg-white';
 
-        {/* Overlay */}
-        <div className="absolute inset-0 bg-black/40 rounded-2xl z-0" />
+  const controles = (
+    <div className={`flex ${esVertical ? 'gap-1.5' : 'gap-2'}`}>
+      <button
+        aria-label="Reglas"
+        onClick={() => toggleRules(true)}
+        className={`${botonControl} text-slate-700 ${esVertical ? 'w-9 h-9' : 'w-11 h-11'}`}
+      >
+        <HelpCircle size={esVertical ? 17 : 20} />
+      </button>
+      <button
+        aria-label="Ajustes"
+        onClick={() => toggleSettings(true)}
+        className={`${botonControl} text-slate-700 ${esVertical ? 'w-9 h-9' : 'w-11 h-11'}`}
+      >
+        <Settings size={esVertical ? 17 : 20} />
+      </button>
+      <button
+        aria-label="Salir de la partida"
+        onClick={() => setShowExitConfirm(true)}
+        className={`${botonControl} ${esVertical ? 'w-9 h-9' : 'w-11 h-11'}`}
+        style={{ color: 'var(--danger)' }}
+      >
+        <LogOut size={esVertical ? 17 : 20} />
+      </button>
+    </div>
+  );
 
-        {/* INDICADOR DE TURNO */}
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40">
-          <TurnIndicator />
-        </div>
-
-        {/* BOTONES */}
-        <div className="absolute top-4 right-4 flex gap-2 z-50">
-          <button
-            aria-label="Reglas"
-            onClick={() => toggleRules(true)}
-            className="w-11 h-11 rounded-full bg-white/95 text-slate-700 shadow-e2 flex items-center justify-center transition-colors hover:bg-white"
-          >
-            <HelpCircle size={20} />
-          </button>
-
-          <button
-            aria-label="Ajustes"
-            onClick={() => toggleSettings(true)}
-            className="w-11 h-11 rounded-full bg-white/95 text-slate-700 shadow-e2 flex items-center justify-center transition-colors hover:bg-white"
-          >
-            <Settings size={20} />
-          </button>
-
-          <button
-            aria-label="Salir de la partida"
-            onClick={() => setShowExitConfirm(true)}
-            className="w-11 h-11 rounded-full bg-white/95 text-red-600 shadow-e2 flex items-center justify-center transition-colors hover:bg-white"
-          >
-            <LogOut size={20} />
-          </button>
-        </div>
-
-
-        {/* OPONENTE SUPERIOR */}
-        <div className="absolute top-[4%] left-1/2 -translate-x-1/2 z-20">
-          <OpponentBoard
-            player={visualOpponents[0]}
-            orientation="portrait"
-          />
-        </div>
-
-        {gameState.players.length > 2 && (
-          /* OPONENTE IZQUIERDO */
-          <div className="absolute top-1/2 left-[18%] -translate-y-1/2 z-20">
-            <OpponentBoard
-              player={visualOpponents[1]}
-              orientation="landscape"
-              small
-            />
-          </div>
-        )}
-
-        {gameState.players.length > 3 && (
-          /* OPONENTE DERECHO (SIMÉTRICO REAL) */
-          <div className="absolute top-1/2 right-[18%] -translate-y-1/2 z-20">
-            <OpponentBoard
-              player={visualOpponents[2]}
-              orientation="landscape"
-              small
-            />
-          </div>
-        )}
-
-        {/* CENTRO */}
-        <div className="absolute inset-0 flex items-center justify-center z-10 top-8">
-          <CenterArea currentPlayer={currentPlayer} />
-        </div>
-
-        {/* PLAYER HAND */}
-        {currentPlayer && (
-          <div className="absolute bottom-[4%] left-1/2 -translate-x-1/2 w-[75%] max-w-[900px] z-30">
-            <PlayerHand cards={currentPlayer.hand} />
-          </div>
-        )}
-
-        {/* OVERLAY CARTA ESPECIAL */}
-        {specialPlay && (
-          <div className="absolute bottom-1/5 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2">
-            {/* Instrucción actual */}
-            <div className='bg-black/80 text-white px-4 py-2 rounded-full font-semibold text-sm text-center backdrop-blur-md border border-white/20 shadow-lg'>
-              {specialPlay.card.subtype === EVENT_TYPES.COMPRA && 'Selecciona la planta que quieres comprar'}
-              {specialPlay.card.subtype === EVENT_TYPES.INTERCAMBIO_PLANTA && specialPlay.step === 'origen' && 'Selecciona tu planta'}
-              {specialPlay.card.subtype === EVENT_TYPES.INTERCAMBIO_PLANTA && specialPlay.step === 'destino' && 'Selecciona la planta del oponente'}
-              {specialPlay.card.subtype === EVENT_TYPES.INTERCAMBIO_TERRENO && 'Selecciona al jugador con quien intercambiar'}
-              {specialPlay.card.subtype === EVENT_TYPES.ESPARCIMIENTO && specialPlay.step === 'origen' && `Selecciona tu riesgo (${specialPlay.movimientos.length} seleccionados)`}
-              {specialPlay.card.subtype === EVENT_TYPES.ESPARCIMIENTO && specialPlay.step === 'destino' && 'Selecciona la planta del oponente'}
-              {specialPlay.card.subtype === EVENT_TYPES.DESCARTE && 'Harás que todos los jugadores descarten sus cartas'}
-            </div>
-
-            {/* Botón para confirmar (solo contagio con al menos 1 par) */}
-            {specialPlay.card.subtype === EVENT_TYPES.ESPARCIMIENTO && specialPlay.movimientos.length > 0 && (
-              <button
-                onClick={ async () => {
-                  await playCard(
-                    specialPlay.card.id,
-                    socketId,
-                    specialPlay.movimientos
-                  );
-                  clearSpecialPlay();
-                  setSelectedCard(null);
-                }}
-                className='text-white font-bold px-6 py-2 rounded-full shadow-lg select-none transition-colors hover:brightness-110'
-                style={{ background: '#14A0AE' }}
-              >
-                Confirmar contagio ({specialPlay.movimientos.length})
-              </button>
-            )}
-
-            {/* Botón para confirmar descarte */}
-            {specialPlay.card.subtype === EVENT_TYPES.DESCARTE && (
-              <button
-                onClick={ async () => {
-                  await playCard(
-                    specialPlay.card.id,
-                    socketId,
-                    specialPlay.movimientos
-                  );
-                  clearSpecialPlay();
-                  setSelectedCard(null);
-                }}
-                className='text-white font-bold px-6 py-2 rounded-full shadow-lg select-none transition-colors hover:brightness-110'
-                style={{ background: '#14A0AE' }}
-              >
-                Confirmar descarte
-              </button>
-            )}
-
-            {/* Botón para cancelar */}
-            <button
-              onClick={() => {
-                clearSpecialPlay();
-                setSelectedCard(null);
-              }}
-              className="text-white/60 hover:text-white text-xs underline select-none"
-            >
-              Cancelar
-            </button>
-          </div>
-        )}
+  const instruccionEspecial = specialPlay && (
+    <div className={`absolute left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2 px-3 ${esVertical ? 'bottom-[38%] w-full' : 'bottom-1/5'}`}>
+      <div className='bg-black/80 text-white px-4 py-2 rounded-full font-semibold text-sm text-center backdrop-blur-md border border-white/20 shadow-lg'>
+        {specialPlay.card.subtype === EVENT_TYPES.COMPRA && 'Selecciona la planta que quieres comprar'}
+        {specialPlay.card.subtype === EVENT_TYPES.INTERCAMBIO_PLANTA && specialPlay.step === 'origen' && 'Selecciona tu planta'}
+        {specialPlay.card.subtype === EVENT_TYPES.INTERCAMBIO_PLANTA && specialPlay.step === 'destino' && 'Selecciona la planta del oponente'}
+        {specialPlay.card.subtype === EVENT_TYPES.INTERCAMBIO_TERRENO && 'Selecciona al jugador con quien intercambiar'}
+        {specialPlay.card.subtype === EVENT_TYPES.ESPARCIMIENTO && specialPlay.step === 'origen' && `Selecciona tu riesgo (${specialPlay.movimientos.length} seleccionados)`}
+        {specialPlay.card.subtype === EVENT_TYPES.ESPARCIMIENTO && specialPlay.step === 'destino' && 'Selecciona la planta del oponente'}
+        {specialPlay.card.subtype === EVENT_TYPES.DESCARTE && 'Harás que todos los jugadores descarten sus cartas'}
       </div>
 
-      {/* MODAL SALIR */}
+      {specialPlay.card.subtype === EVENT_TYPES.ESPARCIMIENTO && specialPlay.movimientos.length > 0 && (
+        <button
+          onClick={async () => {
+            await playCard(specialPlay.card.id, socketId, specialPlay.movimientos);
+            clearSpecialPlay();
+            setSelectedCard(null);
+          }}
+          className='text-white font-bold px-6 py-2 rounded-full shadow-lg select-none transition-colors hover:brightness-110'
+          style={{ background: '#14A0AE' }}
+        >
+          Confirmar contagio ({specialPlay.movimientos.length})
+        </button>
+      )}
+
+      {specialPlay.card.subtype === EVENT_TYPES.DESCARTE && (
+        <button
+          onClick={async () => {
+            await playCard(specialPlay.card.id, socketId, specialPlay.movimientos);
+            clearSpecialPlay();
+            setSelectedCard(null);
+          }}
+          className='text-white font-bold px-6 py-2 rounded-full shadow-lg select-none transition-colors hover:brightness-110'
+          style={{ background: '#14A0AE' }}
+        >
+          Confirmar descarte
+        </button>
+      )}
+
+      <button
+        onClick={() => { clearSpecialPlay(); setSelectedCard(null); }}
+        className="text-white/60 hover:text-white text-xs underline select-none"
+      >
+        Cancelar
+      </button>
+    </div>
+  );
+
+  const modales = (
+    <>
       <Modal
         isOpen={showExitConfirm}
         onClose={() => setShowExitConfirm(false)}
@@ -242,10 +177,7 @@ export default function GameBoard() {
       <SettingsModal
         isOpen={showSettings}
         onClose={() => toggleSettings(false)}
-        onOpenRules={() => {
-          toggleSettings(false);
-          toggleRules(true);
-        }}
+        onOpenRules={() => { toggleSettings(false); toggleRules(true); }}
         onLeaveGame={handleLeaveGame}
       />
 
@@ -253,35 +185,165 @@ export default function GameBoard() {
         isOpen={showVictory}
         winner={winner}
         isWinner={winner?.id === socketId}
-        onClose={() => {
-          toggleVictory(false);
-          handleLeaveGame();
-        }}
+        /* Al perder se enseñan las dos redes, la del ganador y la tuya, para
+           ver qué tan cerca quedaste. */
+        miTablero={currentPlayer?.board}
+        onClose={() => { toggleVictory(false); handleLeaveGame(); }}
       />
+
+      <CardDetailModal
+        card={cardForDetail}
+        isOpen={showCardDetail}
+        onClose={closeCardDetail}
+      />
+    </>
+  );
+
+  /* ============ ACOMODO VERTICAL (celular de pie) ============ */
+  if (esVertical) {
+    return (
+      <div className="alto-pantalla relative flex w-full flex-col overflow-hidden encuadre-pueblo fondo-pueblo fondo-movil">
+        <LucesPueblo jugador={currentPlayer} />
+        <div className="pointer-events-none absolute inset-0 bg-black/50" />
+
+        {/* Barra superior */}
+        <div className="relative z-40 flex shrink-0 items-center justify-between gap-2 px-3 pt-3">
+          <TurnIndicator />
+          {controles}
+        </div>
+
+        {/* Oponentes en fila */}
+        {/* Un renglón por rival: siempre se ven todos, sin deslizar, y deja
+            mucho más tablero que la rejilla de tarjetas. */}
+        {opponents.length > 0 && (
+          <div className="relative z-20 flex shrink-0 flex-col gap-1.5 px-3 py-2">
+            {opponents.map(op => (
+              <OpponentBoard key={op.id} player={op} fila alto={ALTO_RENGLON[opponents.length] || 'compacto'} />
+            ))}
+          </div>
+        )}
+
+        {/* Mi tablero */}
+        {/* items-end y no items-center: el tablero se APOYA abajo, pegado a la
+            mano. Centrado, cada rival de más lo empujaba 26px hacia abajo
+            —104px de diferencia entre una partida de 2 y una de 6— y el
+            tablero y las cartas se movían bajo el dedo según con cuántos
+            jugaras. Los renglones se quedan arriba y el hueco que sobra va en
+            medio; cuando hay pocos rivales sus renglones crecen para
+            llenarlo (ver ALTO_RENGLON). */}
+        <div className="relative z-10 flex min-h-0 flex-1 items-end justify-center px-1 pb-2">
+          <CenterArea currentPlayer={currentPlayer} vertical />
+          <div className="pointer-events-none absolute inset-x-3 top-0 z-30">
+            <RegistroJugadas compacto />
+          </div>
+        </div>
+
+        {/* Mi mano */}
+        {currentPlayer && (
+          <div className="relative z-30 shrink-0 px-2 pb-3">
+            <PlayerHand cards={currentPlayer.hand} vertical />
+          </div>
+        )}
+
+        {instruccionEspecial}
+        {modales}
+      </div>
+    );
+  }
+
+  /* ============ ACOMODO HORIZONTAL (escritorio / celular acostado) ============ */
+  return (
+    /* El fondo va DENTRO del marco 16:9, no sobre la ventana: así el pueblo
+       y las plantas escalan como una sola pieza y no se despegan al cambiar
+       el tamaño de la ventana. Antes el fondo llegaba a verse 41% más grande
+       que el tablero en ventanas muy anchas o muy altas. */
+    <div
+      className="alto-pantalla relative flex w-full items-center justify-center overflow-hidden"
+      style={{ background: '#121820' }}
+    >
+      <div className="marco-16-9 encuadre-pueblo fondo-pueblo relative overflow-hidden">
+        <LucesPueblo jugador={currentPlayer} />
+        {/* Lienzo de diseno fijo: se escala completo para no encimarse */}
+        <div className="lienzo-tablero">
+          <div className="absolute inset-0 z-0 rounded-2xl bg-black/40" />
+
+          <div className="absolute left-1/2 top-4 z-40 -translate-x-1/2">
+            <TurnIndicator />
+          </div>
+
+          {/* Lo que acaba de pasar en la mesa */}
+          <div className="absolute left-4 top-4 z-40 max-w-[320px]">
+            <RegistroJugadas />
+          </div>
+
+          <div className="absolute right-4 top-4 z-50">{controles}</div>
+
+          {/* Oponente de arriba */}
+          <div className="absolute left-1/2 top-[4%] z-20 -translate-x-1/2">
+            <OpponentBoard player={visualOpponents[0]} orientation="portrait" />
+          </div>
+
+          {gameState.players.length > 2 && (
+            <div className="absolute left-[8%] top-1/2 z-20 -translate-y-1/2">
+              <OpponentBoard player={visualOpponents[1]} orientation="landscape" small />
+            </div>
+          )}
+
+          {gameState.players.length > 3 && (
+            <div className="absolute right-[8%] top-1/2 z-20 -translate-y-1/2">
+              <OpponentBoard player={visualOpponents[2]} orientation="landscape" small />
+            </div>
+          )}
+
+          {/* Mi tablero */}
+          <div className="absolute inset-0 top-8 z-10 flex items-center justify-center">
+            <CenterArea currentPlayer={currentPlayer} />
+          </div>
+
+          {/* Mi mano */}
+          {currentPlayer && (
+            <div className="absolute bottom-[4%] left-1/2 z-30 w-[75%] max-w-[900px] -translate-x-1/2">
+              <PlayerHand cards={currentPlayer.hand} />
+            </div>
+          )}
+
+          {instruccionEspecial}
+        </div>
+      </div>
+
+      {modales}
     </div>
   );
 }
 
-/* ================= OPONENT BOARD ================= */
+/* ================= TABLERO DE OPONENTE ================= */
 
-function OpponentBoard({ player, small, orientation }) {
+/* ===== ALTO DEL RENGLÓN DE RIVAL EN CELULAR =====
+   Los renglones viven arriba y el tablero abajo; lo que sobra queda en medio.
+   Con pocos rivales ese hueco era enorme, así que sus renglones crecen para
+   llenarlo: con uno solo se ve su tablero en grande, y a partir de cuatro se
+   van a la versión compacta para que los cinco quepan sin tapar nada.
+   Es por número de rivales, no de jugadores: 1 rival = partida de 2. */
+const ALTO_RENGLON = {
+  1: 'grande',
+  2: 'medio',
+  3: 'medio',
+};
+
+function OpponentBoard({ player, small, orientation, compacto, fila, alto = 'compacto' }) {
   const { specialPlay, clearSpecialPlay, setSelectedCard } = useGameStore();
   const { playCard } = useSocket();
 
   const isClickableForTerrainSwap =
-    specialPlay?.card?.subtype === EVENT_TYPES.INTERCAMBIO_TERRENO &&
-    !player?.isEpmty;
+    specialPlay?.card?.subtype === EVENT_TYPES.INTERCAMBIO_TERRENO && !player?.isEmpty;
 
   const handleBoardClick = async () => {
-    if(!isClickableForTerrainSwap) return;
-    await playCard(
-      specialPlay.card.id,
-      player.id,
-      [{destino: { jugador: player.id } }]
-    );
+    if (!isClickableForTerrainSwap) return;
+    await playCard(specialPlay.card.id, player.id, [{ destino: { jugador: player.id } }]);
     clearSpecialPlay();
     setSelectedCard(null);
-  }
+  };
+
   const BOARD_ENERGIES = [
     ENERGY_TYPES.SOLAR,
     ENERGY_TYPES.EOLICA,
@@ -291,36 +353,81 @@ function OpponentBoard({ player, small, orientation }) {
 
   const isEmpty = player?.isEmpty;
 
+  const slots = BOARD_ENERGIES.map(type => (
+    <PlayerSlot
+      key={type}
+      variant="opponent"
+      slotType={type}
+      slot={player.board?.[type]}
+      isMySlot={false}
+      playerId={player.id}
+      size={compacto || small ? 'small' : 'normal'}
+      orientation={compacto ? 'portrait' : orientation}
+    />
+  ));
+
+  const slotsFila = BOARD_ENERGIES.map(type => (
+    <PlayerSlot
+      key={type}
+      variant="fila"
+      slotType={type}
+      slot={player.board?.[type]}
+      isMySlot={false}
+      playerId={player.id}
+      alto={alto}
+    />
+  ));
+
+  /* Renglón: avatar + nombre + las 4 energías en barra. Se usa en celular
+     cuando hay varios rivales y la rejilla ya no cabe. */
+  if (fila) {
+    return (
+      <div
+        onClick={handleBoardClick}
+        className={`flex items-center rounded-xl border backdrop-blur-md transition-colors
+          ${{ grande: 'gap-3 px-3 py-3', medio: 'gap-2.5 px-2.5 py-2', compacto: 'gap-2 px-2 py-1.5' }[alto]}
+          ${isEmpty ? 'opacity-30 grayscale' : ''}
+          ${isClickableForTerrainSwap ? 'cursor-pointer ring-2 ring-purple-400' : ''}`}
+        style={{
+          background: player?.isCurrentTurn ? 'var(--board-turno)' : 'var(--board-panel)',
+          borderColor: player?.isCurrentTurn ? 'var(--board-turno-borde)' : 'var(--board-panel-borde)',
+        }}
+      >
+        <Avatar id={player?.avatar} size={{ grande: 26, medio: 22, compacto: 18 }[alto]} />
+        <span
+          className={`shrink-0 truncate font-bold leading-tight ${{ grande: 'w-[92px] text-[12px]', medio: 'w-[84px] text-[11px]', compacto: 'w-[74px] text-[10px]' }[alto]}`}
+          style={{ color: 'var(--board-texto)' }}
+        >
+          {String(player?.name || '').replace('[BOT] ', '')}
+        </span>
+        <div className={`flex flex-1 ${alto === 'grande' ? 'gap-2' : 'gap-1.5'}`}>{slotsFila}</div>
+      </div>
+    );
+  }
+
   return (
     <div
       onClick={handleBoardClick}
       className={`
-        bg-white/30 backdrop-blur-xl rounded-2xl p-2 shadow-xl
-        border border-white/40
+        rounded-2xl border border-white/40 bg-white/30 p-2 shadow-xl backdrop-blur-xl
         ${isEmpty ? 'opacity-30 grayscale' : ''}
-        ${small ? 'scale-95' : ''}
-        ${isClickableForTerrainSwap ? 'cursor-pointer ring-2 ring-purple-400': ''}
+        ${small && !compacto ? 'scale-95' : ''}
+        ${compacto ? 'min-w-0' : ''}
+        ${isClickableForTerrainSwap ? 'cursor-pointer ring-2 ring-purple-400' : ''}
       `}
     >
-      <PlayerFrame player={player} />
+      <PlayerFrame player={player} compacto={compacto} />
 
-      <div
-        className={`mt-1 flex gap-1 ${orientation === 'landscape' ? 'flex-col' : 'flex-row'
-          }`}
-      >
-        {BOARD_ENERGIES.map(type => (
-          <PlayerSlot
-            key={type}
-            variant="opponent"
-            slotType={type}
-            slot={player.board?.[type]}
-            isMySlot={false}
-            playerId={player.id}
-            size={small ? 'small' : 'normal'}
-            orientation={orientation}
-          />
-        ))}
-      </div>
+      {compacto ? (
+        /* 2x2: cabe de sobra en pantalla de celular */
+        <div className="mt-1 grid grid-cols-2 justify-items-center gap-1">{slots}</div>
+      ) : (
+        /* items-center: en columna las casillas se estiraban a todo el ancho
+           del panel y quedaban como barras vacías */
+        <div className={`mt-1 flex gap-1 ${orientation === 'landscape' ? 'flex-col items-center' : 'flex-row'}`}>
+          {slots}
+        </div>
+      )}
     </div>
   );
 }

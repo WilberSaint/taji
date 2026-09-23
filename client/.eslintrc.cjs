@@ -1,5 +1,7 @@
 module.exports = {
   root: true,
+  // No revisar la compilacion ni dependencias: no es codigo fuente
+  ignorePatterns: ['dist', 'node_modules'],
   env: { browser: true, es2021: true, node: true },
   extends: [
     'eslint:recommended',

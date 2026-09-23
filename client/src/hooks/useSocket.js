@@ -1,7 +1,22 @@
 import { useEffect, useCallback } from 'react';
 import socket from '../socket';
 import { useGameStore } from '../store/gameStore';
-import { SOCKET_EVENTS } from '../utils/constants';
+import { SOCKET_EVENTS, CARD_TYPES } from '../utils/constants';
+import { describirJugada, TIPO_JUGADA } from '../utils/mensajesJugada';
+import { reproducirSonido } from '../utils/sonido';
+
+/**
+ * Varios componentes llaman a useSocket() a la vez (App, GameBoard, PlayerHand
+ * y cada PlayerSlot). Si cada uno enganchara los escuchas de la partida, el
+ * mismo evento se procesaría tantas veces como componentes haya: se veía como
+ * avisos repetidos en el registro de jugadas.
+ *
+ * Por eso se enganchan UNA sola vez y para toda la vida de la aplicación. El
+ * socket y el store también son únicos, así que no hay nada que desenganchar;
+ * llevar la cuenta de cuántos componentes los usan resultó frágil con el doble
+ * montaje que hace React en desarrollo.
+ */
+let eventosDePartidaEnganchados = false;
 
 /**
  * Hook personalizado para manejar Socket.io
@@ -13,11 +28,11 @@ export function useSocket() {
     setGameState,
     setPublicRooms,
     setNotification,
-    setIsMyTurn,
-    setAnimatingCard,
-    toggleVictory,
     clearRoom,
     setMaintenanceMessage
+    // Las demás acciones (setIsMyTurn, setAnimatingCard, toggleVictory,
+    // agregarJugada) se leen con getState() dentro del efecto de eventos de
+    // partida, que se registra una sola vez.
   } = useGameStore();
 
   const listRooms = useCallback(() => {
@@ -133,8 +148,15 @@ export function useSocket() {
 
   // ============ GAME EVENTS ============
   useEffect(() => {
+    if (eventosDePartidaEnganchados) return;
+    eventosDePartidaEnganchados = true;
+
+    // Los manejadores leen del store con getState(), no de este render:
+    // así no dependen de qué componente fue el primero en montarse.
+    const { setGameState, setIsMyTurn, setNotification, setAnimatingCard,
+            toggleVictory, agregarJugada, marcarEfecto } = useGameStore.getState();
+
     const handleGameStateUpdate = (state) => {
-      console.log('🎮 Estado del juego actualizado:', state);
       setGameState(state);
       
       // Actualizar si es mi turno
@@ -143,17 +165,22 @@ export function useSocket() {
     };
 
     const handleTurnChanged = (data) => {
-      console.log('🔄 Cambio de turno:', data);
-      setNotification({
-        type: 'info',
-        message: data.currentPlayerId === socket.id
-          ? '¡Es tu turno!'
-          : `Turno de ${data.currentPlayerName}`
-      });
+      const esMiTurno = data.currentPlayerId === socket.id;
+      if (!esMiTurno) return;
+      // Sin aviso emergente: el indicador de turno ya está siempre visible
+      // arriba, y con varios rivales el aviso tapaba sus renglones.
+      reproducirSonido('turno');
+    };
+
+    const SONIDO_POR_TIPO = {
+      [TIPO_JUGADA.CONSTRUCCION]: 'construir',
+      [TIPO_JUGADA.DEFENSA]: 'proteger',
+      [TIPO_JUGADA.ATAQUE]: 'atacar',
+      [TIPO_JUGADA.DESTRUCCION]: 'destruir',
+      [TIPO_JUGADA.EVENTO]: 'evento',
     };
 
     const handleCardPlayed = (data) => {
-      console.log('🃏 Carta jugada:', data);
       setAnimatingCard({
         type: 'play',
         card: data.card,
@@ -161,83 +188,45 @@ export function useSocket() {
         to: data.target
       });
 
+      // Contar qué pasó: sin esto el tablero cambia solo y no se entiende
+      const estado = useGameStore.getState();
+      const jugada = describirJugada(data, estado.gameState?.players || [], estado.socketId);
+      if (jugada) {
+        agregarJugada(jugada.texto, jugada.tipo);
+        reproducirSonido(SONIDO_POR_TIPO[jugada.tipo]);
+      }
+
+      // Animación sobre la casilla afectada. Todo sale del mismo evento,
+      // así no hay riesgo de que un efecto se dispare dos veces.
+      const destino = data.target;
+      if (destino?.playerId && destino?.slotType) {
+        let tipoEfecto = null;
+        if (data.card.type === CARD_TYPES.PLANTA) tipoEfecto = 'construir';
+        // `cancelled` es la anulación mutua del servidor, pero significa dos
+        // cosas distintas según quién la provocó, y cada una merece su
+        // animación (antes las dos salían como 'anular', que no contaba nada):
+        //   mantenimiento sobre planta dañada  → la REPARAN
+        //   riesgo sobre planta protegida      → el escudo lo BLOQUEA
+        else if (data.card.type === CARD_TYPES.MANTENIMIENTO) {
+          tipoEfecto = data.effect?.cancelled ? 'reparar' : 'proteger';
+        } else if (data.card.type === CARD_TYPES.RIESGO) {
+          tipoEfecto = data.effect?.destroyed ? 'destruir'
+            : data.effect?.cancelled ? 'bloquear' : 'dañar';
+        }
+        if (tipoEfecto) marcarEfecto(destino.playerId, destino.slotType, tipoEfecto);
+      }
+
       setTimeout(() => setAnimatingCard(null), 1000);
     };
 
-    const handleCardsDrawn = (data) => {
-      console.log('📥 Cartas robadas:', data);
-      if (data.cards && data.cards.length > 0) {
-        setNotification({
-          type: 'success',
-          message: `Robaste ${data.cards.length} carta${data.cards.length > 1 ? 's' : ''}`
-        });
-      }
-    };
-
-    const handlePlantDestroyed = (data) => {
-      console.log('💥 Planta destruida:', data);
-      setNotification({
-        type: 'warning',
-        message: '¡Planta destruida!'
-      });
-    };
-
-    const handleCardsCancelled = (data) => {
-      console.log('⚖️ Anulación mutua:', data);
-      setNotification({
-        type: 'info',
-        message: 'Anulación mutua'
-      });
-    };
-
-    const handlePlantBought = (data) => {
-      console.log('Carta comprada: ', data);
-      setNotification({
-        type: 'warning',
-        message: `¡Te compraron la planta ${data.slot}!`
-      })
-    }
-
-    const handlePlantsSwapped = (data) => {
-      console.log('🔄 Intercambio de plantas:', data);
-      setNotification({
-        type: 'info',
-        message: 'Plantas intercambiadas'
-      });
-    };
-    
-    const handleTerrainSwap = (data) => {
-      console.log('🔄 Intercambio de terreno:', data);
-      setNotification({
-        type: 'info',
-        message: 'Terrenos intercambiados'
-      });  
-    }
-
-    const handleSpread = (data) => {
-      console.log(`¡Esparcimiento! ${data.spreads.length} riesgos propagados: `, data);
-      setNotification({
-        type: 'warning',
-        message: `¡Esparcimiento! ${data.spreads.length} riesgos propagados`
-      });
-    }
-
-    const handleAllDiscard = (data) =>{
-      console.log('¡Todos descartan su mano!', data);
-      setNotification({
-        type: 'warning',
-        message: '¡Todos descartan su mano!'
-      });
-    }
-
     const handleVictory = (data) => {
-      console.log('🏆 Victoria:', data);
       setGameState(data.finalState);
       toggleVictory(true, data.winner);
       setNotification({
         type: 'success',
-        message: `${data.winner.name} ha ganado!`
+        message: `¡${data.winner.name} ganó la partida!`
       });
+      reproducirSonido('victoria');
     };
 
     const handleGameError = (data) => {
@@ -251,33 +240,10 @@ export function useSocket() {
     socket.on(SOCKET_EVENTS.GAME_STATE_UPDATE, handleGameStateUpdate);
     socket.on(SOCKET_EVENTS.GAME_TURN_CHANGED, handleTurnChanged);
     socket.on(SOCKET_EVENTS.GAME_CARD_PLAYED, handleCardPlayed);
-    socket.on(SOCKET_EVENTS.GAME_CARDS_DRAWN, handleCardsDrawn);
-    socket.on(SOCKET_EVENTS.GAME_PLANT_DESTROYED, handlePlantDestroyed);
-    socket.on(SOCKET_EVENTS.GAME_CARDS_CANCELLED, handleCardsCancelled);
-    socket.on(SOCKET_EVENTS.GAME_PLANT_BOUGHT, handlePlantBought);
-    socket.on(SOCKET_EVENTS.GAME_PLANTS_SWAPPED, handlePlantsSwapped);
-    socket.on(SOCKET_EVENTS.GAME_TERRAIN_SWAPPED, handleTerrainSwap);
-    socket.on(SOCKET_EVENTS.GAME_RISK_SPREAD, handleSpread);
-    socket.on(SOCKET_EVENTS.GAME_ALL_DISCARDED, handleAllDiscard);
     socket.on(SOCKET_EVENTS.GAME_VICTORY, handleVictory);
     socket.on(SOCKET_EVENTS.GAME_ERROR, handleGameError);
     
-    return () => {
-      socket.off(SOCKET_EVENTS.GAME_STATE_UPDATE, handleGameStateUpdate);
-      socket.off(SOCKET_EVENTS.GAME_TURN_CHANGED, handleTurnChanged);
-      socket.off(SOCKET_EVENTS.GAME_CARD_PLAYED, handleCardPlayed);
-      socket.off(SOCKET_EVENTS.GAME_CARDS_DRAWN, handleCardsDrawn);
-      socket.off(SOCKET_EVENTS.GAME_PLANT_DESTROYED, handlePlantDestroyed);
-      socket.off(SOCKET_EVENTS.GAME_CARDS_CANCELLED, handleCardsCancelled);
-      socket.off(SOCKET_EVENTS.GAME_PLANT_BOUGHT, handlePlantBought);
-      socket.off(SOCKET_EVENTS.GAME_PLANTS_SWAPPED, handlePlantsSwapped);
-      socket.off(SOCKET_EVENTS.GAME_TERRAIN_SWAPPED, handleTerrainSwap);
-      socket.off(SOCKET_EVENTS.GAME_RISK_SPREAD, handleSpread);
-      socket.off(SOCKET_EVENTS.GAME_ALL_DISCARDED, handleAllDiscard);
-      socket.off(SOCKET_EVENTS.GAME_VICTORY, handleVictory);
-      socket.off(SOCKET_EVENTS.GAME_ERROR, handleGameError);
-    };
-  }, [setGameState, setNotification, setIsMyTurn, setAnimatingCard, toggleVictory]);
+  }, []);
 
   // ============ PLAYER EVENTS ============
   useEffect(() => {
@@ -504,15 +470,23 @@ export function useSocket() {
    * Jugar una carta y terminar el turno automáticamente
    */
   const playCard = useCallback(async (cardId, targetPlayerId, movements) => {
-    const response = await new Promise((resolve, reject) => {
+    const respuesta = await new Promise((resolve) => {
       socket.emit(SOCKET_EVENTS.GAME_PLAY_CARD,
         { cardId, targetPlayerId, movements },
-        (res) => {
-          if (res.success) resolve(res);
-          else reject(new Error(res.error));
-        }
+        (res) => resolve(res)
       );
     });
+
+    // Antes esto rechazaba la promesa y nadie la atrapaba: la jugada inválida
+    // se perdía en silencio y el jugador no sabía por qué no pasaba nada.
+    if (!respuesta?.success) {
+      useGameStore.getState().setNotification({
+        type: 'error',
+        message: respuesta?.error || 'No se puede jugar esa carta ahí',
+      });
+      return { success: false, error: respuesta?.error };
+    }
+    const response = respuesta;
 
     // Esperar a que se propaguen las animaciones y el estado
     await new Promise((resolve) => setTimeout(resolve, 800));

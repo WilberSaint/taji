@@ -6,6 +6,13 @@
   <meta name="description" content="Juegos multilingües sobre energías renovables. Proyecto de divulgación del Instituto Tecnológico de Sonora, con apoyo de SECIHTI." />
   <title>LudoEnergía</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="LudoEnergía" />
+  <meta property="og:description" content="Juegos multilingües sobre energías renovables. Proyecto de divulgación del Instituto Tecnológico de Sonora, con apoyo de SECIHTI." />
+  <meta property="og:image" content="/og-image.png" />
+  <meta name="twitter:card" content="summary_large_image" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesk:opsz,wght@12..96,400..800&family=Hanken+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" />
@@ -79,9 +86,9 @@
       <article class="game-full game-full--live reveal">
         <div class="game-full__media">
           <div class="card-fan">
-            <img src="/img/cards/riesgo-eolica.png" alt="Carta de riesgo del juego TAJI" loading="lazy" style="--i:-1" />
-            <img src="/img/cards/planta-solar.png" alt="Carta de planta solar del juego TAJI" loading="lazy" style="--i:0" />
-            <img src="/img/cards/mantenimiento-hidro.png" alt="Carta de mantenimiento del juego TAJI" loading="lazy" style="--i:1" />
+            <img src="/img/cards/riesgo-eolica.webp" alt="Carta de riesgo del juego TAJI" loading="lazy" style="--i:-1" />
+            <img src="/img/cards/planta-solar.webp" alt="Carta de planta solar del juego TAJI" loading="lazy" style="--i:0" />
+            <img src="/img/cards/mantenimiento-hidro.webp" alt="Carta de mantenimiento del juego TAJI" loading="lazy" style="--i:1" />
           </div>
         </div>
         <div class="game-full__body">
@@ -129,7 +136,7 @@
           </div>
         </div>
         <div class="game-full__body">
-          <span class="badge badge--soon" data-i18n="games_soon">En desarrollo · 2026</span>
+          <span class="badge badge--soon" data-i18n="games_soon">En desarrollo</span>
           <h3 data-i18n="game2_title">El juego de estrategia</h3>
           <p class="game-full__kind" data-i18n="game2_kind">Tablero modular + simulador web · desde 12 años</p>
           <p data-i18n="game2_p1">Para adolescentes y personas adultas. Con un tablero modular, fichas de tecnología y cartas de evento se simula la transición energética: dónde conviene cada planta, cómo responder a los riesgos socioambientales y cómo mantener el sistema en equilibrio.</p>
@@ -143,7 +150,7 @@
           </dl>
 
           <div class="cta">
-            <span class="btn btn--ghost btn--disabled" aria-disabled="true" data-i18n="game2_cta">Disponible en 2026</span>
+            <span class="btn btn--ghost btn--disabled" aria-disabled="true" data-i18n="game2_cta">Próximamente</span>
           </div>
         </div>
       </article>
@@ -208,7 +215,7 @@
         <p data-i18n="dl_lead">Todo el material es libre y está hecho para funcionar en conexiones lentas y equipos modestos.</p>
       </div>
 
-      <a class="dl-hero reveal" href="#">
+      <span class="dl-hero dl-hero--disabled reveal" aria-disabled="true">
         <span class="dl-hero__icon">
           <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v5M6 18H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-1M7 15h10v6H7z"/></svg>
         </span>
@@ -216,24 +223,27 @@
           <b data-i18n="dlh_t">Imprime y juega — kit completo</b>
           <span data-i18n="dlh_d">Cartas listas para imprimir, <b>reglas completas</b> y una guía rápida de una página, en un solo PDF y en los cuatro idiomas.</span>
         </span>
-        <span class="dl-hero__cta" data-i18n="dlh_cta">Descargar PDF →</span>
-      </a>
+        <span class="dl-hero__cta" data-i18n="dlh_cta">Próximamente</span>
+      </span>
 
       <div class="dl-groups">
         <div class="dl-group reveal">
           <h3 data-i18n="dlg1">Para jugar en casa</h3>
-          <a class="dl" href="#">
+          <span class="dl dl--disabled" aria-disabled="true">
             <span class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg></span>
             <span><b data-i18n="dl1_t">Reglas del juego</b><span data-i18n="dl1_d">PDF · 4 idiomas</span></span>
-          </a>
-          <a class="dl" href="#">
+            <span class="dl__soon" data-i18n="dl_soon">Próximamente</span>
+          </span>
+          <span class="dl dl--disabled" aria-disabled="true">
             <span class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 5v14"/></svg></span>
             <span><b data-i18n="dl2_t">Guía pedagógica</b><span data-i18n="dl2_d">Para docentes y facilitadores</span></span>
-          </a>
-          <a class="dl" href="#">
+            <span class="dl__soon" data-i18n="dl_soon">Próximamente</span>
+          </span>
+          <span class="dl dl--disabled" aria-disabled="true">
             <span class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="12" height="16" rx="2"/><path d="M9 8l9 2.5a2 2 0 0 1 1.4 2.5l-2.6 7.5"/></svg></span>
             <span><b data-i18n="dl3_t">Plantillas de cartas</b><span data-i18n="dl3_d">Archivos de impresión en alta calidad</span></span>
-          </a>
+            <span class="dl__soon" data-i18n="dl_soon">Próximamente</span>
+          </span>
         </div>
         <div class="dl-group reveal">
           <h3 data-i18n="dlg2">Versiones digitales</h3>
@@ -241,14 +251,16 @@
             <span class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></span>
             <span><b data-i18n="dl4_t">Jugar TAJI en línea</b><span data-i18n="dl4_d">Multijugador, desde el navegador</span></span>
           </a>
-          <a class="dl" href="#">
+          <span class="dl dl--disabled" aria-disabled="true">
             <span class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/></svg></span>
             <span><b data-i18n="dl5_t">App del juego de cartas</b><span data-i18n="dl5_d">PC y Android · funciona sin internet</span></span>
-          </a>
-          <a class="dl" href="#">
+            <span class="dl__soon" data-i18n="dl_soon">Próximamente</span>
+          </span>
+          <span class="dl dl--disabled" aria-disabled="true">
             <span class="ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.8-.9 1.8-2 0-.5-.2-1-.5-1.3-.3-.4-.5-.8-.5-1.2 0-1 .8-1.8 1.8-1.8H16a5 5 0 0 0 5-5c0-4.4-4-6.5-9-6.5Z"/><circle cx="7.5" cy="11.5" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="8" r="1.2" fill="currentColor" stroke="none"/><circle cx="16.5" cy="11.5" r="1.2" fill="currentColor" stroke="none"/></svg></span>
             <span><b data-i18n="dl6_t">Recursos gráficos</b><span data-i18n="dl6_d">Ilustraciones y plantillas editables</span></span>
-          </a>
+            <span class="dl__soon" data-i18n="dl_soon">Próximamente</span>
+          </span>
         </div>
       </div>
 
@@ -265,13 +277,13 @@
       <div class="proj">
         <div class="prose reveal">
           <p data-i18n="proj_p1">LudoEnergía es un proyecto de divulgación del <b>Instituto Tecnológico de Sonora (ITSON)</b>. Busca acercar el conocimiento sobre energías renovables y transición energética justa a públicos diversos, con especial atención a las comunidades rurales e indígenas del noroeste de México.</p>
-          <p data-i18n="proj_p2">Se desarrolla en dos etapas (2025–2026) de forma participativa. Articula divulgación científica, inclusión lingüística, equidad territorial y de género, y el fomento de vocaciones en ciencia, tecnología e ingeniería. Está alineado con el <b>Plan Sonora de Energías Sostenibles</b>.</p>
+          <p data-i18n="proj_p2">Se desarrolla en dos etapas (2026–2028) de forma participativa. Articula divulgación científica, inclusión lingüística, equidad territorial y de género, y el fomento de vocaciones en ciencia, tecnología e ingeniería. Está alineado con el <b>Plan Sonora de Energías Sostenibles</b>.</p>
         </div>
         <div class="factbox reveal">
           <dl>
             <dt data-i18n="fact_inst">Institución</dt><dd>Instituto Tecnológico de Sonora</dd>
             <dt data-i18n="fact_fund">Financiamiento</dt><dd data-i18n="fact_fund_v">SECIHTI · Ciencia y Tecnología (Divulgación 2025)</dd>
-            <dt data-i18n="fact_period">Periodo</dt><dd>2025–2026 · 2 etapas</dd>
+            <dt data-i18n="fact_period">Periodo</dt><dd>2026–2028 · 2 etapas</dd>
             <dt data-i18n="fact_langs">Idiomas</dt><dd>Español · Inglés · Yoreme · Yoeme</dd>
             <dt data-i18n="fact_place">Territorio</dt><dd data-i18n="fact_place_v">Sonora y regiones vecinas, México</dd>
             <dt data-i18n="fact_license">Licencia</dt><dd data-i18n="fact_license_v">Abierta · acceso libre</dd>
@@ -344,7 +356,6 @@
     <div class="foot-bottom">
       <span data-i18n="foot_credit">Instituto Tecnológico de Sonora · SECIHTI</span>
       <span data-i18n="foot_license">Materiales bajo licencia abierta</span>
-      <span data-i18n="foot_year">2025 · Año de la Mujer Indígena</span>
     </div>
   </div>
 </footer>

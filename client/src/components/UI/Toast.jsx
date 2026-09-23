@@ -17,22 +17,29 @@ export function Toast() {
     info: <Info className="w-5 h-5" />
   };
 
+  // Colores del sistema de diseño, no los de Tailwind: así el aviso combina
+  // con el resto del juego y respeta el tema claro/oscuro.
   const colors = {
-    success: 'bg-green-500',
-    error: 'bg-red-500',
-    warning: 'bg-yellow-500',
-    info: 'bg-blue-500'
+    success: 'var(--success)',
+    error: 'var(--danger)',
+    warning: 'var(--warning)',
+    info: 'var(--info)'
   };
 
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ opacity: 0, y: -50, x: '-50%' }}
-        animate={{ opacity: 1, y: 0, x: '-50%' }}
-        exit={{ opacity: 0, y: -50, x: '-50%' }}
-        className="fixed top-4 left-1/2 z-50"
+        initial={{ opacity: 0, y: -40 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -40 }}
+        // Centrado con inset-x + justify-center: con `left-1/2` el ancho
+        // disponible era medio viewport y el texto se partía letra por letra.
+        className="pointer-events-none fixed inset-x-0 top-20 z-50 flex justify-center px-4"
       >
-        <div className={`${colors[notification.type]} text-white px-6 py-3 rounded-xl shadow-2xl flex items-center gap-3 min-w-[300px]`}>
+        <div
+          className="pointer-events-auto flex max-w-[min(92vw,420px)] items-center gap-3 rounded-xl px-5 py-3 text-white shadow-2xl"
+          style={{ background: colors[notification.type] || colors.info }}
+        >
           {icons[notification.type]}
           <span className="flex-1 font-medium">{notification.message}</span>
           <button

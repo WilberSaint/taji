@@ -59,6 +59,21 @@
   --font-display: "Bricolage Grotesk", "Trebuchet MS", sans-serif;
   --font-body: "Hanken Grotesk", "Segoe UI", system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
+
+  /* ===== TABLERO DE JUEGO =====
+     El tablero vivía con colores fijos oscuros y por eso el cambio de tema
+     no se notaba durante la partida. Estas variables lo hacen responder.
+     Valores de aquí = tema claro (día sobre la ciudad). */
+  --pueblo-zoom: 137%;
+  --board-velo: rgba(226,234,237,0.78);
+  --board-panel: rgba(255,255,255,0.86);
+  --board-panel-borde: rgba(22,33,42,0.14);
+  --board-texto: #16212A;
+  --board-texto-suave: rgba(22,33,42,0.5);
+  --board-hueco: rgba(22,33,42,0.06);
+  --board-hueco-borde: rgba(22,33,42,0.22);
+  --board-turno: rgba(11,116,128,0.16);
+  --board-turno-borde: rgba(11,116,128,0.7);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -80,6 +95,17 @@
     --sh-1: 0 1px 2px rgba(0,0,0,.4), 0 1px 3px rgba(0,0,0,.5);
     --sh-2: 0 4px 14px -2px rgba(0,0,0,.5), 0 2px 6px -3px rgba(0,0,0,.5);
     --sh-3: 0 18px 44px -12px rgba(0,0,0,.65);
+
+    /* tablero de juego (ver bloque claro en :root) */
+    --board-velo: rgba(0,0,0,0.5);
+    --board-panel: rgba(255,255,255,0.08);
+    --board-panel-borde: rgba(255,255,255,0.18);
+    --board-texto: rgba(255,255,255,0.92);
+    --board-texto-suave: rgba(255,255,255,0.42);
+    --board-hueco: rgba(255,255,255,0.05);
+    --board-hueco-borde: rgba(255,255,255,0.22);
+    --board-turno: rgba(20,160,174,0.22);
+    --board-turno-borde: rgba(20,160,174,0.85);
   }
 }
 :root[data-theme="dark"] {
@@ -100,6 +126,17 @@
   --sh-1: 0 1px 2px rgba(0,0,0,.4), 0 1px 3px rgba(0,0,0,.5);
   --sh-2: 0 4px 14px -2px rgba(0,0,0,.5), 0 2px 6px -3px rgba(0,0,0,.5);
   --sh-3: 0 18px 44px -12px rgba(0,0,0,.65);
+
+  /* tablero de juego (ver bloque claro en :root) */
+  --board-velo: rgba(0,0,0,0.5);
+  --board-panel: rgba(255,255,255,0.08);
+  --board-panel-borde: rgba(255,255,255,0.18);
+  --board-texto: rgba(255,255,255,0.92);
+  --board-texto-suave: rgba(255,255,255,0.42);
+  --board-hueco: rgba(255,255,255,0.05);
+  --board-hueco-borde: rgba(255,255,255,0.22);
+  --board-turno: rgba(20,160,174,0.22);
+  --board-turno-borde: rgba(20,160,174,0.85);
 }
 
 /* ============================================================
@@ -140,4 +177,119 @@
   .font-display { font-family: var(--font-display); }
   .font-mono { font-family: var(--font-mono); }
   .text-shadow-sm { text-shadow: 0 1px 3px rgba(0, 0, 0, .35); }
+}
+
+/* ============================================================
+   TABLERO — medidas de pantalla con respaldo
+   dvh es lo correcto en celular (descuenta la barra del navegador),
+   pero se declara vh primero por si el navegador no lo soporta.
+   ============================================================ */
+.alto-pantalla {
+  height: 100vh;
+  height: 100dvh;
+}
+
+/* ===== ENCUADRE DEL PUEBLO =====
+   El fondo y las cuatro capas de luces son recortes del mismo archivo, así
+   que TIENEN que dibujarse con exactamente el mismo background-size y
+   background-position o las luces se despegan de sus casas. Por eso el
+   encuadre vive en una sola variable y todos la heredan.
+
+   Valor por defecto: cover. Sirve en vertical, donde el tablero no se apoya
+   en el lote de tierra del dibujo (lleva su propia tarjeta) y lo único que
+   importa es que el pueblo cubra la pantalla para que se le vean las luces.
+   Con "137% auto" en una pantalla alta la imagen se queda corta y aparecen
+   franjas vacías arriba y abajo. */
+:root {
+  --pueblo-encuadre: cover;
+  --pueblo-y: center;
+
+  /* ===== PERILLAS DEL FONDO EN CELULAR =====
+     Con `cover` en vertical la imagen queda EXACTAMENTE del alto de la
+     pantalla (solo se recorta a los lados), así que no hay holgura para
+     moverla. Por eso se agranda con --pueblo-alto-movil y esa holgura es la
+     que reparte --pueblo-y-movil:
+       0%   = la imagen lo más ABAJO que puede (se ve el cielo/las orillas de arriba)
+       50%  = centrada, como antes
+       100% = lo más ARRIBA
+     Menos % = más abajo. Las capas de luces heredan las dos, así que siguen
+     cayendo sobre sus casas. Probar en vivo:
+       document.documentElement.style.setProperty('--pueblo-y-movil', '10%') */
+  --pueblo-alto-movil: 122%;
+  --pueblo-y-movil: 8%;
+
+  /* ===== PERILLA DE ENCUADRE =====
+     Cuánto sube el conjunto de las cuatro plantas respecto al lote de tierra.
+     Por pura geometría le toca -13px (medido con work/encuadre3.mjs sobre el
+     lienzo de diseño de 900px de alto), pero a ojo se ve mejor un poco más
+     arriba porque los molinos y la chimenea cargan el dibujo hacia arriba.
+     Es el ÚNICO número de este ajuste: más negativo = más arriba.
+     Se puede probar en vivo desde el navegador con
+       document.documentElement.style.setProperty('--plantas-y', '-34px')
+     y cuando quede, se escribe aquí. */
+  --plantas-y: -26px;
+
+  /* Lo mismo para el acomodo de celular. Va aparte porque allá la tarjeta es
+     neutra (no se apoya en el lote del dibujo) y la escala es otra.
+     Más negativo = plantas más arriba dentro de su tarjeta. */
+  --plantas-y-movil: -14px;
+
+  /* Sube o baja la TARJETA entera del tablero en celular, con sus plantas
+     dentro. Sirve para alinearla con el lote de tierra que se asoma por
+     detrás. Más negativo = más arriba. Hace la misma pareja que
+     --pueblo-y-movil, que mueve el pueblo en vez de la tarjeta. */
+  --tablero-y-movil: -12px;
+}
+
+/* En el marco 16:9 sí importa: las cuatro plantas se apoyan sobre el lote de
+   tierra vacío del centro del dibujo. El lote mide 31.03% del ancho de la
+   imagen y el área de las plantas 42.50% del marco, así que hay que acercar
+   la imagen 42.50 / 31.03 = 1.37 para que coincidan. Si se cambia el fondo,
+   hay que volver a medirlo (work/medir-lote.mjs) y ajustar --pueblo-zoom. */
+.marco-16-9 {
+  --pueblo-encuadre: var(--pueblo-zoom) auto;
+}
+
+/* El fondo y las capas de luces comparten esta regla; la única diferencia
+   entre ellos es qué imagen se pone encima. */
+.encuadre-pueblo {
+  background-size: var(--pueblo-encuadre);
+  background-position: center var(--pueblo-y);
+  background-repeat: no-repeat;
+}
+
+/* Acomodo vertical (celular de pie): ver las perillas del fondo en :root. */
+.fondo-movil {
+  --pueblo-encuadre: auto var(--pueblo-alto-movil);
+  --pueblo-y: var(--pueblo-y-movil);
+}
+
+.fondo-pueblo {
+  background-image: url('/assets/backgrounds/background.webp');
+}
+
+/* Marco 16:9 que respeta ancho Y alto: nunca se desborda */
+
+.marco-16-9 {
+  aspect-ratio: 16 / 9;
+  width: min(100%, 1600px, calc(100vh * 16 / 9));
+  width: min(100%, 1600px, calc(100dvh * 16 / 9));
+  /* Contenedor de consulta: da la unidad cqw para escalar el lienzo */
+  container-type: size;
+}
+
+/*
+ * El tablero horizontal se dibuja a un tamano de diseno fijo (1600x900) y
+ * se encoge completo. Asi todo mantiene su proporcion en cualquier pantalla
+ * -- incluido un celular acostado -- en vez de encimarse porque los hijos
+ * estan en pixeles fijos. 100cqw = el ancho real del marco.
+ */
+.lienzo-tablero {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1600px;
+  height: 900px;
+  transform-origin: top left;
+  transform: scale(calc(100cqw / 1600px));
 }

@@ -17,7 +17,7 @@ export const I18N = {
 
     games_eyebrow: 'The games', games_title: 'For the classroom, the home and the science fair',
     games_lead: 'The card game is a quick way in; the strategy game gets into the detail of planning an energy system. Both come in a physical version to print and a digital version.',
-    games_live: 'Playable now', games_soon: 'In development · 2026',
+    games_live: 'Playable now', games_soon: 'In development',
 
     game1_title: 'TAJI',
     game1_kind: 'Card game · 2–4 players · ages 5+',
@@ -41,7 +41,7 @@ export const I18N = {
     game2_players: '2–5 · solo or in teams', game2_age: 'Ages 12 and up',
     game2_format: 'Modular board + web simulator',
     game2_learn: 'Energy transition, systems planning and climate justice',
-    game2_cta: 'Available in 2026',
+    game2_cta: 'Coming soon',
 
     ficha_players: 'Players', ficha_age: 'Age', ficha_time: 'Length',
     ficha_learn: 'You learn', ficha_format: 'Format',
@@ -65,7 +65,8 @@ export const I18N = {
     dl_lead: 'Every material is free and built to work on slow connections and modest devices.',
     dlh_t: 'Print and play — full kit',
     dlh_d: 'Print-ready cards, <b>complete rules</b> and a one-page quick guide, in a single PDF and in the four languages.',
-    dlh_cta: 'Download PDF →',
+    dlh_cta: 'Coming soon',
+    dl_soon: 'Coming soon',
     dlg1: 'To play at home', dlg2: 'Digital versions',
     dl1_t: 'Game rules', dl1_d: 'PDF · 4 languages',
     dl2_t: 'Teaching guide', dl2_d: 'For teachers and facilitators',
@@ -77,7 +78,7 @@ export const I18N = {
 
     proj_eyebrow: 'The project', proj_title: 'Open, intercultural science outreach',
     proj_p1: 'LudoEnergía is an outreach project by the <b>Sonora Institute of Technology (ITSON)</b>. It brings knowledge about renewable energy and a just energy transition to diverse audiences, with special attention to rural and Indigenous communities in northwestern Mexico.',
-    proj_p2: 'It runs in two stages (2025–2026), participatory throughout. It links science outreach, linguistic inclusion, territorial and gender equity, and encouraging vocations in science, technology and engineering. It is aligned with the <b>Sonora Sustainable Energy Plan</b>.',
+    proj_p2: 'It runs in two stages (2026–2028), participatory throughout. It links science outreach, linguistic inclusion, territorial and gender equity, and encouraging vocations in science, technology and engineering. It is aligned with the <b>Sonora Sustainable Energy Plan</b>.',
     fact_inst: 'Institution', fact_fund: 'Funding', fact_fund_v: 'SECIHTI · Science & Technology (Outreach 2025)',
     fact_period: 'Period', fact_langs: 'Languages', fact_place: 'Territory',
     fact_place_v: 'Sonora and neighbouring regions, Mexico',
@@ -96,7 +97,6 @@ export const I18N = {
     foot_team: 'Team',
     foot_credit: 'Sonora Institute of Technology · SECIHTI',
     foot_license: 'Materials under an open license',
-    foot_year: '2025 · Year of the Indigenous Woman',
   },
 };
 

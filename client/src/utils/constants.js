@@ -84,6 +84,14 @@ export const SOCKET_EVENTS = {
   ERROR: "error",
 };
 
+// Nombre legible de cada tipo de carta (para el detalle de carta)
+export const CARD_TYPE_LABELS = {
+  [CARD_TYPES.PLANTA]: "Planta de energía",
+  [CARD_TYPES.MANTENIMIENTO]: "Mantenimiento",
+  [CARD_TYPES.RIESGO]: "Riesgo",
+  [CARD_TYPES.EVENTO]: "Evento",
+};
+
 // Colores de tipo de carta (alineados con el sistema de diseño)
 export const CARD_TYPE_COLORS = {
   [CARD_TYPES.PLANTA]: "#3B9668",
@@ -132,7 +140,7 @@ export const GAME_RULES = {
   HAND_LIMIT: 3,
   PLANTS_TO_WIN: 4,
   MIN_PLAYERS: 2,
-  MAX_PLAYERS: 4,
+  MAX_PLAYERS: 6,
   DISCARD_MIN: 1,
   DISCARD_MAX: 3,
 };
