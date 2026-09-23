@@ -41,3 +41,8 @@ temp/
 
 # Entregables e insumos para el equipo (viven en Drive, no en el repo)
 entregables/
+
+# Ilustraciones fuente del generador de arte (24 MB de PNG).
+# El arte final ya vive en client/public/assets en WebP; estos originales
+# van a Drive, junto con los demás insumos.
+herramientas/arte/ilustraciones/
