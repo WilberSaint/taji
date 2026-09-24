@@ -106,14 +106,48 @@ export default function GameBoard() {
 
   const instruccionEspecial = specialPlay && (
     <div className={`absolute left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2 px-3 ${esVertical ? 'bottom-[38%] w-full' : 'bottom-1/5'}`}>
-      <div className='bg-black/80 text-white px-4 py-2 rounded-full font-semibold text-sm text-center backdrop-blur-md border border-white/20 shadow-lg'>
-        {specialPlay.card.subtype === EVENT_TYPES.COMPRA && 'Selecciona la planta que quieres comprar'}
-        {specialPlay.card.subtype === EVENT_TYPES.INTERCAMBIO_PLANTA && specialPlay.step === 'origen' && 'Selecciona tu planta'}
-        {specialPlay.card.subtype === EVENT_TYPES.INTERCAMBIO_PLANTA && specialPlay.step === 'destino' && 'Selecciona la planta del oponente'}
-        {specialPlay.card.subtype === EVENT_TYPES.INTERCAMBIO_TERRENO && 'Selecciona al jugador con quien intercambiar'}
-        {specialPlay.card.subtype === EVENT_TYPES.ESPARCIMIENTO && specialPlay.step === 'origen' && `Selecciona tu riesgo (${specialPlay.movimientos.length} seleccionados)`}
-        {specialPlay.card.subtype === EVENT_TYPES.ESPARCIMIENTO && specialPlay.step === 'destino' && 'Selecciona la planta del oponente'}
-        {specialPlay.card.subtype === EVENT_TYPES.DESCARTE && 'Harás que todos los jugadores descarten sus cartas'}
+      {/* Las instrucciones dicen QUÉ hace la carta y QUÉ hay que tocar ahora.
+          Antes el esparcimiento decía solo "Selecciona tu riesgo (0
+          seleccionados)": ni explicaba que los riesgos se le pasan a otro, ni
+          que se pueden mover varios, ni cómo terminar. */}
+      <div className='max-w-[min(92vw,420px)] bg-black/85 text-white px-4 py-2.5 rounded-2xl text-center backdrop-blur-md border border-white/20 shadow-lg'>
+        {(() => {
+          const t = specialPlay.card.subtype;
+          const paso = specialPlay.step;
+          const n = specialPlay.movimientos.length;
+          const linea = (titulo, detalle) => (
+            <>
+              <span className="block text-sm font-bold">{titulo}</span>
+              <span className="mt-0.5 block text-xs leading-snug text-white/70">{detalle}</span>
+            </>
+          );
+
+          if (t === EVENT_TYPES.COMPRA)
+            return linea('Roba una planta', 'Toca la planta de un rival: pasa a tu tablero.');
+
+          if (t === EVENT_TYPES.INTERCAMBIO_PLANTA)
+            return paso === 'origen'
+              ? linea('Intercambia una planta', 'Primero toca una planta TUYA, la que quieres dar.')
+              : linea('¿Por cuál la cambias?', 'Ahora toca la planta del rival que quieres recibir.');
+
+          if (t === EVENT_TYPES.INTERCAMBIO_TERRENO)
+            return linea('Intercambia tableros enteros', 'Toca al rival con quien quieres cambiar todo tu tablero.');
+
+          if (t === EVENT_TYPES.ESPARCIMIENTO)
+            return paso === 'origen'
+              ? linea(
+                  n === 0 ? 'Pasa tus riesgos a los demás' : `Riesgo ${n} listo, ¿otro más?`,
+                  n === 0
+                    ? 'Toca una planta TUYA que esté dañada. Después elegirás a quién le pasas ese riesgo.'
+                    : 'Toca otra planta tuya dañada, o pulsa el botón para mover los que ya elegiste.',
+                )
+              : linea('¿A quién se lo pasas?', 'Toca la planta de un rival: ahí se va ese riesgo.');
+
+          if (t === EVENT_TYPES.DESCARTE)
+            return linea('Todos tiran su mano', 'Los demás descartan sus cartas y roban de nuevo. Tú vuelves a jugar.');
+
+          return null;
+        })()}
       </div>
 
       {specialPlay.card.subtype === EVENT_TYPES.ESPARCIMIENTO && specialPlay.movimientos.length > 0 && (
@@ -126,7 +160,10 @@ export default function GameBoard() {
           className='text-white font-bold px-6 py-2 rounded-full shadow-lg select-none transition-colors hover:brightness-110'
           style={{ background: '#14A0AE' }}
         >
-          Confirmar contagio ({specialPlay.movimientos.length})
+          {/* "Contagio" era vocabulario del juego en que se inspira TAJI, no
+              del nuestro: aquí se mueven riesgos entre plantas. */}
+          Mover {specialPlay.movimientos.length}{' '}
+          {specialPlay.movimientos.length === 1 ? 'riesgo' : 'riesgos'}
         </button>
       )}
 

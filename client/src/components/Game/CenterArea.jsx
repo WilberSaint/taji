@@ -64,6 +64,12 @@ function Terrenos({ currentPlayer }) {
         width: ANCHO_LIENZO,
         transform: 'translate(-50%, -50%)',
         zIndex: CAPAS[slotType],
+        /* Transparente al dedo: este envoltorio es un CUADRADO y los cuatro
+           se encima entre sí, así que se comía los toques de la planta
+           vecina. Medido: tocar el centro de la solar activaba la geotérmica.
+           Quien recibe el toque es la capa recortada al rombo que hay dentro
+           de PlayerSlot (RECORTE_SUELO). */
+        pointerEvents: 'none',
       }}
     >
       <PlayerSlot

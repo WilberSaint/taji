@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ENERGY_TYPES, CARD_TYPES, EVENT_TYPES } from '../../utils/constants';
 import { useGameStore } from '../../store/gameStore';
@@ -12,6 +13,15 @@ import EfectoCasilla from './EfectoCasilla';
    dibujaban contra el lienzo ENTERO y por eso se salían de la tarjeta por
    los lados y por abajo. Estas dos cajas los mantienen sobre la tierra. */
 const SUELO_HOLGADO = { top: '24%', bottom: '24%', left: '8%', right: '8%' };
+
+/* El mismo rombo, pero como recorte para el ÁREA DE TOQUE.
+   Cada planta ocupaba, para efectos del dedo, todo su lienzo cuadrado, y esos
+   cuadrados se encima entre sí: medido, tocar el centro de la SOLAR activaba
+   la geotérmica, y la eólica y la geo activaban las dos la hidroeléctrica.
+   Tres de cuatro plantas no respondían en su propio centro y había que
+   apuntar más arriba. Con el recorte, cada una solo recibe toques sobre su
+   rombo, y los cuatro rombos embaldosan sin encimarse. */
+const RECORTE_SUELO = 'polygon(50% 20.4%, 95.65% 50%, 50% 79.6%, 4.35% 50%)';
 
 /* ================= ENERGÍA =================
    `color` es fijo y lo usa el TABLERO CENTRAL, que siempre es oscuro (es el
@@ -84,6 +94,9 @@ export default function PlayerSlot({
   );
   const destruyendo = efecto === 'destruir';
 
+  // Solo para el realce al pasar el ratón en escritorio; en táctil no aplica
+  const [encima, setEncima] = useState(false);
+
   const isEmpty = !slot?.plant;
   const isActive = !!slot?.plant;
 
@@ -127,7 +140,9 @@ export default function PlayerSlot({
           if (step === 'origen') {
             return isMySlot && riskCount > 0 && movimientos.find((m) => m.origen.slot === slotType) === undefined;
           }
-          if (step === 'destino') return !isMySlot && !isEmpty && pendiente.slot === slotType;
+          // pendiente?. y no pendiente.: si llegara nulo, esto se ejecuta en
+          // pleno render y tumbaba el tablero completo en pantalla blanca.
+          if (step === 'destino') return !isMySlot && !isEmpty && pendiente?.slot === slotType;
           return false;
         default:
           return false;
@@ -285,14 +300,14 @@ export default function PlayerSlot({
   /* ================= VARIANTE CENTRO (mi tablero) ================= */
   if (variant === 'center') {
     return (
+      /* pointer-events-none aquí y el toque en la capa recortada del final:
+         así el lienzo cuadrado no le roba los toques a la planta vecina. */
       <motion.div
-        onClick={handleClick}
-        whileHover={clickable ? { y: -10 } : undefined}
         animate={destruyendo
           ? { x: [0, -6, 6, -4, 4, 0], scale: [1, 1.06, 0.94, 1] }
-          : { opacity: 1, x: 0, scale: 1 }}
+          : { opacity: 1, x: 0, scale: 1, y: clickable && encima ? -10 : 0 }}
         transition={{ duration: destruyendo ? 0.5 : 0.4 }}
-        className={`relative h-full w-full ${clickable ? 'cursor-pointer' : ''}`}
+        className="pointer-events-none relative h-full w-full"
       >
         <img
           src={isActive ? PLANT_IMAGES[slotType].on : PLANT_IMAGES[slotType].off}
@@ -481,6 +496,17 @@ export default function PlayerSlot({
             insignia suelta en la esquina solo confundía. */}
 
         {efecto && <EfectoCasilla tipo={efecto} />}
+
+        {/* Área de toque, recortada al rombo del suelo. Va la última para
+            quedar por encima del dibujo; las etiquetas y los aros no
+            estorban porque todos son pointer-events-none. */}
+        <div
+          className={`pointer-events-auto absolute inset-0 ${clickable ? 'cursor-pointer' : ''}`}
+          style={{ clipPath: RECORTE_SUELO }}
+          onClick={handleClick}
+          onMouseEnter={() => setEncima(true)}
+          onMouseLeave={() => setEncima(false)}
+        />
       </motion.div>
     );
   }
