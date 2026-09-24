@@ -239,6 +239,29 @@ export default class Game {
       player.hasDiscardedThisTurn = false;
     }
 
+    /* ===== LAS CARTAS NO PUEDEN DESAPARECER =====
+       Una carta jugada o bien se queda en un tablero, o bien va al descarte.
+       Faltaban las dos mitades de esa regla y se perdían cartas de verdad:
+       medido, 8 de 52 en quince turnos, hasta dejar la partida sin mazo.
+
+       1. La carta de EVENTO se quitaba de la mano y no se mandaba a ningún
+          lado: las 10 del mazo se evaporaban al jugarlas.
+       2. `effect.cardsToDiscard` (anulaciones mutuas, plantas destruidas,
+          manos descartadas) solo llegaba al descarte por el camino de
+          GameManager.playCard, que usan las PERSONAS. El turno de los bots
+          llama a este modelo directo, así que todo lo que anulaba o destruía
+          un bot se perdía.
+
+       Por eso se hace aquí, en el modelo: es el único sitio por el que pasan
+       todos los caminos. GameManager ya no lo repite. */
+    if (card.type === CARD_TYPES.EVENTO && !effect.cardsToDiscard.includes(card)) {
+      effect.cardsToDiscard.push(card);
+    }
+
+    if (effect.cardsToDiscard.length > 0) {
+      this.discardPile.push(...effect.cardsToDiscard);
+    }
+
     if (card.type === CARD_TYPES.EVENTO) {
       logger.game(`${player.name} jugó ${card.name}`);
     } else {

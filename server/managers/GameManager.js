@@ -315,14 +315,11 @@ class GameManager {
       return { success: false, error: 'La partida no está en curso' };
     }
 
-    const result = game.playCard(playerId, cardId, targetPlayerId, movements);
-
-    // Si hubo cartas descartadas (anulación o destrucción), agregarlas a la pila
-    if (result.success && result.effect && result.effect.cardsToDiscard.length > 0) {
-      game.discardPile.push(...result.effect.cardsToDiscard);
-    }
-
-    return result;
+    /* El descarte de las cartas anuladas o destruidas lo hace ya el propio
+       modelo (Game.playCard). Antes se hacía aquí, y como el turno de los
+       bots llama al modelo directo sin pasar por esta función, todo lo que
+       anulaba o destruía un bot desaparecía de la partida. */
+    return game.playCard(playerId, cardId, targetPlayerId, movements);
   }
 
   /**
