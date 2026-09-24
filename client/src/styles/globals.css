@@ -72,8 +72,14 @@
   --board-texto-suave: rgba(22,33,42,0.5);
   --board-hueco: rgba(22,33,42,0.06);
   --board-hueco-borde: rgba(22,33,42,0.22);
-  --board-turno: rgba(11,116,128,0.16);
-  --board-turno-borde: rgba(11,116,128,0.7);
+  /* El renglón del jugador en turno. OJO con la opacidad: estos paneles
+     flotan sobre el pueblo, que es oscuro SIEMPRE (el tablero no cambia con
+     el tema). A 0.16 el panel se quedaba casi transparente, o sea oscuro, y
+     encima le caía el texto de tema claro, que es casi negro: el renglón del
+     que iba en turno se volvía ilegible. Tiene que tapar tanto como
+     --board-panel, solo que teñido de teal. */
+  --board-turno: rgba(205,237,239,0.92);
+  --board-turno-borde: rgba(11,116,128,0.8);
 }
 
 @media (prefers-color-scheme: dark) {

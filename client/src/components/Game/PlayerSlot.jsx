@@ -496,7 +496,16 @@ export default function PlayerSlot({
            debajo de su contenido. Sin eso, en pantallas angostas empujaba el
            renglón y el último se salía de la pantalla. */
         className={`relative flex min-w-0 flex-1 items-center justify-center overflow-hidden rounded-md
-          ${{ grande: 'h-12 gap-1.5 px-0.5', medio: 'h-10 gap-1 px-0.5', compacto: 'h-8 gap-0.5 px-0.5 min-[360px]:gap-1' }[alto]}
+          /* Alturas pensadas para el dedo: Apple pide 44pt mínimo. El tamaño
+             lo manda cuántos rivales hay, PERO también cuánta pantalla hay:
+             en un iPhone SE (667px de alto) con seis jugadores, los renglones
+             altos se encimaban con el tablero. Por debajo de 720px de alto se
+             usa la versión baja; encima, la cómoda. */
+          ${{
+            grande: 'h-10 gap-1.5 px-0.5 [@media(min-height:720px)]:h-12',
+            medio: 'h-9 gap-1 px-0.5 [@media(min-height:720px)]:h-11',
+            compacto: 'h-8 gap-0.5 px-0.5 min-[360px]:gap-1 [@media(min-height:720px)]:h-10',
+          }[alto]}
           ${clickable ? 'cursor-pointer' : ''}`}
         style={{
           background: isActive

@@ -30,11 +30,13 @@ export default function PlayerHand({ cards = [], vertical = false }) {
   const descarteTotal = gameState?.discardPile?.count ?? 0;
   const ultimaDescartada = gameState?.discardPile?.topCard || null;
 
-  const rotations = [
-    '-rotate-6',
-    '',
-    'rotate-6'
-  ]
+  /* En celular el abanico va más cerrado. Girada 6 grados, una carta de
+     76x102 ocupa 5.15px más por lado de lo que mide su hueco, y con la
+     separación de 4px que había las cartas se encimaban 1px: tocabas una y
+     respondía la de al lado. A 3 grados el sobrante baja a 2.6px. */
+  const rotations = vertical
+    ? ['-rotate-3', '', 'rotate-3']
+    : ['-rotate-6', '', 'rotate-6'];
   /* ===== ACCIONES ===== */
   const handleCardClick = (card) => {
     if (!isMyTurn) return;
@@ -92,7 +94,7 @@ export default function PlayerHand({ cards = [], vertical = false }) {
         {/* ===== MANO CENTRAL ===== */}
         <div className="flex justify-center pointer-events-auto">
           <div
-            className={`flex items-end ${vertical ? "gap-1" : "gap-12 lg:gap-6"}`}
+            className={`flex items-end ${vertical ? "gap-2.5" : "gap-12 lg:gap-6"}`}
           >
             {cards.map((card, index) => {
               const isSelected = discardMode
@@ -149,7 +151,7 @@ export default function PlayerHand({ cards = [], vertical = false }) {
         </div>
 
         {/* ===== BLOQUE MAZO + DESCARTE ===== */}
-        <div className={`relative pointer-events-auto flex-shrink-0 ${vertical ? "w-[122px]" : "w-[18%] max-w-[240px]"}`}>
+        <div className={`relative pointer-events-auto flex-shrink-0 ${vertical ? "w-[104px] min-[360px]:w-[122px]" : "w-[18%] max-w-[240px]"}`}>
 
           {/* INDICADOR DE TURNO */}
           <div className={`absolute -top-[35%] left-1/2 -translate-x-1/2 w-full justify-center ${vertical ? "hidden" : "flex"}`}>

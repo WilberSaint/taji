@@ -220,7 +220,19 @@ export default function GameBoard() {
         {/* Un renglón por rival: siempre se ven todos, sin deslizar, y deja
             mucho más tablero que la rejilla de tarjetas. */}
         {opponents.length > 0 && (
-          <div className="relative z-20 flex shrink-0 flex-col gap-1.5 px-2 py-2 min-[380px]:px-3">
+          /* min-h-0 + overflow-y-auto y SIN shrink-0: la lista de rivales es lo
+             que cede si de plano no cabe (pantalla muy baja con seis
+             jugadores), en vez de empujar el tablero y encimarse con él.
+             Mientras quepa no se desliza nada, que era la idea original. */
+          <div
+            className="relative z-20 flex min-h-0 flex-col gap-2 overflow-y-auto px-2 py-2 min-[380px]:px-3"
+            /* El tablero se sube con --tablero-y-movil, que es un transform y
+               por tanto no ocupa lugar: en pantallas justas se montaba encima
+               del último rival. Este margen reserva exactamente lo que el
+               tablero va a subir, así las dos perillas no se pisan aunque se
+               cambie el valor. */
+            style={{ marginBottom: 'calc(-1 * var(--tablero-y-movil))' }}
+          >
             {opponents.map(op => (
               <OpponentBoard key={op.id} player={op} fila alto={ALTO_RENGLON[opponents.length] || 'compacto'} />
             ))}
@@ -234,8 +246,14 @@ export default function GameBoard() {
             tablero y las cartas se movían bajo el dedo según con cuántos
             jugaras. Los renglones se quedan arriba y el hueco que sobra va en
             medio; cuando hay pocos rivales sus renglones crecen para
-            llenarlo (ver ALTO_RENGLON). */}
-        <div className="relative z-10 flex min-h-0 flex-1 items-end justify-center px-1 pb-2">
+            llenarlo (ver ALTO_RENGLON).
+
+            grow + shrink-0 y no flex-1: crece para empujar el tablero abajo,
+            pero NUNCA se encoge. Con flex-1 este hueco colapsaba en pantallas
+            bajas y el tablero se desbordaba hacia arriba, encimándose con los
+            renglones de rivales. Ahora el que cede es la lista de rivales,
+            que para eso puede deslizarse. */}
+        <div className="relative z-10 flex shrink-0 grow basis-auto items-end justify-center px-1 pb-2">
           <CenterArea currentPlayer={currentPlayer} vertical />
           <div className="pointer-events-none absolute inset-x-3 top-0 z-30">
             <RegistroJugadas compacto />
@@ -419,7 +437,7 @@ function OpponentBoard({ player, small, orientation, compacto, fila, alto = 'com
         </span>
         {/* min-w-0: sin esto un contenedor flex no baja de su contenido y los
             chips empujan el renglón fuera de la pantalla. */}
-        <div className={`flex min-w-0 flex-1 ${alto === 'grande' ? 'gap-1.5 min-[380px]:gap-2' : 'gap-1 min-[360px]:gap-1.5'}`}>{slotsFila}</div>
+        <div className={`flex min-w-0 flex-1 ${alto === 'grande' ? 'gap-2 min-[380px]:gap-2.5' : 'gap-1.5 min-[360px]:gap-2'}`}>{slotsFila}</div>
       </div>
     );
   }
