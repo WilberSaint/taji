@@ -60,11 +60,18 @@ const SIZE_CLASSES = {
     small: 'w-[58px] aspect-[3/4]',
     normal: 'w-[70px] aspect-[3/4]',
   },
-  // Ancho explícito: con aspect-[4/3] el contenedor en columna los estiraba
-  // a todo lo ancho del panel y quedaban como barras casi vacías.
+  /* Los paneles laterales de PC apilan sus casillas en COLUMNA: ahí lo que
+     escasea es el alto y lo que sobra es el ancho. Medido: el chip ocupaba
+     67px dentro de un panel de 172 y quedaban 105px sin usar, con las
+     casillas viéndose diminutas.
+
+     Antes llevaban ancho fijo porque con aspect-[4/3] se estiraban y quedaban
+     como barras casi vacías, pero eso era culpa de la PROPORCIÓN, no del
+     ancho: con alto fijo y ancho completo llenan bien, igual que los
+     renglones de rival del celular. */
   landscape: {
-    small: 'h-[52px] w-[74px]',
-    normal: 'h-[62px] w-[88px]',
+    small: 'h-[46px] w-full',
+    normal: 'h-[54px] w-full',
   },
 };
 
@@ -614,7 +621,8 @@ export default function PlayerSlot({
   /* ================= VARIANTE OPONENTE (chip de energía) ================= */
   const sizeClass = SIZE_CLASSES[orientation]?.[size] || SIZE_CLASSES.portrait.normal;
   const landscape = orientation === 'landscape';
-  const iconPx = size === 'small' ? 13 : 16;
+  // En los paneles de columna hay ancho de sobra: el contenido puede crecer
+  const iconPx = landscape ? (size === 'small' ? 16 : 18) : (size === 'small' ? 13 : 16);
 
   return (
     <motion.div
@@ -650,7 +658,7 @@ export default function PlayerSlot({
       />
       {/* Mismo motivo que en la variante de renglón: ver la nota de arriba. */}
       <span
-        className="text-[8px] font-bold uppercase leading-none tracking-wide"
+        className={`font-bold uppercase leading-none tracking-wide ${landscape ? 'text-[10px]' : 'text-[8px]'}`}
         style={{ color: isActive ? 'var(--board-texto)' : 'var(--board-texto-suave)' }}
       >
         {energy.label}

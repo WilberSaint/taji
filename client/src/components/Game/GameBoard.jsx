@@ -61,10 +61,26 @@ export default function GameBoard() {
     isEmpty: true
   };
 
+  /* Se rellena hasta 3 para que en partidas cortas se vean los asientos
+     libres, que es lo que había siempre. Por encima de 3 ya no se rellena:
+     son rivales de verdad. */
   const visualOpponents = [...opponents];
   while (visualOpponents.length < 3) {
     visualOpponents.push(EMPTY_PLAYER);
   }
+
+  /* Reparto alrededor de la mesa. El acomodo de PC tenía tres huecos fijos
+     —arriba, izquierda, derecha—, así que en una partida de 6 jugadores dos
+     rivales sencillamente NO se dibujaban: se veían 4 de 6. Ahora los lados
+     apilan hasta dos y arriba caben dos, que da para los cinco rivales. */
+  const alrededor = (() => {
+    const r = visualOpponents;
+    if (r.length <= 1) return { izquierda: [], arriba: r, derecha: [] };
+    if (r.length === 2) return { izquierda: [r[0]], arriba: [], derecha: [r[1]] };
+    if (r.length === 3) return { izquierda: [r[0]], arriba: [r[1]], derecha: [r[2]] };
+    if (r.length === 4) return { izquierda: [r[0]], arriba: [r[1], r[2]], derecha: [r[3]] };
+    return { izquierda: [r[0], r[1]], arriba: [r[2]], derecha: [r[3], r[4]] };
+  })();
 
   const handleLeaveGame = async () => {
     await leaveRoom();
@@ -346,20 +362,29 @@ export default function GameBoard() {
 
           <div className="absolute right-4 top-4 z-50">{controles}</div>
 
-          {/* Oponente de arriba */}
-          <div className="absolute left-1/2 top-[4%] z-20 -translate-x-1/2">
-            <OpponentBoard player={visualOpponents[0]} orientation="portrait" />
-          </div>
-
-          {gameState.players.length > 2 && (
-            <div className="absolute left-[8%] top-1/2 z-20 -translate-y-1/2">
-              <OpponentBoard player={visualOpponents[1]} orientation="landscape" small />
+          {/* Rivales de arriba */}
+          {alrededor.arriba.length > 0 && (
+            <div className="absolute left-1/2 top-[4%] z-20 flex -translate-x-1/2 gap-4">
+              {alrededor.arriba.map((op, i) => (
+                <OpponentBoard key={op.id || `arriba-${i}`} player={op} orientation="portrait" />
+              ))}
             </div>
           )}
 
-          {gameState.players.length > 3 && (
-            <div className="absolute right-[8%] top-1/2 z-20 -translate-y-1/2">
-              <OpponentBoard player={visualOpponents[2]} orientation="landscape" small />
+          {/* Rivales de los lados: apilados, para que quepan hasta dos */}
+          {alrededor.izquierda.length > 0 && (
+            <div className="absolute left-[6%] top-1/2 z-20 flex -translate-y-1/2 flex-col gap-3">
+              {alrededor.izquierda.map((op, i) => (
+                <OpponentBoard key={op.id || `izq-${i}`} player={op} orientation="landscape" small />
+              ))}
+            </div>
+          )}
+
+          {alrededor.derecha.length > 0 && (
+            <div className="absolute right-[6%] top-1/2 z-20 flex -translate-y-1/2 flex-col gap-3">
+              {alrededor.derecha.map((op, i) => (
+                <OpponentBoard key={op.id || `der-${i}`} player={op} orientation="landscape" small />
+              ))}
             </div>
           )}
 
@@ -550,9 +575,11 @@ function OpponentBoard({ player, small, orientation, compacto, fila, alto = 'com
         /* 2x2: cabe de sobra en pantalla de celular */
         <div className="mt-1 grid grid-cols-2 justify-items-center gap-1">{slots}</div>
       ) : (
-        /* items-center: en columna las casillas se estiraban a todo el ancho
-           del panel y quedaban como barras vacías */
-        <div className={`mt-1 flex gap-1 ${orientation === 'landscape' ? 'flex-col items-center' : 'flex-row'}`}>
+        /* En columna las casillas se estiran a todo el ancho del panel: ahí
+           lo que escasea es el alto, no el ancho, y dejarlas estrechas
+           desperdiciaba 105px de los 172 del panel. En fila se quedan como
+           estaban, que ahí sí llenan. */
+        <div className={`mt-1 flex gap-1.5 ${orientation === 'landscape' ? 'flex-col items-stretch' : 'flex-row'}`}>
           {slots}
         </div>
       )}
