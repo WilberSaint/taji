@@ -13,7 +13,7 @@ function quitarPrefijoBot(nombre) {
  * Cabecera de un tablero de jugador (usada sobre el panel de vidrio del oponente).
  * Colores fijos claros: vive sobre vidrio traslúcido encima de la foto del tablero.
  */
-export function PlayerFrame({ player, isMe = false, isHost = false, orientation = 'horizontal', compacto = false, esLider = false }) {
+export function PlayerFrame({ player, isMe = false, isHost = false, orientation = 'horizontal', compacto = false }) {
   const isEmpty = player?.isEmpty;
   const isCurrentTurn = player?.isCurrentTurn;
   const isVertical = orientation === 'vertical';
@@ -52,7 +52,11 @@ export function PlayerFrame({ player, isMe = false, isHost = false, orientation 
 
         {/* Cuántas plantas sanas lleva: es la carrera, y sin verla la partida
             no se siente competitiva. Mismo criterio que la condición de
-            victoria — una planta dañada no cuenta. */}
+            victoria — una planta dañada no cuenta.
+
+            Sin etiqueta de "va ganando" a propósito: el número y su color ya
+            lo dicen, y ponerlo con palabras era señalar a quién atacar, que
+            es una decisión del jugador, no del juego. */}
         {!isEmpty && (() => {
           const n = plantasSanas(player);
           const color = colorProgreso(n);
@@ -60,7 +64,7 @@ export function PlayerFrame({ player, isMe = false, isHost = false, orientation 
             <div
               className={`mt-0.5 flex items-center gap-1 font-mono font-bold leading-none ${compacto ? 'text-[9px]' : 'text-[10px]'}`}
               style={{ color }}
-              aria-label={`${n} de 4 plantas sanas${esLider ? ', va en cabeza' : ''}`}
+              aria-label={`${n} de 4 plantas sanas`}
             >
               {/* Cuatro puntos: se lee el avance sin tener que leer el número */}
               <span className="flex items-center gap-[2px]" aria-hidden="true">
@@ -73,7 +77,6 @@ export function PlayerFrame({ player, isMe = false, isHost = false, orientation 
                 ))}
               </span>
               <span>{n}/4</span>
-              {esLider && <span className="font-sans font-semibold">· va ganando</span>}
             </div>
           );
         })()}

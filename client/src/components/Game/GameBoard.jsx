@@ -1,13 +1,13 @@
 import { useGameStore } from '../../store/gameStore';
 import { useSocket } from '../../hooks/useSocket';
 import { useOrientacion } from '../../hooks/useOrientacion';
-import { Crown, HelpCircle, LogOut, Settings } from 'lucide-react';
+import { HelpCircle, LogOut, Settings } from 'lucide-react';
 import PlayerFrame from '../Player/PlayerFrame';
 import Avatar from '../UI/Avatar';
 import PlayerSlot from './PlayerSlot';
 import PlayerHand from './PlayerHand';
 import CenterArea from './CenterArea';
-import { plantasSanas, lideres, colorProgreso } from '../../utils/progreso';
+import { plantasSanas, colorProgreso } from '../../utils/progreso';
 import VictoryModal from './VictoryModal';
 import CardDetailModal from '../Card/CardDetailModal';
 import RulesModal from './RulesModal';
@@ -48,9 +48,6 @@ export default function GameBoard() {
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const esVertical = useOrientacion();
 
-  /* Quién va ganando. Se calcula aquí y se reparte, no en cada renglón: es la
-     misma cuenta para todos y así no se puede desincronizar. */
-  const enCabeza = lideres(gameState?.players || []);
 
   if (!gameState) return null;
 
@@ -283,7 +280,7 @@ export default function GameBoard() {
             style={{ marginBottom: 'calc(-1 * var(--tablero-y-movil))' }}
           >
             {opponents.map(op => (
-              <OpponentBoard key={op.id} player={op} fila alto={ALTO_RENGLON[opponents.length] || 'compacto'} esLider={enCabeza.includes(op.id)} />
+              <OpponentBoard key={op.id} player={op} fila alto={ALTO_RENGLON[opponents.length] || 'compacto'} />
             ))}
           </div>
         )}
@@ -351,18 +348,18 @@ export default function GameBoard() {
 
           {/* Oponente de arriba */}
           <div className="absolute left-1/2 top-[4%] z-20 -translate-x-1/2">
-            <OpponentBoard player={visualOpponents[0]} esLider={enCabeza.includes(visualOpponents[0]?.id)} orientation="portrait" />
+            <OpponentBoard player={visualOpponents[0]} orientation="portrait" />
           </div>
 
           {gameState.players.length > 2 && (
             <div className="absolute left-[8%] top-1/2 z-20 -translate-y-1/2">
-              <OpponentBoard player={visualOpponents[1]} esLider={enCabeza.includes(visualOpponents[1]?.id)} orientation="landscape" small />
+              <OpponentBoard player={visualOpponents[1]} orientation="landscape" small />
             </div>
           )}
 
           {gameState.players.length > 3 && (
             <div className="absolute right-[8%] top-1/2 z-20 -translate-y-1/2">
-              <OpponentBoard player={visualOpponents[2]} esLider={enCabeza.includes(visualOpponents[2]?.id)} orientation="landscape" small />
+              <OpponentBoard player={visualOpponents[2]} orientation="landscape" small />
             </div>
           )}
 
@@ -391,10 +388,15 @@ export default function GameBoard() {
 
 /**
  * "3/4" — cuántas plantas sanas lleva, que es exactamente lo que hace falta
- * para ganar. Se colorea según lo cerca que esté, para poder encontrar de un
- * vistazo a quién atacar sin leer los números.
+ * para ganar. El color dice lo cerca que está.
+ *
+ * Sin corona ni "va ganando" a propósito, por dos razones. Una: el número y
+ * su color ya lo dicen, y decirlo además con palabras es el juego señalando a
+ * quién hay que atacar — eso le toca decidirlo al jugador. Dos: la corona ya
+ * significa "anfitrión de la sala" en la cabecera de jugador, y el mismo
+ * ícono con dos significados distintos confunde.
  */
-function ProgresoRed({ jugador, esLider }) {
+function ProgresoRed({ jugador }) {
   const n = plantasSanas(jugador);
   const color = colorProgreso(n);
 
@@ -407,9 +409,8 @@ function ProgresoRed({ jugador, esLider }) {
         boxShadow: `inset 0 0 0 1px color-mix(in srgb, ${color} 45%, transparent)`,
       }}
       title={`${n} de 4 plantas sanas`}
-      aria-label={`${n} de 4 plantas sanas${esLider ? ', va en cabeza' : ''}`}
+      aria-label={`${n} de 4 plantas sanas`}
     >
-      {esLider && <Crown size={9} aria-hidden="true" />}
       {n}/4
     </span>
   );
@@ -427,7 +428,7 @@ const ALTO_RENGLON = {
   3: 'medio',
 };
 
-function OpponentBoard({ player, small, orientation, compacto, fila, alto = 'compacto', esLider = false }) {
+function OpponentBoard({ player, small, orientation, compacto, fila, alto = 'compacto' }) {
   const { specialPlay, clearSpecialPlay, setSelectedCard } = useGameStore();
   const { playCard } = useSocket();
 
@@ -524,7 +525,7 @@ function OpponentBoard({ player, small, orientation, compacto, fila, alto = 'com
             construidas de cada rival para saber quién iba a ganar, y en la
             práctica nadie lo hacía: la partida no se sentía competitiva
             porque no se veía a quién había que frenar. */}
-        <ProgresoRed jugador={player} esLider={esLider} />
+        <ProgresoRed jugador={player} />
         {/* min-w-0: sin esto un contenedor flex no baja de su contenido y los
             chips empujan el renglón fuera de la pantalla. */}
         <div className={`flex min-w-0 flex-1 ${alto === 'grande' ? 'gap-2 min-[380px]:gap-2.5' : 'gap-1.5 min-[360px]:gap-2'}`}>{slotsFila}</div>
@@ -543,7 +544,7 @@ function OpponentBoard({ player, small, orientation, compacto, fila, alto = 'com
         ${isClickableForTerrainSwap ? 'cursor-pointer ring-2 ring-purple-400' : ''}
       `}
     >
-      <PlayerFrame player={player} compacto={compacto} esLider={esLider} />
+      <PlayerFrame player={player} compacto={compacto} />
 
       {compacto ? (
         /* 2x2: cabe de sobra en pantalla de celular */

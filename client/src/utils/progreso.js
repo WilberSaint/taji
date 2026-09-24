@@ -28,20 +28,6 @@ export function plantasSanas(player) {
 }
 
 /**
- * Ids de quienes van en cabeza.
- *
- * Solo hay líder a partir de 2 plantas: con 0 o 1 no hay carrera que señalar
- * y marcar a alguien sería ruido. Si empatan, se marcan todos — señalar a uno
- * solo al azar sería mentir sobre quién amenaza.
- */
-export function lideres(players = []) {
-  const conteos = players.map((p) => ({ id: p.id, n: plantasSanas(p) }));
-  const maximo = Math.max(0, ...conteos.map((c) => c.n));
-  if (maximo < 2) return [];
-  return conteos.filter((c) => c.n === maximo).map((c) => c.id);
-}
-
-/**
  * Color del marcador según lo cerca que esté de ganar. La idea es que el ojo
  * encuentre solo a quién hay que atacar, sin leer números.
  */
@@ -52,4 +38,4 @@ export function colorProgreso(n) {
   return 'var(--ink-faint)';
 }
 
-export default { plantasSanas, lideres, colorProgreso };
+export default { plantasSanas, colorProgreso };
