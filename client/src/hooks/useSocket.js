@@ -4,6 +4,7 @@ import { useGameStore } from '../store/gameStore';
 import { SOCKET_EVENTS, CARD_TYPES } from '../utils/constants';
 import { describirJugada, TIPO_JUGADA } from '../utils/mensajesJugada';
 import { reproducirSonido } from '../utils/sonido';
+import { registrarPartida } from '../utils/estadisticas';
 
 /**
  * Varios componentes llaman a useSocket() a la vez (App, GameBoard, PlayerHand
@@ -227,6 +228,14 @@ export function useSocket() {
         message: `¡${data.winner.name} ganó la partida!`
       });
       reproducirSonido('victoria');
+
+      /* Se apunta el resultado en el propio dispositivo. Va aquí y no en el
+         modal de victoria porque este escucha se engancha UNA sola vez en la
+         vida de la app (ver la bandera de más arriba), así que la partida se
+         cuenta exactamente una vez. Si se contara al pintar el modal, cada
+         re-render podría sumar de más. */
+      const soyYo = data.winner?.id === socket.id;
+      registrarPartida(soyYo);
     };
 
     const handleGameError = (data) => {

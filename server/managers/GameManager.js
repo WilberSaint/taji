@@ -131,6 +131,12 @@ class GameManager {
       // Si ya avanzó, no hay nada que destrabar
       if (!actual || actual.id !== playerId || game.turnCount !== turnoAlArmar) return;
 
+      /* Y si volvió, tampoco. Al reconectarse se le asigna un socket nuevo,
+         así que la comparación de arriba ya lo descartaría, pero esto lo deja
+         explícito: a una persona conectada no se le quita el turno por haber
+         tardado. Solo se destraban bots y ausentes. */
+      if (!actual.isBot && actual.status !== PLAYER_STATUS.DISCONNECTED) return;
+
       logger.error(
         `Turno atascado en ${roomCode} (${actual.name}); el vigilante lo destraba`,
       );

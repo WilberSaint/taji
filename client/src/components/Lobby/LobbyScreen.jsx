@@ -6,6 +6,7 @@ import Button from '../UI/Button';
 import Avatar from '../UI/Avatar';
 import AvatarPicker from '../UI/AvatarPicker';
 import RulesModal from '../Game/RulesModal';
+import { leerEstadisticas, porcentajeVictorias } from '../../utils/estadisticas';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Users, Lock, Globe, LogIn, Plus, Bot, X, Crown,
@@ -66,6 +67,47 @@ function RulesButton() {
     >
       <HelpCircle size={18} />
     </button>
+  );
+}
+
+/**
+ * Marcador del dispositivo. Se guarda en este navegador, no en el servidor:
+ * no hay cuentas. Si no se ha jugado nada todavía, no se muestra — un
+ * marcador en ceros no le dice nada a nadie y solo estorba en la pantalla.
+ */
+function MarcadorLocal() {
+  const [est, setEst] = useState(() => leerEstadisticas());
+
+  /* Se relee al volver a la pantalla: la partida acaba de sumar su resultado
+     y este componente no se desmonta en el camino. */
+  useEffect(() => {
+    const alVolver = () => setEst(leerEstadisticas());
+    window.addEventListener('focus', alVolver);
+    return () => window.removeEventListener('focus', alVolver);
+  }, []);
+
+  if (!est.jugadas) return null;
+
+  const dato = (valor, etiqueta, color) => (
+    <div className="flex flex-col items-center">
+      <span className="font-display text-xl font-extrabold leading-none" style={{ color }}>
+        {valor}
+      </span>
+      <span className="mt-1 font-mono text-[10px] uppercase tracking-wider text-ink-faint">
+        {etiqueta}
+      </span>
+    </div>
+  );
+
+  return (
+    <div className="flex items-center justify-around gap-2 rounded-[var(--r-md)] border p-3"
+         style={{ borderColor: 'var(--line)', background: 'var(--surface-2)' }}>
+      {dato(est.jugadas, 'partidas', 'var(--ink)')}
+      {dato(est.victorias, 'ganadas', 'var(--success)')}
+      {dato(est.derrotas, 'perdidas', 'var(--ink-soft)')}
+      {dato(porcentajeVictorias(est) + '%', 'aciertos', 'var(--primary)')}
+      {est.mejorRacha > 1 && dato(est.mejorRacha, 'mejor racha', 'var(--solar)')}
+    </div>
   );
 }
 
@@ -291,6 +333,10 @@ export function LobbyScreen() {
               <span className="text-sm text-ink-soft">Entra a una sala privada con su código.</span>
             </motion.button>
           </div>
+
+          <motion.div {...fade} transition={{ delay: 0.12 }} className="mb-6">
+            <MarcadorLocal />
+          </motion.div>
 
           <motion.section {...fade} transition={{ delay: 0.15 }} className={`${panelBase} p-6`}>
             <div className="mb-4 flex items-center justify-between">

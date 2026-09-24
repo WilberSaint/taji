@@ -1,10 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Trophy, Home, RotateCcw, Check, Minus } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import Modal from '../UI/Modal';
 import Button from '../UI/Button';
 import Avatar from '../UI/Avatar';
+import { leerEstadisticas, porcentajeVictorias } from '../../utils/estadisticas';
 
 const ENERGIAS = [
   { tipo: 'solar', etiqueta: 'Solar', cvar: '--solar' },
@@ -52,6 +53,36 @@ function ResumenRed({ board, titulo, apagado = false }) {
           );
         })}
       </div>
+    </div>
+  );
+}
+
+/** Cómo va este dispositivo. No se muestra en la primera partida. */
+function MarcadorPartidas({ abierto }) {
+  const [est, setEst] = useState(null);
+
+  useEffect(() => {
+    if (abierto) setEst(leerEstadisticas());
+  }, [abierto]);
+
+  if (!est || est.jugadas < 2) return null;
+
+  return (
+    <div className="mt-6 flex items-center justify-center gap-4 rounded-[var(--r-md)] border px-4 py-2.5 text-sm"
+         style={{ borderColor: 'var(--line)', background: 'var(--surface-2)' }}>
+      <span className="text-ink-soft">
+        En este dispositivo llevas{' '}
+        <strong style={{ color: 'var(--success)' }}>{est.victorias}</strong>
+        {' de '}
+        <strong>{est.jugadas}</strong>
+        {' ('}{porcentajeVictorias(est)}%{')'}
+      </span>
+      {est.rachaActual > 1 && (
+        <span className="rounded-full px-2 py-0.5 font-mono text-xs font-bold"
+              style={{ background: 'var(--solar-soft)', color: 'var(--solar)' }}>
+          racha de {est.rachaActual}
+        </span>
+      )}
     </div>
   );
 }
@@ -154,6 +185,11 @@ export function VictoryModal({ isOpen, winner, onClose, onNewGame, isWinner, miT
             </div>
           </>
         )}
+
+        {/* Marcador del dispositivo. Se lee al abrir el modal, no al montarlo
+            en cada render: para entonces el resultado de esta partida ya
+            quedó apuntado (lo hace el escucha de victoria en useSocket). */}
+        <MarcadorPartidas abierto={isOpen} />
 
         <div className="mt-7 flex gap-3">
           <Button variant="secondary" fullWidth onClick={onClose} icon={<Home size={18} />}>
