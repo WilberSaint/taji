@@ -155,19 +155,21 @@ export default function PlayerHand({ cards = [], vertical = false }) {
                           selected={isSelected}
                           disabled={!isMyTurn}
                         />
-                        {/* Velo y aviso sobre las cartas sin destino. No se
-                            bloquea el toque a propósito: al tocarla el
+                        {/* Velo sobre las cartas que ahora mismo no van a
+                            ninguna parte. Solo el velo, sin texto encima: la
+                            etiqueta tapaba el arte, que es justo lo que hay
+                            que mirar para decidir. Quien use lector de
+                            pantalla no se pierde nada — la carta ya se anuncia
+                            como "no se puede jugar ahora".
+
+                            No se bloquea el toque a propósito: al tocarla el
                             servidor responde con el motivo exacto, que enseña
                             más que un botón muerto. */}
                         {sinDonde && !isSelected && (
-                          <div className="pointer-events-none absolute inset-0 flex items-end justify-center rounded-[10px] bg-black/45 p-1">
-                            <span
-                              className="rounded-full px-1.5 py-0.5 text-center font-bold leading-tight text-white"
-                              style={{ background: 'rgba(12,20,26,0.9)', fontSize: vertical ? 7 : 8 }}
-                            >
-                              sin dónde
-                            </span>
-                          </div>
+                          <div
+                            className="pointer-events-none absolute inset-0 rounded-[10px]"
+                            style={{ background: 'rgba(8,14,20,0.5)', backdropFilter: 'saturate(0.35)' }}
+                          />
                         )}
                         {/* Boton de detalle: la carta es muy chica para leer su texto */}
                         <button
