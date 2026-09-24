@@ -5,6 +5,7 @@ import { useGameStore } from '../../store/gameStore';
 import { useSocket } from '../../hooks/useSocket';
 import { Sun, Wind, Waves, Flame, AlertTriangle, Shield, ShieldCheck } from 'lucide-react';
 import EfectoCasilla from './EfectoCasilla';
+import { puedeJugarseEn } from '../../utils/jugadasValidas';
 
 /* ===== DONDE VA EL SUELO DENTRO DEL LIENZO DE UNA BALDOSA =====
    Cada imagen de planta es un lienzo cuadrado de 1024 px, pero el rombo de
@@ -115,16 +116,11 @@ export default function PlayerSlot({
     if (!isMyTurn) return false;
 
     if (selectedCard && !specialPlay) {
-      if (selectedCard.type === CARD_TYPES.PLANTA)
-        return isMySlot && isEmpty;
-
-      if (selectedCard.type === CARD_TYPES.MANTENIMIENTO)
-        return isMySlot && !isEmpty;
-
-      if (selectedCard.type === CARD_TYPES.RIESGO)
-        return !isMySlot && !isEmpty;
-
-      return false;
+      /* La regla vive en utils/jugadasValidas.js, compartida con la mano de
+         cartas: así lo que se enciende en el tablero y lo que se marca como
+         jugable en la mano no pueden contradecirse. Es un espejo de
+         server/utils/gameValidator.js; la autoridad sigue siendo el servidor. */
+      return puedeJugarseEn(selectedCard, slot, slotType, isMySlot);
     }
 
     if (specialPlay) {

@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import Card from '../Card/Card';
+import { tieneDondeJugarse } from '../../utils/jugadasValidas';
 import { useGameStore } from '../../store/gameStore';
 import { useSocket } from '../../hooks/useSocket';
 import { Trash2, Info, Check } from 'lucide-react';
@@ -17,7 +18,8 @@ export default function PlayerHand({ cards = [], vertical = false }) {
     setSpecialPlay,
     clearSpecialPlay,
     openCardDetail,
-    gameState
+    gameState,
+    socketId
   } = useGameStore();
 
   const { discardCards } = useSocket();
@@ -103,6 +105,15 @@ export default function PlayerHand({ cards = [], vertical = false }) {
 
               const isRevealed = isMyTurn;
 
+              /* ¿Esta carta va a alguna parte ahora mismo? Si tienes un
+                 mantenimiento solar y ninguna planta solar, antes tocabas las
+                 cuatro casillas, no se encendía ninguna y no había forma de
+                 saber por qué. Marcarla aquí cierra el círculo: la casilla
+                 dice DÓNDE y la carta dice SI SE PUEDE. Misma regla en los
+                 dos sitios (utils/jugadasValidas.js). */
+              const sinDonde =
+                isMyTurn && !discardMode && !tieneDondeJugarse(card, gameState, socketId);
+
               return (
                 <motion.div
                   key={card.id}
@@ -130,6 +141,20 @@ export default function PlayerHand({ cards = [], vertical = false }) {
                           selected={isSelected}
                           disabled={!isMyTurn}
                         />
+                        {/* Velo y aviso sobre las cartas sin destino. No se
+                            bloquea el toque a propósito: al tocarla el
+                            servidor responde con el motivo exacto, que enseña
+                            más que un botón muerto. */}
+                        {sinDonde && !isSelected && (
+                          <div className="pointer-events-none absolute inset-0 flex items-end justify-center rounded-[10px] bg-black/45 p-1">
+                            <span
+                              className="rounded-full px-1.5 py-0.5 text-center font-bold leading-tight text-white"
+                              style={{ background: 'rgba(12,20,26,0.9)', fontSize: vertical ? 7 : 8 }}
+                            >
+                              sin dónde
+                            </span>
+                          </div>
+                        )}
                         {/* Boton de detalle: la carta es muy chica para leer su texto */}
                         <button
                           type="button"
