@@ -1,0 +1,33 @@
+{
+  "name": "TAJI — LudoEnergía",
+  "short_name": "TAJI",
+  "description": "Juego de cartas sobre energías renovables. Conecta cuatro fuentes limpias y mantén tu comunidad con luz.",
+  "lang": "es",
+  "dir": "ltr",
+  "start_url": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0F161B",
+  "theme_color": "#0F161B",
+  "categories": ["games", "education"],
+  "icons": [
+    {
+      "src": "icono-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icono-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icono-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

@@ -189,6 +189,25 @@
   height: 100dvh;
 }
 
+/* ===== ZONAS SEGURAS (iPhone con muesca o isla dinámica) =====
+   Instalado como PWA no hay barra del navegador que tape nada: el contenido
+   llega hasta el borde físico y la isla dinámica de arriba y la barra de
+   inicio de abajo se comen lo que esté ahí. Estas clases reservan ese
+   espacio. En un navegador normal env() vale 0 y no cambian nada, así que se
+   pueden usar siempre. */
+.margen-seguro-arriba {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.margen-seguro-abajo {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+/* Los lados solo importan con el teléfono acostado, donde la muesca queda en
+   un costado. */
+.margen-seguro-lados {
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
 /* ===== ENCUADRE DEL PUEBLO =====
    El fondo y las cuatro capas de luces son recortes del mismo archivo, así
    que TIENEN que dibujarse con exactamente el mismo background-size y

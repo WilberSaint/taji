@@ -202,21 +202,25 @@ export default function GameBoard() {
   /* ============ ACOMODO VERTICAL (celular de pie) ============ */
   if (esVertical) {
     return (
-      <div className="alto-pantalla relative flex w-full flex-col overflow-hidden encuadre-pueblo fondo-pueblo fondo-movil">
+      <div className="alto-pantalla margen-seguro-lados relative flex w-full flex-col overflow-hidden encuadre-pueblo fondo-pueblo fondo-movil">
         <LucesPueblo jugador={currentPlayer} />
         <div className="pointer-events-none absolute inset-0 bg-black/50" />
 
         {/* Barra superior */}
-        <div className="relative z-40 flex shrink-0 items-center justify-between gap-2 px-3 pt-3">
-          <TurnIndicator />
-          {controles}
+        <div className="margen-seguro-arriba relative z-40 flex shrink-0 items-center justify-between gap-2 px-2 pt-3 min-[380px]:px-3">
+          {/* min-w-0 para que la píldora de turno pueda recortar su texto en
+              vez de empujar los botones fuera de la pantalla. */}
+          <div className="flex min-w-0 flex-1">
+            <TurnIndicator />
+          </div>
+          <div className="flex shrink-0 items-center gap-2">{controles}</div>
         </div>
 
         {/* Oponentes en fila */}
         {/* Un renglón por rival: siempre se ven todos, sin deslizar, y deja
             mucho más tablero que la rejilla de tarjetas. */}
         {opponents.length > 0 && (
-          <div className="relative z-20 flex shrink-0 flex-col gap-1.5 px-3 py-2">
+          <div className="relative z-20 flex shrink-0 flex-col gap-1.5 px-2 py-2 min-[380px]:px-3">
             {opponents.map(op => (
               <OpponentBoard key={op.id} player={op} fila alto={ALTO_RENGLON[opponents.length] || 'compacto'} />
             ))}
@@ -240,7 +244,7 @@ export default function GameBoard() {
 
         {/* Mi mano */}
         {currentPlayer && (
-          <div className="relative z-30 shrink-0 px-2 pb-3">
+          <div className="margen-seguro-abajo relative z-30 shrink-0 px-2 pb-3">
             <PlayerHand cards={currentPlayer.hand} vertical />
           </div>
         )}
@@ -258,7 +262,7 @@ export default function GameBoard() {
        el tamaño de la ventana. Antes el fondo llegaba a verse 41% más grande
        que el tablero en ventanas muy anchas o muy altas. */
     <div
-      className="alto-pantalla relative flex w-full items-center justify-center overflow-hidden"
+      className="alto-pantalla margen-seguro-lados relative flex w-full items-center justify-center overflow-hidden"
       style={{ background: '#121820' }}
     >
       <div className="marco-16-9 encuadre-pueblo fondo-pueblo relative overflow-hidden">
@@ -385,7 +389,11 @@ function OpponentBoard({ player, small, orientation, compacto, fila, alto = 'com
       <div
         onClick={handleBoardClick}
         className={`flex items-center rounded-xl border backdrop-blur-md transition-colors
-          ${{ grande: 'gap-3 px-3 py-3', medio: 'gap-2.5 px-2.5 py-2', compacto: 'gap-2 px-2 py-1.5' }[alto]}
+          ${{
+            grande: 'gap-2 px-2 py-3 min-[380px]:gap-3 min-[380px]:px-3',
+            medio: 'gap-1.5 px-2 py-2 min-[380px]:gap-2.5 min-[380px]:px-2.5',
+            compacto: 'gap-1.5 px-1.5 py-1.5 min-[360px]:gap-2 min-[360px]:px-2',
+          }[alto]}
           ${isEmpty ? 'opacity-30 grayscale' : ''}
           ${isClickableForTerrainSwap ? 'cursor-pointer ring-2 ring-purple-400' : ''}`}
         style={{
@@ -395,12 +403,23 @@ function OpponentBoard({ player, small, orientation, compacto, fila, alto = 'com
       >
         <Avatar id={player?.avatar} size={{ grande: 26, medio: 22, compacto: 18 }[alto]} />
         <span
-          className={`shrink-0 truncate font-bold leading-tight ${{ grande: 'w-[92px] text-[12px]', medio: 'w-[84px] text-[11px]', compacto: 'w-[74px] text-[10px]' }[alto]}`}
+          /* El ancho del nombre es lo PRIMERO que se encoge en pantallas
+             angostas. Fijo en 74px, a 320 px de ancho (iPhone con "Pantalla
+             ampliada") el último chip se salía de la pantalla y GEO quedaba
+             cortado: todo el apretón caía en los chips, que son lo que hay
+             que poder leer y tocar. */
+          className={`shrink-0 truncate font-bold leading-tight ${{
+            grande: 'w-[70px] text-[11px] min-[380px]:w-[92px] min-[380px]:text-[12px]',
+            medio: 'w-[62px] text-[10px] min-[380px]:w-[84px] min-[380px]:text-[11px]',
+            compacto: 'w-[52px] text-[9px] min-[360px]:w-[64px] min-[392px]:w-[74px] min-[360px]:text-[10px]',
+          }[alto]}`}
           style={{ color: 'var(--board-texto)' }}
         >
           {String(player?.name || '').replace('[BOT] ', '')}
         </span>
-        <div className={`flex flex-1 ${alto === 'grande' ? 'gap-2' : 'gap-1.5'}`}>{slotsFila}</div>
+        {/* min-w-0: sin esto un contenedor flex no baja de su contenido y los
+            chips empujan el renglón fuera de la pantalla. */}
+        <div className={`flex min-w-0 flex-1 ${alto === 'grande' ? 'gap-1.5 min-[380px]:gap-2' : 'gap-1 min-[360px]:gap-1.5'}`}>{slotsFila}</div>
       </div>
     );
   }

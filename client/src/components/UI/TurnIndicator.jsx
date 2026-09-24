@@ -14,7 +14,10 @@ export default function TurnIndicator() {
 
   return (
     <motion.div
-      className="flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm font-semibold backdrop-blur-md"
+      /* min-w-0 + truncate: "Turno de [BOT] Doña Eólica" no cabe en una
+         pantalla angosta y partía la píldora en dos renglones, empujando los
+         botones de al lado. */
+      className="flex min-w-0 items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-semibold backdrop-blur-md min-[380px]:px-4"
       style={
         isMyTurn
           ? { background: 'rgba(20,160,174,0.22)', borderColor: 'rgba(47,176,190,0.55)', color: '#CFF3F5' }
@@ -27,7 +30,11 @@ export default function TurnIndicator() {
         className="h-2 w-2 rounded-full"
         style={{ background: isMyTurn ? '#2FB0BE' : currentPlayer.color || '#94A3B8' }}
       />
-      <span>{isMyTurn ? 'Tu turno' : `Turno de ${currentPlayer.name}`}</span>
+      {/* Se quita el prefijo "[BOT] ", igual que en los renglones de rival:
+          ocupa espacio y el ícono de robot del avatar ya lo dice. */}
+      <span className="truncate">
+        {isMyTurn ? 'Tu turno' : `Turno de ${String(currentPlayer.name || '').replace('[BOT] ', '')}`}
+      </span>
     </motion.div>
   );
 }

@@ -492,8 +492,11 @@ export default function PlayerSlot({
         transition={{ duration: 0.3 }}
         /* El alto lo manda el renglón, que a su vez depende de cuántos
            rivales haya: con pocos sobra espacio arriba y conviene usarlo. */
-        className={`relative flex flex-1 items-center justify-center rounded-md
-          ${{ grande: 'h-12 gap-1.5', medio: 'h-10 gap-1', compacto: 'h-8 gap-1' }[alto]}
+        /* min-w-0 y overflow-hidden: el chip tiene que poder encogerse por
+           debajo de su contenido. Sin eso, en pantallas angostas empujaba el
+           renglón y el último se salía de la pantalla. */
+        className={`relative flex min-w-0 flex-1 items-center justify-center overflow-hidden rounded-md
+          ${{ grande: 'h-12 gap-1.5 px-0.5', medio: 'h-10 gap-1 px-0.5', compacto: 'h-8 gap-0.5 px-0.5 min-[360px]:gap-1' }[alto]}
           ${clickable ? 'cursor-pointer' : ''}`}
         style={{
           background: isActive
@@ -517,7 +520,10 @@ export default function PlayerSlot({
             ícono y el borde, que sí se leen; la etiqueta usa el token de
             texto del tablero, que está hecho para contrastar con el panel. */}
         <span
-          className={`truncate font-bold uppercase leading-none tracking-wide ${{ grande: 'text-[11px]', medio: 'text-[9px]', compacto: 'text-[8px]' }[alto]}`}
+          /* Por debajo de 340px de ancho la etiqueta desaparece y se queda el
+             ícono, que es lo que de verdad identifica la energía. Vale más
+             eso que verla cortada o que empuje el chip fuera de pantalla. */
+          className={`hidden truncate font-bold uppercase leading-none tracking-wide min-[340px]:block ${{ grande: 'text-[11px]', medio: 'text-[9px]', compacto: 'text-[8px]' }[alto]}`}
           style={{ color: isActive ? 'var(--board-texto)' : 'var(--board-texto-suave)' }}
         >
           {energy.label}

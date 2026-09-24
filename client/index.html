@@ -2,9 +2,33 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- viewport-fit=cover: en una PWA instalada no hay barra del navegador y
+         el contenido llega hasta los bordes. Sin esto, en iPhone quedan
+         franjas blancas arriba y abajo; con esto hay que respetar las zonas
+         seguras, que se manejan con env(safe-area-inset-*) en globals.css. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
     <meta name="description" content="TAJI - Juego de cartas sobre energías renovables" />
+    <meta name="theme-color" content="#0F161B" />
+
+    <!-- ===== PWA =====
+         Todas las rutas van RELATIVAS a propósito: el juego se sirve bajo
+         /taji/ en producción y en la raíz durante el desarrollo. Con rutas
+         absolutas el manifiesto y los íconos se irían a la raíz del sitio de
+         LudoEnergía y devolverían el HTML de la portada. -->
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+
+    <!-- iOS no lee el manifiesto para la pantalla de inicio: usa estas tres.
+         apple-mobile-web-app-title es lo que pone el nombre corto "TAJI"
+         debajo del ícono. -->
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="TAJI" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
