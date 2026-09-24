@@ -27,11 +27,17 @@ const SUELO_HOLGADO = { top: '24%', bottom: '24%', left: '8%', right: '8%' };
    El relleno de fondo se queda con el hexadecimal y su transparencia: al ser
    un tinte muy suave funciona igual sobre claro que sobre oscuro, y así no
    hace falta color-mix() (que pide navegadores más nuevos). */
+/* `corto` es para los chips de rival en celular. Medido a 393px de ancho —un
+   iPhone normal—: el chip queda en 49px y "Eólica" con su ícono necesita unos
+   61px, así que se cortaba y solo se leía la primera letra. Cuatro etiquetas
+   completas más la columna del nombre no caben en esa pantalla, se muevan a
+   donde se muevan. Tres letras sí, y con el ícono al lado no hay confusión
+   posible. En pantallas anchas se usa el nombre completo. */
 const ENERGY = {
-  [ENERGY_TYPES.SOLAR]: { color: '#DF9A34', token: 'var(--solar)', Icon: Sun, label: 'Solar' },
-  [ENERGY_TYPES.EOLICA]: { color: '#4F9FD2', token: 'var(--wind)', Icon: Wind, label: 'Eólica' },
-  [ENERGY_TYPES.HIDROELECTRICA]: { color: '#3A6AAE', token: 'var(--hydro)', Icon: Waves, label: 'Hidro' },
-  [ENERGY_TYPES.GEOTERMICA]: { color: '#C55C3C', token: 'var(--geo)', Icon: Flame, label: 'Geo' },
+  [ENERGY_TYPES.SOLAR]: { color: '#DF9A34', token: 'var(--solar)', Icon: Sun, label: 'Solar', corto: 'Sol' },
+  [ENERGY_TYPES.EOLICA]: { color: '#4F9FD2', token: 'var(--wind)', Icon: Wind, label: 'Eólica', corto: 'Eól' },
+  [ENERGY_TYPES.HIDROELECTRICA]: { color: '#3A6AAE', token: 'var(--hydro)', Icon: Waves, label: 'Hidro', corto: 'Hid' },
+  [ENERGY_TYPES.GEOTERMICA]: { color: '#C55C3C', token: 'var(--geo)', Icon: Flame, label: 'Geo', corto: 'Geo' },
 };
 
 const SHIELD_COLOR = '#3C79BE';
@@ -532,10 +538,14 @@ export default function PlayerSlot({
           /* Por debajo de 340px de ancho la etiqueta desaparece y se queda el
              ícono, que es lo que de verdad identifica la energía. Vale más
              eso que verla cortada o que empuje el chip fuera de pantalla. */
-          className={`hidden truncate font-bold uppercase leading-none tracking-wide min-[340px]:block ${{ grande: 'text-[11px]', medio: 'text-[9px]', compacto: 'text-[8px]' }[alto]}`}
+          className={`truncate font-bold uppercase leading-none tracking-wide ${{ grande: 'text-[11px]', medio: 'text-[10px]', compacto: 'text-[9px]' }[alto]}`}
           style={{ color: isActive ? 'var(--board-texto)' : 'var(--board-texto-suave)' }}
         >
-          {energy.label}
+          {/* Tres letras en pantalla angosta, nombre completo de 430px en
+              adelante. Dos nodos y no un corte con CSS porque "Eólica"
+              recortada a tres letras por overflow se lee "Eól…" con puntos. */}
+          <span className="min-[430px]:hidden">{energy.corto}</span>
+          <span className="hidden min-[430px]:inline">{energy.label}</span>
         </span>
 
         <StateBadges big={alto === 'grande'} />

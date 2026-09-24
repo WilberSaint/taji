@@ -44,6 +44,16 @@ export function setupLobbyHandlers(io, socket) {
       player.id = socket.id;
       player.status = 'connected';
 
+      /* Si el que vuelve era el anfitrión, la sala tiene que seguirlo: su id
+         de socket cambió y `hostId` se quedaba apuntando al viejo. El
+         anfitrión perdía sus permisos —agregar bots, expulsar, iniciar la
+         partida, pedir revancha— con solo bloquear la pantalla del teléfono
+         un momento, y no había forma de recuperarlos. */
+      if (room.hostId === oldSocketId) {
+        room.hostId = socket.id;
+        logger.info(`El anfitrión de ${roomCode} volvió; la sala lo sigue`);
+      }
+
       // Unir al socket a la sala
       socket.join(roomCode);
       socket.roomCode = roomCode;

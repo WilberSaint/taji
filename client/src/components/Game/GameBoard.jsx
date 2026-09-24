@@ -39,10 +39,11 @@ export default function GameBoard() {
     toggleVictory,
     showCardDetail,
     cardForDetail,
-    closeCardDetail
+    closeCardDetail,
+    currentRoom
   } = useGameStore();
 
-  const { leaveRoom, playCard } = useSocket();
+  const { leaveRoom, playCard, pedirRevancha } = useSocket();
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const esVertical = useOrientacion();
 
@@ -190,6 +191,10 @@ export default function GameBoard() {
         /* Al perder se enseñan las dos redes, la del ganador y la tuya, para
            ver qué tan cerca quedaste. */
         miTablero={currentPlayer?.board}
+        /* El botón de revancha solo le sale a quien creó la sala: es quien
+           puede iniciarla. Al resto no se le enseña un botón que le va a
+           decir que no. */
+        onNewGame={currentRoom?.hostId === socketId ? pedirRevancha : undefined}
         onClose={() => { toggleVictory(false); handleLeaveGame(); }}
       />
 
@@ -428,10 +433,16 @@ function OpponentBoard({ player, small, orientation, compacto, fila, alto = 'com
              ampliada") el último chip se salía de la pantalla y GEO quedaba
              cortado: todo el apretón caía en los chips, que son lo que hay
              que poder leer y tocar. */
-          className={`shrink-0 truncate font-bold leading-tight ${{
-            grande: 'w-[70px] text-[11px] min-[380px]:w-[92px] min-[380px]:text-[12px]',
-            medio: 'w-[62px] text-[10px] min-[380px]:w-[84px] min-[380px]:text-[11px]',
-            compacto: 'w-[52px] text-[9px] min-[360px]:w-[64px] min-[392px]:w-[74px] min-[360px]:text-[10px]',
+          /* El ancho del nombre es el MISMO en los tres tamaños: no depende de
+             cuán alto sea el renglón sino de que quepa un nombre. Antes el
+             renglón "grande" le daba 92px y dejaba los chips en 49px, más
+             estrechos que con seis jugadores — al revés de lo razonable, y
+             ahí es donde se cortaban las etiquetas de energía. Solo cambia el
+             tamaño de letra. */
+          className={`shrink-0 truncate font-bold leading-tight w-[52px] min-[360px]:w-[64px] min-[392px]:w-[74px] ${{
+            grande: 'text-[12px]',
+            medio: 'text-[11px]',
+            compacto: 'text-[10px]',
           }[alto]}`}
           style={{ color: 'var(--board-texto)' }}
         >

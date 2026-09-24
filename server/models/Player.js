@@ -213,6 +213,21 @@ export default class Player {
   }
 
   /**
+   * Deja al jugador como recién llegado, para jugar otra partida con la misma
+   * gente. Vacía la mano y el tablero y lo marca listo: ya estaba jugando, no
+   * tiene sentido pedirle que confirme otra vez.
+   *
+   * Sin esto, una revancha arrancaba con las plantas y las cartas de la
+   * partida anterior todavía puestas.
+   */
+  prepararNuevaPartida() {
+    this.hand = [];
+    this.board = this.initializeBoard();
+    this.isReady = true;
+    this.resetTurnState();
+  }
+
+  /**
    * Resetea el estado del turno
    */
   resetTurnState() {

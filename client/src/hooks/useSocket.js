@@ -249,6 +249,14 @@ export function useSocket() {
       }
     };
 
+    const handleRematch = () => {
+      // El estado de la partida nueva llega por su cuenta; aquí solo se
+      // cierra la pantalla de fin y se limpia el registro de la anterior.
+      toggleVictory(false, null);
+      useGameStore.getState().limpiarRegistroJugadas();
+      setNotification({ type: 'info', message: '¡Revancha! Nueva partida con los mismos jugadores' });
+    };
+
     const handleGameError = (data) => {
       console.error('❌ Error del juego:', data);
       setNotification({
@@ -261,6 +269,7 @@ export function useSocket() {
     socket.on(SOCKET_EVENTS.GAME_TURN_CHANGED, handleTurnChanged);
     socket.on(SOCKET_EVENTS.GAME_CARD_PLAYED, handleCardPlayed);
     socket.on(SOCKET_EVENTS.GAME_VICTORY, handleVictory);
+    socket.on(SOCKET_EVENTS.GAME_REMATCH, handleRematch);
     socket.on(SOCKET_EVENTS.GAME_ERROR, handleGameError);
     
   }, []);
@@ -550,8 +559,28 @@ export function useSocket() {
     });
   }, []);
 
+  /**
+   * Pide otra partida con la misma gente. Solo el anfitrión; el servidor lo
+   * verifica igual. No lanza: devuelve el error para poder avisarlo con un
+   * toast en vez de romper el modal de fin de partida.
+   */
+  const pedirRevancha = useCallback(() => {
+    return new Promise((resolve) => {
+      socket.emit(SOCKET_EVENTS.GAME_REMATCH, {}, (response) => {
+        if (!response?.success) {
+          useGameStore.getState().setNotification({
+            type: 'error',
+            message: response?.error || 'No se pudo iniciar la revancha',
+          });
+        }
+        resolve(response);
+      });
+    });
+  }, []);
+
   return {
     socket,
+    pedirRevancha,
     // Acciones de lobby
     createRoom,
     joinRoom,

@@ -137,8 +137,14 @@ export function handleReconnect(io, socket, roomCode, playerId) {
   }
 
   // Actualizar socket ID del jugador
+  const idAnterior = player.id;
   player.id = socket.id;
   player.status = PLAYER_STATUS.CONNECTED;
+
+  // Mismo motivo que en lobbyHandlers: la sala debe seguir al anfitrión
+  if (room.hostId === idAnterior) {
+    room.hostId = socket.id;
+  }
 
   // Unir al nuevo socket a la sala
   socket.join(roomCode);

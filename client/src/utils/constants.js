@@ -72,6 +72,7 @@ export const SOCKET_EVENTS = {
   GAME_RISK_SPREAD: "game:risk_spread", 
   GAME_ALL_DISCARDED: "game:all_discarded", 
   GAME_VICTORY: "game:victory",
+  GAME_REMATCH: "game:rematch",
   GAME_ERROR: "game:error",
   ROOM_UPDATED: "room:updated",
   ROOM_LIST_UPDATE: "room:list_update",

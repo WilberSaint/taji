@@ -1,6 +1,6 @@
 import GameManager from '../managers/GameManager.js';
 import RoomManager from '../managers/RoomManager.js';
-import { SOCKET_EVENTS } from '../utils/constants.js';
+import { SOCKET_EVENTS, GAME_STATUS } from '../utils/constants.js';
 import logger from '../utils/logger.js';
 
 /**
@@ -78,6 +78,60 @@ export function setupGameHandlers(io, socket) {
       if (callback) {
         callback({ success: false, error: 'Error al iniciar partida' });
       }
+    }
+  });
+
+  /**
+   * Revancha: otra partida con la misma gente, sin volver al lobby.
+   *
+   * En un taller esto es lo que más tiempo ahorra: al terminar una ronda,
+   * antes había que salir al lobby, volver a crear la sala, repartir el
+   * código y esperar a que todos entraran otra vez.
+   *
+   * Solo la pide el anfitrión, y solo si la partida ya terminó — si no,
+   * cualquiera podría reiniciar una partida en curso.
+   */
+  socket.on(SOCKET_EVENTS.GAME_REMATCH, (data, callback) => {
+    try {
+      const roomCode = socket.roomCode;
+      const responder = (r) => { if (callback) callback(r); };
+
+      if (!roomCode) return responder({ success: false, error: 'No estás en ninguna sala' });
+
+      const room = RoomManager.getRoom(roomCode);
+      if (!room) return responder({ success: false, error: 'Sala no encontrada' });
+
+      if (room.hostId !== socket.id) {
+        return responder({ success: false, error: 'Solo quien creó la sala puede pedir revancha' });
+      }
+
+      const partida = GameManager.getGame(roomCode);
+      if (!partida) return responder({ success: false, error: 'No hay partida que repetir' });
+      if (partida.status !== GAME_STATUS.FINISHED) {
+        return responder({ success: false, error: 'La partida todavía no termina' });
+      }
+
+      logger.info(`Revancha pedida en ${roomCode} por ${socket.id}`);
+
+      // Fuera la partida vieja y sus temporizadores, y a limpiar los tableros
+      GameManager.deleteGame(roomCode);
+      room.players.forEach((p) => p.prepararNuevaPartida());
+      room.setStatus(GAME_STATUS.LOBBY);
+
+      const nueva = GameManager.createGame(room, io);
+      if (!nueva) {
+        return responder({ success: false, error: 'No se pudo iniciar la revancha' });
+      }
+
+      /* Avisar a todos para que cierren la pantalla de fin de partida. El
+         estado nuevo ya viaja por su cuenta desde createGame. */
+      io.to(roomCode).emit(SOCKET_EVENTS.GAME_REMATCH, { roomCode });
+
+      responder({ success: true });
+      logger.success(`Revancha iniciada en ${roomCode}`);
+    } catch (error) {
+      logger.error('Error al iniciar la revancha', error);
+      if (callback) callback({ success: false, error: 'Error al iniciar la revancha' });
     }
   });
 
