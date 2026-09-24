@@ -1,6 +1,6 @@
 import Game from '../models/Game.js';
 import RoomManager from './RoomManager.js';
-import { GAME_STATUS, SOCKET_EVENTS } from '../utils/constants.js';
+import { GAME_STATUS, PLAYER_STATUS, SOCKET_EVENTS } from '../utils/constants.js';
 import logger from '../utils/logger.js';
 import { selectBotAction } from '../utils/botAI.js';
 
@@ -11,6 +11,7 @@ class GameManager {
   constructor() {
     this.games = new Map(); // roomCode -> Game
     this.botTurnTimers = new Map(); // roomCode -> timeoutId
+    this.botWatchdogs = new Map(); // roomCode -> timeoutId (turnos atascados)
   }
 
   emitGameState(io, roomCode) {
@@ -51,8 +52,97 @@ class GameManager {
     }
   }
 
+  clearWatchdog(roomCode) {
+    const timer = this.botWatchdogs.get(roomCode);
+    if (timer) {
+      clearTimeout(timer);
+      this.botWatchdogs.delete(roomCode);
+    }
+  }
+
+  /**
+   * Cierra el turno del jugador y deja la mesa lista para el siguiente.
+   *
+   * Existe porque antes cada rama del turno del bot cerraba por su cuenta con
+   * `if (result.success) { ... }` y SIN else: seis caminos distintos en los
+   * que, si `endTurn` fallaba, no se avisaba a nadie y la partida se quedaba
+   * congelada para siempre. Tres de esas ramas además se tragaban la victoria
+   * (`if (fallback.success && !fallback.victory)`), o sea que ganar por esa
+   * vía tampoco terminaba la partida.
+   *
+   * Aquí hay un solo camino y SIEMPRE termina en una de dos: se anuncia la
+   * victoria, o pasa el turno. Si `endTurn` no se puede completar se fuerza
+   * con `forceEndTurn`, que no valida nada. Vale mil veces más un turno
+   * pasado a la fuerza que una mesa trabada.
+   */
+  resolverTurno(roomCode, io, playerId) {
+    const game = this.games.get(roomCode);
+    if (!game || game.status !== GAME_STATUS.PLAYING) {
+      return;
+    }
+
+    let resultado = game.endTurn(playerId);
+
+    if (!resultado.success) {
+      logger.warn(
+        `No se pudo cerrar el turno en ${roomCode} (${resultado.error}); se fuerza el paso`,
+      );
+      resultado = game.forceEndTurn(playerId);
+    }
+
+    if (!resultado.success) {
+      logger.error(`Turno atascado sin remedio en ${roomCode}: ${resultado.error}`);
+      return;
+    }
+
+    if (resultado.victory) {
+      this.clearBotTimer(roomCode);
+      this.clearWatchdog(roomCode);
+      io.to(roomCode).emit(SOCKET_EVENTS.GAME_VICTORY, {
+        winner: resultado.winner,
+        finalState: resultado.gameState,
+      });
+      return;
+    }
+
+    this.emitTurnChanged(io, roomCode, resultado.nextPlayer, game.turnCount);
+    this.emitGameState(io, roomCode);
+    this.scheduleBotTurn(roomCode, io);
+  }
+
+  /**
+   * Vigilante de turnos atascados.
+   *
+   * Red de seguridad por si alguna vez vuelve a aparecer un camino sin salida
+   * que no previmos: si pasado un rato sigue siendo el turno del mismo
+   * jugador, se le pasa el turno a la fuerza. Vigila turnos de BOT (12s) y de
+   * personas DESCONECTADAS (45s, por si vuelven). A una persona conectada
+   * nunca se le apura: puede estar pensando.
+   */
+  armarWatchdog(roomCode, io, playerId, turnoAlArmar, espera = 12000) {
+    this.clearWatchdog(roomCode);
+
+    const timer = setTimeout(() => {
+      this.botWatchdogs.delete(roomCode);
+      const game = this.games.get(roomCode);
+      if (!game || game.status !== GAME_STATUS.PLAYING) return;
+
+      const actual = game.getCurrentPlayer();
+      // Si ya avanzó, no hay nada que destrabar
+      if (!actual || actual.id !== playerId || game.turnCount !== turnoAlArmar) return;
+
+      logger.error(
+        `Turno atascado en ${roomCode} (${actual.name}); el vigilante lo destraba`,
+      );
+      this.resolverTurno(roomCode, io, playerId);
+    }, espera);
+
+    this.botWatchdogs.set(roomCode, timer);
+  }
+
   scheduleBotTurn(roomCode, io) {
     this.clearBotTimer(roomCode);
+    this.clearWatchdog(roomCode);
 
     const game = this.games.get(roomCode);
     if (!game || game.status !== GAME_STATUS.PLAYING) {
@@ -60,11 +150,28 @@ class GameManager {
     }
 
     const currentPlayer = game.getCurrentPlayer();
-    if (!currentPlayer || !currentPlayer.isBot) {
+    if (!currentPlayer) {
       return;
     }
 
+    /* Si al jugador en turno se le cayó la conexión, NADIE puede cerrar ese
+       turno y la mesa se queda trabada para todos. No hay reconexión todavía
+       (ver el TODO en connectionHandlers), así que al menos no dejamos la
+       partida muerta: se le da un rato por si vuelve y luego se le pasa el
+       turno. En un taller con celulares esto pasa seguido — se bloquea la
+       pantalla, parpadea el wifi, se cambian de app. */
+    if (!currentPlayer.isBot) {
+      if (currentPlayer.status === PLAYER_STATUS.DISCONNECTED) {
+        this.armarWatchdog(roomCode, io, currentPlayer.id, game.turnCount, 45000);
+      }
+      return;
+    }
+
+    this.armarWatchdog(roomCode, io, currentPlayer.id, game.turnCount);
+
     const timer = setTimeout(() => {
+      this.botTurnTimers.delete(roomCode);
+
       const liveGame = this.games.get(roomCode);
       if (!liveGame || liveGame.status !== GAME_STATUS.PLAYING) {
         return;
@@ -75,128 +182,65 @@ class GameManager {
         return;
       }
 
-      const action = selectBotAction(liveGame, activePlayer);
-
       try {
-        if (!action || action.type === 'end_turn') {
-          const result = liveGame.endTurn(activePlayer.id);
-          if (result.success) {
-            if (result.victory) {
-              io.to(roomCode).emit(SOCKET_EVENTS.GAME_VICTORY, {
-                winner: result.winner,
-                finalState: result.gameState
-              });
-              return;
-            }
+        const action = selectBotAction(liveGame, activePlayer);
 
-            this.emitTurnChanged(io, roomCode, result.nextPlayer, liveGame.turnCount);
-            this.emitGameState(io, roomCode);
-            this.scheduleBotTurn(roomCode, io);
-          }
-          return;
-        }
-
-        if (action.type === 'discard') {
+        if (action && action.type === 'discard') {
           const result = liveGame.discardCards(activePlayer.id, action.cardIds);
-          if (!result.success) {
-            const fallback = liveGame.endTurn(activePlayer.id);
-            if (fallback.success && !fallback.victory) {
-              this.emitTurnChanged(io, roomCode, fallback.nextPlayer, liveGame.turnCount);
-              this.emitGameState(io, roomCode);
-              this.scheduleBotTurn(roomCode, io);
-            }
-            return;
-          }
-
-          io.to(activePlayer.id).emit(SOCKET_EVENTS.GAME_CARDS_DRAWN, { cards: result.drawnCards });
-          this.emitGameState(io, roomCode);
-
-          const endResult = liveGame.endTurn(activePlayer.id);
-          if (endResult.success) {
-            if (endResult.victory) {
-              io.to(roomCode).emit(SOCKET_EVENTS.GAME_VICTORY, {
-                winner: endResult.winner,
-                finalState: endResult.gameState
-              });
-              return;
-            }
-
-            this.emitTurnChanged(io, roomCode, endResult.nextPlayer, liveGame.turnCount);
-            this.emitGameState(io, roomCode);
-            this.scheduleBotTurn(roomCode, io);
-          }
-          return;
-        }
-
-        const result = liveGame.playCard(
-          activePlayer.id,
-          action.cardId,
-          action.targetPlayerId,
-          action.movements || []
-        );
-
-        if (!result.success) {
-          const fallback = liveGame.endTurn(activePlayer.id);
-          if (fallback.success && !fallback.victory) {
-            this.emitTurnChanged(io, roomCode, fallback.nextPlayer, liveGame.turnCount);
-            this.emitGameState(io, roomCode);
-            this.scheduleBotTurn(roomCode, io);
-          }
-          return;
-        }
-
-        io.to(roomCode).emit(SOCKET_EVENTS.GAME_CARD_PLAYED, {
-          playerId: activePlayer.id,
-          card: result.card,
-          target: result.target,
-          effect: result.effect
-        });
-
-        if (result.effect.cancelled) {
-          io.to(roomCode).emit(SOCKET_EVENTS.GAME_CARDS_CANCELLED, {
-            slotType: action.movements?.[0]?.destino?.slot,
-            targetPlayerId: action.targetPlayerId,
-            cardsDiscarded: result.effect.cardsToDiscard
-          });
-        }
-
-        if (result.effect.destroyed) {
-          io.to(roomCode).emit(SOCKET_EVENTS.GAME_PLANT_DESTROYED, {
-            slotType: action.movements?.[0]?.destino?.slot,
-            playerId: action.targetPlayerId,
-            cardsDiscarded: result.effect.cardsToDiscard
-          });
-        }
-
-        if (result.drawnCard) {
-          io.to(activePlayer.id).emit(SOCKET_EVENTS.GAME_CARDS_DRAWN, { cards: [result.drawnCard] });
-        }
-
-        this.emitGameState(io, roomCode);
-
-        const endResult = liveGame.endTurn(activePlayer.id);
-        if (endResult.success) {
-          if (endResult.victory) {
-            io.to(roomCode).emit(SOCKET_EVENTS.GAME_VICTORY, {
-              winner: endResult.winner,
-              finalState: endResult.gameState
+          if (result.success) {
+            io.to(activePlayer.id).emit(SOCKET_EVENTS.GAME_CARDS_DRAWN, {
+              cards: result.drawnCards,
             });
-            return;
+            this.emitGameState(io, roomCode);
           }
+        } else if (action && action.type !== 'end_turn') {
+          const result = liveGame.playCard(
+            activePlayer.id,
+            action.cardId,
+            action.targetPlayerId,
+            action.movements || [],
+          );
 
-          this.emitTurnChanged(io, roomCode, endResult.nextPlayer, liveGame.turnCount);
-          this.emitGameState(io, roomCode);
-          this.scheduleBotTurn(roomCode, io);
+          if (result.success) {
+            io.to(roomCode).emit(SOCKET_EVENTS.GAME_CARD_PLAYED, {
+              playerId: activePlayer.id,
+              card: result.card,
+              target: result.target,
+              effect: result.effect,
+            });
+
+            if (result.effect.cancelled) {
+              io.to(roomCode).emit(SOCKET_EVENTS.GAME_CARDS_CANCELLED, {
+                slotType: action.movements?.[0]?.destino?.slot,
+                targetPlayerId: action.targetPlayerId,
+                cardsDiscarded: result.effect.cardsToDiscard,
+              });
+            }
+
+            if (result.effect.destroyed) {
+              io.to(roomCode).emit(SOCKET_EVENTS.GAME_PLANT_DESTROYED, {
+                slotType: action.movements?.[0]?.destino?.slot,
+                playerId: action.targetPlayerId,
+                cardsDiscarded: result.effect.cardsToDiscard,
+              });
+            }
+
+            if (result.drawnCard) {
+              io.to(activePlayer.id).emit(SOCKET_EVENTS.GAME_CARDS_DRAWN, {
+                cards: [result.drawnCard],
+              });
+            }
+
+            this.emitGameState(io, roomCode);
+          }
         }
       } catch (error) {
         logger.error(`Error ejecutando turno del bot en ${roomCode}`, error);
-        const fallback = liveGame.endTurn(activePlayer.id);
-        if (fallback.success && !fallback.victory) {
-          this.emitTurnChanged(io, roomCode, fallback.nextPlayer, liveGame.turnCount);
-          this.emitGameState(io, roomCode);
-          this.scheduleBotTurn(roomCode, io);
-        }
       }
+
+      // Pase lo que pase arriba —jugada buena, jugada rechazada, excepción o
+      // ninguna jugada posible— el turno se cierra aquí. Una sola salida.
+      this.resolverTurno(roomCode, io, activePlayer.id);
     }, 800 + Math.random() * 500);
 
     this.botTurnTimers.set(roomCode, timer);
@@ -385,6 +429,9 @@ class GameManager {
    */
   deleteGame(roomCode) {
     this.clearBotTimer(roomCode);
+    // El vigilante también, o queda un temporizador suelto apuntando a una
+    // partida que ya no existe.
+    this.clearWatchdog(roomCode);
     const deleted = this.games.delete(roomCode);
 
     if (deleted) {

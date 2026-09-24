@@ -462,7 +462,12 @@ export function checkVictoryCondition(player) {
 /**
  * Valida si un jugador puede terminar su turno
  */
-export function canEndTurn(player, hasPlayedCard, hasDiscarded) {
+export function canEndTurn(
+  player,
+  hasPlayedCard,
+  hasDiscarded,
+  sinCartasDisponibles = false,
+) {
   const rules = getRules();
 
   // El jugador debe haber realizado una acción (jugar carta o descartar)
@@ -474,8 +479,12 @@ export function canEndTurn(player, hasPlayedCard, hasDiscarded) {
     };
   }
 
-  // El jugador debe tener exactamente el límite de cartas
-  if (player.hand.length !== rules.HAND_LIMIT) {
+  /* El jugador debe tener exactamente el límite de cartas... salvo que no
+     queden cartas en ningún lado. Cuando el mazo y el descarte se vacían a la
+     vez (las 52 cartas repartidas entre tableros y manos), el jugador no
+     puede volver a 3 y se quedaba sin poder cerrar el turno: la partida se
+     congelaba para todos. Exigir lo imposible no es una regla, es un bloqueo. */
+  if (!sinCartasDisponibles && player.hand.length !== rules.HAND_LIMIT) {
     return {
       valid: false,
       error: `Debes tener exactamente ${rules.HAND_LIMIT} cartas para terminar tu turno`,

@@ -550,11 +550,20 @@ export default class Game {
       return { success: false, error: "No es tu turno" };
     }
 
-    // Validar que puede terminar el turno
+    /* Validar que puede terminar el turno.
+       `sinCartasDisponibles` existe porque la regla de "tienes que terminar
+       con exactamente 3 cartas" es imposible de cumplir cuando se acabaron el
+       mazo Y el descarte: el jugador se queda con menos de 3 y ya no puede
+       cerrar su turno NUNCA. La partida se congelaba ahí, para todos. En ese
+       caso se le perdona el tamaño de mano. */
+    const sinCartasDisponibles =
+      this.deck.isEmpty() && this.discardPile.length === 0;
+
     const validation = canEndTurn(
       player,
       player.hasPlayedThisTurn,
       player.hasDiscardedThisTurn,
+      sinCartasDisponibles,
     );
     if (!validation.valid) {
       return { success: false, error: validation.error };
@@ -577,6 +586,42 @@ export default class Game {
     return {
       success: true,
       victory: false,
+      nextPlayer: nextPlayer.getState(),
+      gameState: this.getState(),
+    };
+  }
+
+  /**
+   * Pasa el turno SIN validar nada. Es la salida de emergencia para que una
+   * partida no se quede congelada: si por lo que sea `endTurn` no se puede
+   * completar (mano incompleta, el bot no encontró jugada, un error raro),
+   * alguien tiene que destrabar la mesa. Sigue revisando la victoria, porque
+   * saltársela sería peor que el congelamiento.
+   *
+   * No la llama ninguna jugada normal: solo el gestor de turnos de bots y el
+   * vigilante de turnos atascados.
+   */
+  forceEndTurn(playerId) {
+    const player = this.getPlayer(playerId);
+    if (!player) {
+      return { success: false, error: "Jugador no encontrado" };
+    }
+
+    if (player.hasWon()) {
+      this.endGame(player);
+      return {
+        success: true,
+        victory: true,
+        winner: player.getState(),
+        gameState: this.getState(),
+      };
+    }
+
+    const nextPlayer = this.nextTurn();
+    return {
+      success: true,
+      victory: false,
+      forzado: true,
       nextPlayer: nextPlayer.getState(),
       gameState: this.getState(),
     };

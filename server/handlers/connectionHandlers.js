@@ -103,12 +103,19 @@ function handleDisconnect(io, socket) {
 
       logger.warn(`${player.name} desconectado de partida ${roomCode}`);
 
-      // TODO: Implementar lógica de reconexión o IA temporal
-      // Por ahora, solo marcamos al jugador como desconectado
-      // En una versión futura, se podría:
-      // 1. Pausar el juego por 60 segundos
-      // 2. Permitir reconexión
-      // 3. Si no regresa, AI toma el control o pierde automáticamente
+      /* Si se cayó justo en SU turno, nadie puede cerrarlo y la mesa queda
+         trabada para todos los demás. Esto le pide al gestor que revise el
+         turno actual: al ver al jugador desconectado arma un vigilante que,
+         si no vuelve en 45 segundos, le pasa el turno. No es reconexión
+         —eso sigue pendiente, ver abajo— pero al menos la partida sigue. */
+      GameManager.scheduleBotTurn(roomCode, io);
+
+      // TODO: Implementar reconexión de verdad. Hoy la identidad del jugador
+      // ES el id del socket, así que al recargar la página se vuelve otro
+      // jugador y no puede volver a su lugar. Haría falta un id de sesión
+      // propio, guardado en el navegador, que sobreviva a la reconexión.
+      // Mientras tanto quien se cae pierde su sitio; al menos ya no congela
+      // la partida de los demás.
     }
   }
 }
