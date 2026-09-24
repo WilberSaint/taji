@@ -209,7 +209,6 @@ export default class Game {
     // Remover carta de la mano
     player.removeCard(cardId);
 
-    console.log(movements);
     const slotType = movements?.[0]?.destino?.slot; // Obtener slot del primer movimiento
     // Aplicar efectos de la carta
     const effect = this.applyCardEffect(card, targetPlayer, movements);
@@ -220,10 +219,21 @@ export default class Game {
     // Marcar que el jugador ya jugó en este turno
     player.hasPlayedThisTurn = true;
 
-    // Si fue carta de descarte, permitir volver a jugar
+    /* La carta de descarte regala otra acción en el mismo turno: se borra la
+       marca de "ya jugó" para que el jugador pueda volver a mover.
+
+       Para los BOTS no. El gestor de turnos juega UNA acción y cierra el
+       turno enseguida; al encontrarse la marca borrada, `canEndTurn` respondía
+       "no has jugado nada" y el turno no se podía cerrar. Antes eso dejaba la
+       mesa congelada, y hoy se destraba a la fuerza pero llenando el registro
+       de avisos. El bot juega su carta, surte efecto igual sobre los demás, y
+       pasa. Si algún día se quiere que el bot aproveche la acción extra, lo
+       correcto es que el gestor encadene otra jugada —con un tope, o una mano
+       llena de descartes lo dejaría jugando solo— no revivir esto. */
     if (
       card.type === CARD_TYPES.EVENTO &&
-      card.subtype === EVENT_TYPES.DESCARTE
+      card.subtype === EVENT_TYPES.DESCARTE &&
+      !player.isBot
     ) {
       player.hasPlayedThisTurn = false;
       player.hasDiscardedThisTurn = false;
