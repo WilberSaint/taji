@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { Bot, Crown, User } from 'lucide-react';
 import Avatar from '../UI/Avatar';
+import { plantasSanas, colorProgreso } from '../../utils/progreso';
 
 const PREFIJO_BOT = '[BOT] ';
 function quitarPrefijoBot(nombre) {
@@ -12,7 +13,7 @@ function quitarPrefijoBot(nombre) {
  * Cabecera de un tablero de jugador (usada sobre el panel de vidrio del oponente).
  * Colores fijos claros: vive sobre vidrio traslúcido encima de la foto del tablero.
  */
-export function PlayerFrame({ player, isMe = false, isHost = false, orientation = 'horizontal', compacto = false }) {
+export function PlayerFrame({ player, isMe = false, isHost = false, orientation = 'horizontal', compacto = false, esLider = false }) {
   const isEmpty = player?.isEmpty;
   const isCurrentTurn = player?.isCurrentTurn;
   const isVertical = orientation === 'vertical';
@@ -48,6 +49,34 @@ export function PlayerFrame({ player, isMe = false, isHost = false, orientation 
           {player?.isBot && <Bot size={12} className="shrink-0 text-slate-500" />}
           {isHost && !isEmpty && <Crown size={12} className="shrink-0" style={{ color: '#DF9A34' }} />}
         </div>
+
+        {/* Cuántas plantas sanas lleva: es la carrera, y sin verla la partida
+            no se siente competitiva. Mismo criterio que la condición de
+            victoria — una planta dañada no cuenta. */}
+        {!isEmpty && (() => {
+          const n = plantasSanas(player);
+          const color = colorProgreso(n);
+          return (
+            <div
+              className={`mt-0.5 flex items-center gap-1 font-mono font-bold leading-none ${compacto ? 'text-[9px]' : 'text-[10px]'}`}
+              style={{ color }}
+              aria-label={`${n} de 4 plantas sanas${esLider ? ', va en cabeza' : ''}`}
+            >
+              {/* Cuatro puntos: se lee el avance sin tener que leer el número */}
+              <span className="flex items-center gap-[2px]" aria-hidden="true">
+                {[0, 1, 2, 3].map((i) => (
+                  <span
+                    key={i}
+                    className="block h-[5px] w-[5px] rounded-full"
+                    style={{ background: i < n ? color : 'rgba(100,116,130,0.35)' }}
+                  />
+                ))}
+              </span>
+              <span>{n}/4</span>
+              {esLider && <span className="font-sans font-semibold">· va ganando</span>}
+            </div>
+          );
+        })()}
       </div>
     </motion.div>
   );

@@ -559,11 +559,15 @@ export default function PlayerSlot({
              en un iPhone SE (667px de alto) con seis jugadores, los renglones
              altos se encimaban con el tablero. Por debajo de 720px de alto se
              usa la versión baja; encima, la cómoda. */
+          /* Solo cambia el ALTO. El espacio que sobra con pocos jugadores es
+             vertical, no horizontal: al agrandar también ícono y letra, con 2
+             jugadores la etiqueta dejaba de caber y se leía "S…", "E…", "G…".
+             El contenido del chip mide lo mismo siempre. */
           ${{
-            grande: 'h-10 gap-1.5 px-0.5 [@media(min-height:720px)]:h-12',
-            medio: 'h-9 gap-1 px-0.5 [@media(min-height:720px)]:h-11',
-            compacto: 'h-8 gap-0.5 px-0.5 min-[360px]:gap-1 [@media(min-height:720px)]:h-10',
-          }[alto]}
+            grande: 'h-10 [@media(min-height:720px)]:h-12',
+            medio: 'h-9 [@media(min-height:720px)]:h-11',
+            compacto: 'h-8 [@media(min-height:720px)]:h-10',
+          }[alto]} gap-0.5 px-0.5 min-[360px]:gap-1
           ${clickable ? 'cursor-pointer' : ''}`}
         style={{
           background: isActive
@@ -574,7 +578,7 @@ export default function PlayerSlot({
         }}
       >
         <energy.Icon
-          size={{ grande: 18, medio: 15, compacto: 13 }[alto]}
+          size={14}
           className="shrink-0"
           style={{ color: isActive ? energy.token : 'var(--board-texto-suave)' }}
         />
@@ -590,7 +594,7 @@ export default function PlayerSlot({
           /* Por debajo de 340px de ancho la etiqueta desaparece y se queda el
              ícono, que es lo que de verdad identifica la energía. Vale más
              eso que verla cortada o que empuje el chip fuera de pantalla. */
-          className={`truncate font-bold uppercase leading-none tracking-wide ${{ grande: 'text-[11px]', medio: 'text-[10px]', compacto: 'text-[9px]' }[alto]}`}
+          className="truncate font-bold uppercase leading-none tracking-wide text-[9px]"
           style={{ color: isActive ? 'var(--board-texto)' : 'var(--board-texto-suave)' }}
         >
           {/* Tres letras en pantalla angosta, nombre completo de 430px en
