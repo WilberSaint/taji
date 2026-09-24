@@ -101,6 +101,10 @@ class GameManager {
       io.to(roomCode).emit(SOCKET_EVENTS.GAME_VICTORY, {
         winner: resultado.winner,
         finalState: resultado.gameState,
+        // Se acabaron las cartas: puede no haber ganador (empate)
+        porAgotamiento: resultado.porAgotamiento || false,
+        empate: resultado.empate || false,
+        empatados: resultado.empatados || null,
       });
       return;
     }

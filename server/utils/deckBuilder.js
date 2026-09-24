@@ -1,6 +1,60 @@
 import { v4 as uuidv4 } from 'uuid';
 import { CARD_TYPES, ENERGY_TYPES, DECK_CONFIG as DEFAULT_DECK_CONFIG, EVENT_TYPES } from './constants.js';
 
+/* Las cuatro energías. Los comodines y los eventos NO escalan: un comodín de
+   más desequilibra, y los eventos son cartas fuertes —más de ellas vuelven la
+   partida un caos. */
+const ENERGIAS = [
+  ENERGY_TYPES.SOLAR,
+  ENERGY_TYPES.EOLICA,
+  ENERGY_TYPES.HIDROELECTRICA,
+  ENERGY_TYPES.GEOTERMICA,
+];
+
+/**
+ * Ajusta las copias del mazo al número de jugadores.
+ *
+ * El mazo era fijo: 52 cartas, las mismas para 2 que para 6. Con 14 plantas y
+ * 6 jugadores no alcanzan ni para que todos llenen su tablero (harían falta
+ * 24), y además todas esas cartas quedan "aparcadas" en los tableros y no
+ * vuelven al mazo: el mazo y el descarte se vacían y la partida se atasca.
+ *
+ * La regla es una sola y se explica en una línea: **al menos una copia de cada
+ * energía por jugador**. Con 2 y 3 jugadores no cambia nada respecto al mazo
+ * de siempre; de 4 en adelante crece.
+ *
+ *   jugadores   copias/energía   plantas   mantenim.   riesgos   total
+ *       2             3             14        14         14       52
+ *       3             3             14        14         14       52
+ *       4             4             18        18         18       64
+ *       5             5             22        22         22       76
+ *       6             6             26        26         26       88
+ *
+ * (Los comodines suman 2 a cada bloque y los eventos se quedan en 10.)
+ */
+export function escalarConfigPorJugadores(deckConfig, numJugadores) {
+  const jugadores = Number(numJugadores);
+  if (!Number.isFinite(jugadores) || jugadores < 2) return deckConfig;
+
+  const escalarBloque = (bloque) => {
+    if (!bloque) return bloque;
+    const salida = { ...bloque };
+    for (const energia of ENERGIAS) {
+      if (typeof salida[energia] === 'number') {
+        salida[energia] = Math.max(salida[energia], jugadores);
+      }
+    }
+    return salida;
+  };
+
+  return {
+    ...deckConfig,
+    PLANTAS: escalarBloque(deckConfig.PLANTAS),
+    MANTENIMIENTOS: escalarBloque(deckConfig.MANTENIMIENTOS),
+    RIESGOS: escalarBloque(deckConfig.RIESGOS),
+  };
+}
+
 /**
  * Construye el mazo completo del juego con todas las cartas
  * @param {object} [deckConfig] Configuración de cantidades por tipo (por defecto,

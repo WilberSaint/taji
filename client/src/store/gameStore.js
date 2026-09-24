@@ -80,7 +80,13 @@ export const useGameStore = create((set, get) => ({
   
   toggleSettings: (show) => set({ showSettings: show }),
   
-  toggleVictory: (show, winner = null) => set({ showVictory: show, winner }),
+  /* `fin` trae el detalle de cómo acabó: si fue por agotarse las cartas y si
+     quedó en empate. Va aparte de `winner` porque en un empate no hay
+     ganador y el modal tiene que poder distinguir "perdiste" de "nadie
+     ganó". */
+  finPartida: null,
+  toggleVictory: (show, winner = null, fin = null) =>
+    set({ showVictory: show, winner, finPartida: show ? fin : null }),
   
   setNotification: (notification) => {
     set({ notification });

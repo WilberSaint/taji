@@ -35,6 +35,7 @@ export default function GameBoard() {
     setSelectedCard,
     showVictory,
     winner,
+    finPartida,
     toggleVictory,
     showCardDetail,
     cardForDetail,
@@ -185,6 +186,7 @@ export default function GameBoard() {
         isOpen={showVictory}
         winner={winner}
         isWinner={winner?.id === socketId}
+        fin={finPartida}
         /* Al perder se enseñan las dos redes, la del ganador y la tuya, para
            ver qué tan cerca quedaste. */
         miTablero={currentPlayer?.board}

@@ -21,7 +21,7 @@ export default class Game {
     this.id = roomCode;
     this.players = players;
     this.currentTurnIndex = 0;
-    this.deck = new Deck();
+    this.deck = new Deck(this.players.length);
     this.discardPile = [];
     this.status = GAME_STATUS.PLAYING;
     this.winner = null;
@@ -590,6 +590,11 @@ export default class Game {
       };
     }
 
+    // Si ya no queda una sola carta en juego, la partida no puede seguir
+    if (!this.quedanCartas()) {
+      return this.terminarPorAgotamiento();
+    }
+
     // Pasar al siguiente turno
     const nextPlayer = this.nextTurn();
 
@@ -597,6 +602,77 @@ export default class Game {
       success: true,
       victory: false,
       nextPlayer: nextPlayer.getState(),
+      gameState: this.getState(),
+    };
+  }
+
+  /**
+   * ¿Queda alguna carta viva en la partida?
+   *
+   * El mazo se rellena solo desde el descarte, así que un mazo en 0 no es
+   * problema por sí mismo: en cuanto alguien tira algo, vuelve a haber. Lo
+   * que sí es terminal es que NO quede nada en ningún lado —mazo, descarte y
+   * todas las manos vacíos— porque entonces las 52 (u 88) cartas están
+   * aparcadas en los tableros y nadie puede volver a jugar. Sin esto, los
+   * turnos seguían pasando en seco para siempre.
+   */
+  quedanCartas() {
+    if (!this.deck.isEmpty()) return true;
+    if (this.discardPile.length > 0) return true;
+    return this.players.some((p) => p.hand.length > 0);
+  }
+
+  /** Plantas sanas de un jugador: construidas y sin riesgos encima. */
+  contarPlantasSanas(player) {
+    return Object.values(player.board || {}).filter(
+      (slot) =>
+        slot?.plant &&
+        !slot.modifiers?.some((m) => m.type === CARD_TYPES.RIESGO),
+    ).length;
+  }
+
+  /**
+   * Cierra la partida porque se agotaron las cartas.
+   *
+   * Gana quien tenga más plantas sanas. Si hay empate arriba, la partida
+   * queda en empate: inventar un desempate rebuscado sería peor que decir la
+   * verdad, que es que nadie llegó a las cuatro.
+   */
+  terminarPorAgotamiento() {
+    const conteos = this.players.map((p) => ({
+      player: p,
+      plantas: this.contarPlantasSanas(p),
+    }));
+    const maximo = Math.max(...conteos.map((c) => c.plantas));
+    const lideres = conteos.filter((c) => c.plantas === maximo);
+
+    this.status = GAME_STATUS.FINISHED;
+
+    if (lideres.length === 1) {
+      this.winner = lideres[0].player;
+      logger.success(
+        `Se acabaron las cartas en ${this.id}: gana ${this.winner.name} con ${maximo} plantas sanas`,
+      );
+      return {
+        success: true,
+        victory: true,
+        porAgotamiento: true,
+        winner: this.winner.getState(),
+        gameState: this.getState(),
+      };
+    }
+
+    this.winner = null;
+    logger.info(
+      `Se acabaron las cartas en ${this.id}: empate a ${maximo} plantas sanas entre ${lideres.length} jugadores`,
+    );
+    return {
+      success: true,
+      victory: true,
+      porAgotamiento: true,
+      empate: true,
+      empatados: lideres.map((c) => c.player.getState()),
+      winner: null,
       gameState: this.getState(),
     };
   }
@@ -625,6 +701,10 @@ export default class Game {
         winner: player.getState(),
         gameState: this.getState(),
       };
+    }
+
+    if (!this.quedanCartas()) {
+      return this.terminarPorAgotamiento();
     }
 
     const nextPlayer = this.nextTurn();

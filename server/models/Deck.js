@@ -1,4 +1,4 @@
-import { buildDeck, shuffleArray } from '../utils/deckBuilder.js';
+import { buildDeck, escalarConfigPorJugadores, shuffleArray } from '../utils/deckBuilder.js';
 import { getDeckConfig } from '../state/adminSettings.js';
 import logger from '../utils/logger.js';
 
@@ -6,7 +6,13 @@ import logger from '../utils/logger.js';
  * Clase que representa el mazo de cartas del juego
  */
 export default class Deck {
-  constructor() {
+  /**
+   * @param {number} [numJugadores] Cuántos van a jugar. El mazo crece con
+   *   ellos: con 6 jugadores el mazo fijo de 52 cartas no alcanzaba ni para
+   *   que todos llenaran su tablero. Ver escalarConfigPorJugadores.
+   */
+  constructor(numJugadores) {
+    this.numJugadores = numJugadores;
     this.cards = [];
     this.initialize();
   }
@@ -15,9 +21,13 @@ export default class Deck {
    * Inicializa el mazo construyendo y mezclando las cartas
    */
   initialize() {
-    this.cards = buildDeck(getDeckConfig());
+    this.cards = buildDeck(
+      escalarConfigPorJugadores(getDeckConfig(), this.numJugadores),
+    );
     this.shuffle();
-    logger.debug('Mazo inicializado', { totalCards: this.cards.length });
+    logger.info(
+      `Mazo inicializado: ${this.cards.length} cartas para ${this.numJugadores ?? '?'} jugadores`,
+    );
   }
 
   /**

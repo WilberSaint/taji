@@ -222,10 +222,18 @@ export function useSocket() {
 
     const handleVictory = (data) => {
       setGameState(data.finalState);
-      toggleVictory(true, data.winner);
+      // `data.winner` puede venir vacío: si se acaban las cartas y hay empate
+      // arriba, la partida termina sin ganador.
+      toggleVictory(true, data.winner, {
+        porAgotamiento: data.porAgotamiento,
+        empate: data.empate,
+        empatados: data.empatados,
+      });
       setNotification({
-        type: 'success',
-        message: `¡${data.winner.name} ganó la partida!`
+        type: data.empate ? 'info' : 'success',
+        message: data.empate
+          ? 'Se acabaron las cartas: la partida queda en empate'
+          : `¡${data.winner?.name ?? 'Alguien'} ganó la partida!`,
       });
       reproducirSonido('victoria');
 
@@ -234,8 +242,11 @@ export function useSocket() {
          vida de la app (ver la bandera de más arriba), así que la partida se
          cuenta exactamente una vez. Si se contara al pintar el modal, cada
          re-render podría sumar de más. */
-      const soyYo = data.winner?.id === socket.id;
-      registrarPartida(soyYo);
+      /* Un empate no cuenta como derrota: no se apunta. Contarlo como
+         perdida castigaría a quien iba ganando en plantas. */
+      if (!data.empate) {
+        registrarPartida(data.winner?.id === socket.id);
+      }
     };
 
     const handleGameError = (data) => {

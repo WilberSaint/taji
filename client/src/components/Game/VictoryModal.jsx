@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Trophy, Home, RotateCcw, Check, Minus } from 'lucide-react';
+import { Trophy, Home, RotateCcw, Check, Minus, Handshake } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import Modal from '../UI/Modal';
 import Button from '../UI/Button';
@@ -87,9 +87,9 @@ function MarcadorPartidas({ abierto }) {
   );
 }
 
-export function VictoryModal({ isOpen, winner, onClose, onNewGame, isWinner, miTablero }) {
+export function VictoryModal({ isOpen, winner, onClose, onNewGame, isWinner, miTablero, fin }) {
   useEffect(() => {
-    if (!isOpen || !isWinner) return;
+    if (!isOpen || !isWinner || fin?.empate) return;
 
     const end = Date.now() + 2200;
     let raf;
@@ -105,7 +105,7 @@ export function VictoryModal({ isOpen, winner, onClose, onNewGame, isWinner, miT
     };
     frame();
     return () => raf && cancelAnimationFrame(raf);
-  }, [isOpen, isWinner]);
+  }, [isOpen, isWinner, fin?.empate]);
 
   /* Ganar y perder eran la misma tarjeta con otro título y otro ícono: se
      sentían igual. Ahora cada una tiene su franja de color arriba, su
@@ -126,7 +126,40 @@ export function VictoryModal({ isOpen, winner, onClose, onNewGame, isWinner, miT
           }}
         />
 
-        {isWinner ? (
+        {fin?.empate ? (
+          <>
+            {/* Nadie llegó a las cuatro plantas y se acabaron las cartas. No
+                es victoria ni derrota, y decirlo así es más honesto que
+                inventar un desempate. */}
+            <motion.div
+              initial={{ scale: 0.7, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: 'spring', stiffness: 200, damping: 18, delay: 0.1 }}
+              className="mx-auto mb-4 grid h-20 w-20 place-items-center rounded-full"
+              style={{ background: 'var(--surface-2)', color: 'var(--ink-soft)' }}
+            >
+              <Handshake size={38} />
+            </motion.div>
+
+            <p className="font-mono text-xs uppercase tracking-[0.16em] text-ink-faint">
+              Se acabaron las cartas
+            </p>
+            <h2 className="mt-1 font-display text-3xl font-extrabold tracking-tight">
+              Empate
+            </h2>
+            <p className="mx-auto mt-2 max-w-sm text-sm text-ink-soft">
+              Nadie completó las cuatro fuentes y ya no queda una sola carta
+              por repartir. Van empatados en plantas sanas
+              {fin.empatados?.length ? `: ${fin.empatados.map((p) => p.name).join(', ')}` : ''}.
+            </p>
+
+            {miTablero && (
+              <div className="mt-6">
+                <ResumenRed board={miTablero} titulo="Tu red" />
+              </div>
+            )}
+          </>
+        ) : isWinner ? (
           <>
             <motion.div
               initial={{ scale: 0.5, rotate: -12, opacity: 0 }}
@@ -145,8 +178,9 @@ export function VictoryModal({ isOpen, winner, onClose, onNewGame, isWinner, miT
               ¡Victoria!
             </h2>
             <p className="mx-auto mt-2 max-w-sm text-sm text-ink-soft">
-              Solar, eólica, hidroeléctrica y geotérmica funcionando a la vez, sin un solo
-              riesgo encima. Tu comunidad quedó con luz.
+              {fin?.porAgotamiento
+                ? 'Se acabaron las cartas y quedaste con más plantas sanas que nadie. Tu comunidad es la que mejor aguantó.'
+                : 'Solar, eólica, hidroeléctrica y geotérmica funcionando a la vez, sin un solo riesgo encima. Tu comunidad quedó con luz.'}
             </p>
 
             <div className="mt-6">
@@ -175,8 +209,9 @@ export function VictoryModal({ isOpen, winner, onClose, onNewGame, isWinner, miT
               Ganó {winner?.name || 'otro jugador'}
             </h2>
             <p className="mx-auto mt-2 max-w-sm text-sm text-ink-soft">
-              Conectó las cuatro fuentes sin riesgos antes que tú. En la próxima, guarda un
-              mantenimiento para cuando te ataquen.
+              {fin?.porAgotamiento
+                ? 'Se acabaron las cartas y quedó con más plantas sanas que nadie. En la próxima, no dejes que se te aparquen las cartas en el tablero.'
+                : 'Conectó las cuatro fuentes sin riesgos antes que tú. En la próxima, guarda un mantenimiento para cuando te ataquen.'}
             </p>
 
             <div className="mt-6 space-y-4">
