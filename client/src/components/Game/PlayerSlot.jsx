@@ -112,6 +112,20 @@ export default function PlayerSlot({
 
   const energy = ENERGY[slotType] || ENERGY[ENERGY_TYPES.SOLAR];
 
+  /* Qué es esta casilla, en palabras. Un lector de pantalla solo ve el
+     dibujo de la planta, que no dice nada: sin esto anunciaba "imagen" y ya.
+     También es lo que lee el navegador al llegar con el tabulador. */
+  const descripcionAccesible = () => {
+    const dueno = isMySlot ? 'tu' : 'del rival';
+    if (isEmpty) return `Espacio ${energy.label} ${isMySlot ? 'tuyo' : 'del rival'}, vacío`;
+    let estado = 'funcionando';
+    if (isImmune) estado = 'inmune, con dos mantenimientos';
+    else if (riskCount >= 2) estado = 'destruida';
+    else if (riskCount === 1) estado = 'dañada';
+    else if (maintenanceCount === 1) estado = 'protegida';
+    return `Planta ${energy.label} ${dueno}, ${estado}`;
+  };
+
   const canPlayHere = () => {
     if (!isMyTurn) return false;
 
@@ -497,7 +511,23 @@ export default function PlayerSlot({
             quedar por encima del dibujo; las etiquetas y los aros no
             estorban porque todos son pointer-events-none. */}
         <div
-          className={`pointer-events-auto absolute inset-0 ${clickable ? 'cursor-pointer' : ''}`}
+          /* role + tabIndex + teclado: sin esto la casilla solo respondía al
+             ratón o al dedo. En una computadora del salón, quien no pueda usar
+             el ratón no podía jugar, y un lector de pantalla no anunciaba
+             nada. Solo entra en el recorrido del tabulador cuando de verdad se
+             puede jugar aquí: tabular por 24 casillas muertas no ayuda. */
+          role="button"
+          tabIndex={clickable ? 0 : -1}
+          aria-label={
+            clickable
+              ? `Jugar aquí: ${descripcionAccesible()}`
+              : descripcionAccesible()
+          }
+          aria-disabled={!clickable}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleClick(); }
+          }}
+          className={`pointer-events-auto absolute inset-0 outline-none ${clickable ? 'cursor-pointer focus-visible:ring-2 focus-visible:ring-[#F5C042]' : ''}`}
           style={{ clipPath: RECORTE_SUELO }}
           onClick={handleClick}
           onMouseEnter={() => setEncima(true)}

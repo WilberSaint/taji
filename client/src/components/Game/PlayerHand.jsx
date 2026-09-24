@@ -117,7 +117,21 @@ export default function PlayerHand({ cards = [], vertical = false }) {
               return (
                 <motion.div
                   key={card.id}
-                  className='relative cursor-pointer'
+                  /* Las cartas eran divs con onClick: no se llegaba a ellas
+                     con el tabulador y un lector de pantalla no las
+                     anunciaba. En una computadora del salón, quien no use el
+                     ratón no podía jugar. */
+                  role="button"
+                  tabIndex={isMyTurn ? 0 : -1}
+                  aria-label={
+                    `${card.name}${sinDonde ? ', no se puede jugar ahora' : ''}` +
+                    `${isSelected ? ', elegida' : ''}`
+                  }
+                  aria-pressed={isSelected}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleCardClick(card); }
+                  }}
+                  className='relative cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-[#14A0AE] focus-visible:ring-offset-2 rounded-[12px]'
                   style={{ zIndex: isSelected ? 50 : index }}
                   onClick={() => handleCardClick(card)}
                   whileHover={{
@@ -161,10 +175,10 @@ export default function PlayerHand({ cards = [], vertical = false }) {
                           aria-label={`Ver detalle de ${card.name}`}
                           onClick={(e) => { e.stopPropagation(); openCardDetail(card); }}
                           className={`absolute right-0.5 top-0.5 z-10 grid place-items-center rounded-full bg-black/55 text-white/90 backdrop-blur-sm transition-colors hover:bg-black/75 ${
-                            vertical ? 'h-7 w-7' : 'h-5 w-5'
+                            vertical ? 'h-7 w-7' : 'h-7 w-7'
                           }`}
                         >
-                          <Info size={vertical ? 15 : 12} />
+                          <Info size={vertical ? 15 : 14} />
                         </button>
                       </motion.div>
                     )}
