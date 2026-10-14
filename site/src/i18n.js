@@ -93,6 +93,19 @@ export const I18N = {
     team_more: 'The project brings together an interdisciplinary ITSON team in renewable energy, water resources, photovoltaic materials, electrical systems, experimental psychology and science outreach, along with translators and facilitators from the communities.',
     team_contact: 'Contact: Dr. Ian Sosa Tinoco · Sonora Institute of Technology',
 
+    fair_eyebrow: 'Where to find us',
+    fair_title: 'The project is played outside the classroom',
+    fair_lead: 'LudoEnergía is not only a download. The games travel to book fairs, science festivals, schools and community workshops across southern Sonora, where they are played with children and families. Those sessions are also where the materials get tested, and where the Yoreme and Yoeme versions are built with speakers from the communities.',
+    fair_empty: 'Upcoming dates are posted here as soon as they are confirmed. If you run a fair or a workshop and would like to host the games, get in touch.',
+
+    inst_eyebrow: 'Institutional support',
+    inst_title: 'Who makes this project possible',
+    inst_itson: 'Lead institution. The project is based at ITSON and run by an interdisciplinary team from its engineering, water sciences, psychology and science outreach departments.',
+    inst_secihti: 'Funding. Supported by the Ministry of Science, Humanities, Technology and Innovation under its 2025 science outreach call.',
+    inst_note: 'LudoEnergía materials are open access. If you use or adapt them, please keep the credit to both institutions.',
+
+    nav_fairs: 'Where to find us',
+
     foot_desc: 'Multilingual games about renewable energy. An outreach project by the Sonora Institute of Technology, supported by SECIHTI.',
     foot_team: 'Team',
     foot_credit: 'Sonora Institute of Technology · SECIHTI',

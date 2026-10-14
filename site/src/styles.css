@@ -341,6 +341,62 @@ html.js .reveal.in { opacity: 1; transform: none; }
 .team__contact { margin-top: 10px; font-size: .88rem; color: var(--ink); font-weight: 500; }
 
 /* ============================================================
+   DÓNDE ENCONTRARNOS (ferias, talleres)
+   ============================================================ */
+.eventos { list-style: none; margin: 28px 0 0; padding: 0; display: grid; gap: 12px; }
+.eventos:empty { display: none; }
+
+.evento {
+  display: flex; gap: 16px; align-items: flex-start;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md);
+  padding: 16px 18px; box-shadow: var(--sh-1);
+}
+/* La fecha como taco de calendario: se encuentra antes de leer el nombre */
+.evento__fecha {
+  flex: 0 0 auto; display: grid; place-items: center; min-width: 54px;
+  padding: 6px 8px; border-radius: var(--r-md);
+  background: var(--surface-2); border: 1px solid var(--line);
+}
+.evento__dia { font-size: 1.35rem; font-weight: 700; line-height: 1; color: var(--ink); }
+.evento__mes {
+  font-family: var(--font-mono); font-size: .62rem; text-transform: uppercase;
+  letter-spacing: .1em; color: var(--ink-faint); margin-top: 3px;
+}
+.evento__nombre { font-size: 1rem; margin: 0 0 4px; }
+.evento__lugar { font-size: .84rem; color: var(--ink-soft); margin: 0; }
+.evento__que { font-size: .84rem; color: var(--ink-soft); margin: 6px 0 0; }
+
+.eventos__vacio { margin-top: 24px; font-size: .88rem; color: var(--ink-soft); max-width: 62ch; }
+
+/* ============================================================
+   INSTITUCIONES
+   ============================================================ */
+.instituciones {
+  list-style: none; margin: 28px 0 0; padding: 0;
+  display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+.institucion {
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md);
+  padding: 22px; box-shadow: var(--sh-1);
+  display: flex; flex-direction: column; gap: 12px;
+}
+.institucion__marca {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 86px; text-decoration: none;
+}
+.institucion__logo { max-height: 72px; max-width: 100%; width: auto; height: auto; object-fit: contain; }
+
+/* El nombre escrito solo aparece si el logotipo no está (ver main.js). Así el
+   sitio nunca enseña una imagen rota mientras no lleguen los archivos
+   oficiales, y en cuanto lleguen se pone el logotipo sin tocar nada. */
+.institucion__texto { display: none; font-size: 1.05rem; font-weight: 700; color: var(--ink); text-align: center; }
+.institucion--sin-logo .institucion__logo { display: none; }
+.institucion--sin-logo .institucion__texto { display: block; }
+
+.institucion__rol { font-size: .84rem; color: var(--ink-soft); }
+.instituciones__nota { margin-top: 20px; font-size: .82rem; color: var(--ink-faint); max-width: 68ch; }
+
+/* ============================================================
    FOOTER
    ============================================================ */
 footer.site { border-top: 1px solid var(--line); padding: 48px 0 40px; background: var(--paper); }

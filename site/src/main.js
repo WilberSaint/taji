@@ -12,6 +12,27 @@ document.querySelectorAll('.js-taji-link').forEach((a) => {
   a.rel = 'noopener';
 });
 
+/* ---------- logotipos institucionales ----------
+   Los archivos de ITSON y SECIHTI no están en el repositorio: son marca de
+   cada institución y deben venir de sus manuales de identidad. Mientras no
+   existan, en vez de una imagen rota se enseña el nombre escrito. En cuanto
+   alguien deje los archivos en public/img/instituciones/, aparecen solos. */
+document.querySelectorAll('img[data-logo]').forEach((img) => {
+  const caer = () => img.closest('.institucion')?.classList.add('institucion--sin-logo');
+  img.addEventListener('error', caer);
+  // Si la imagen ya falló antes de que llegara este script
+  if (img.complete && img.naturalWidth === 0) caer();
+});
+
+/* ---------- próximas fechas ----------
+   La nota de "aún no hay fechas" se esconde en cuanto haya al menos un
+   evento en la lista, para no decir las dos cosas a la vez. */
+const listaEventos = document.getElementById('eventos');
+const notaEventos = document.getElementById('eventos-vacio');
+if (listaEventos && notaEventos && listaEventos.querySelector('.evento')) {
+  notaEventos.hidden = true;
+}
+
 /* ---------- tema (claro por defecto; el usuario puede pasar a oscuro) ---------- */
 let storedTheme;
 try { storedTheme = localStorage.getItem('ludo-theme'); } catch (e) { /* noop */ }

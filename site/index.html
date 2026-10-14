@@ -31,6 +31,7 @@
       <a href="#energias" data-i18n="nav_energy">Las energías</a>
       <a href="#comunidades" data-i18n="nav_comm">Con las comunidades</a>
       <a href="#descargas" data-i18n="nav_dl">Acceso abierto</a>
+      <a href="#ferias" data-i18n="nav_fairs">Dónde encontrarnos</a>
       <a href="#proyecto" data-i18n="nav_proj">El proyecto</a>
     </nav>
     <div class="langbar" role="group" aria-label="Idioma">
@@ -336,6 +337,83 @@
       </div>
     </div>
   </section>
+
+  <!-- ============================================================
+       DÓNDE ENCONTRARNOS
+       Ferias, talleres y eventos donde se lleva el proyecto.
+
+       PARA AÑADIR UNA FECHA: copia un bloque <li class="evento"> y cambia
+       los textos. La lista entera se oculta sola si no hay ninguno, así que
+       no hace falta tocar nada más cuando no haya eventos próximos.
+       Pon la fecha completa en <time datetime="AAAA-MM-DD">.
+       ============================================================ -->
+  <section class="band" id="ferias">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <span class="eyebrow" data-i18n="fair_eyebrow">Dónde encontrarnos</span>
+        <h2 data-i18n="fair_title">El proyecto se juega fuera del aula</h2>
+        <p data-i18n="fair_lead">LudoEnergía no se queda en la descarga. Los juegos se llevan a ferias del libro, festivales de ciencia, escuelas y talleres comunitarios del sur de Sonora, donde se juegan con niñas, niños y familias. Esas sesiones son también donde se prueban los materiales y donde se construyen las versiones en yoreme y yoeme con hablantes de las comunidades.</p>
+      </div>
+
+      <ul class="eventos reveal" id="eventos">
+        <!-- Ejemplo de evento. Borra este comentario y descomenta para usarlo:
+        <li class="evento">
+          <time class="evento__fecha" datetime="2026-11-20">
+            <span class="evento__dia">20</span>
+            <span class="evento__mes">nov</span>
+          </time>
+          <div class="evento__cuerpo">
+            <h3 class="evento__nombre">Nombre oficial de la feria</h3>
+            <p class="evento__lugar">Sede · Ciudad, Sonora</p>
+            <p class="evento__que">Qué vamos a hacer ahí.</p>
+          </div>
+        </li>
+        -->
+      </ul>
+
+      <p class="eventos__vacio" id="eventos-vacio" data-i18n="fair_empty">Las próximas fechas se publican aquí en cuanto se confirman. Si organizas una feria o un taller y quieres llevar los juegos, escríbenos.</p>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       INSTITUCIONES
+       Los logotipos oficiales NO están en el repositorio: son marca de cada
+       institución y tienen que venir de sus propios manuales de identidad.
+       Para ponerlos, deja los archivos en site/public/img/instituciones/
+       con estos nombres exactos:
+            itson.svg      (o .png)
+            secihti.svg    (o .png)
+       Mientras no existan, cada bloque enseña el nombre escrito en vez de
+       una imagen rota: el main.js lo detecta y cambia solo.
+       ============================================================ -->
+  <section class="band alt" id="instituciones">
+    <div class="wrap">
+      <div class="sec-head reveal">
+        <span class="eyebrow" data-i18n="inst_eyebrow">Respaldo institucional</span>
+        <h2 data-i18n="inst_title">Quién hace posible este proyecto</h2>
+      </div>
+
+      <ul class="instituciones reveal">
+        <li class="institucion">
+          <a class="institucion__marca" href="https://www.itson.mx" target="_blank" rel="noopener">
+            <img class="institucion__logo" data-logo src="/img/instituciones/itson.svg" alt="Instituto Tecnológico de Sonora" width="200" height="80" />
+            <span class="institucion__texto">Instituto Tecnológico de Sonora</span>
+          </a>
+          <span class="institucion__rol" data-i18n="inst_itson">Institución responsable. El proyecto nace y se desarrolla en el ITSON, con un equipo interdisciplinario de sus departamentos de ingeniería, ciencias del agua, psicología y divulgación.</span>
+        </li>
+
+        <li class="institucion">
+          <a class="institucion__marca" href="https://secihti.mx" target="_blank" rel="noopener">
+            <img class="institucion__logo" data-logo src="/img/instituciones/secihti.svg" alt="SECIHTI · Secretaría de Ciencia, Humanidades, Tecnología e Innovación" width="200" height="80" />
+            <span class="institucion__texto">SECIHTI</span>
+          </a>
+          <span class="institucion__rol" data-i18n="inst_secihti">Financiamiento. Proyecto apoyado por la Secretaría de Ciencia, Humanidades, Tecnología e Innovación en su convocatoria de divulgación 2025.</span>
+        </li>
+      </ul>
+
+      <p class="instituciones__nota" data-i18n="inst_note">Los materiales de LudoEnergía son de acceso abierto. Al usarlos o adaptarlos, agradecemos que se mantenga el crédito a ambas instituciones.</p>
+    </div>
+  </section>
 </main>
 
 <footer class="site">
@@ -349,6 +427,7 @@
         <a href="#juegos" data-i18n="nav_games">Los juegos</a>
         <a href="#energias" data-i18n="nav_energy">Las energías</a>
         <a href="#descargas" data-i18n="nav_dl">Acceso abierto</a>
+        <a href="#ferias" data-i18n="nav_fairs">Dónde encontrarnos</a>
         <a href="#equipo" data-i18n="foot_team">Equipo</a>
         <a href="#proyecto" data-i18n="nav_proj">El proyecto</a>
       </nav>
