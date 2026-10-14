@@ -1,5 +1,5 @@
 import Modal from '../UI/Modal';
-import { CARD_TYPE_COLORS, CARD_TYPE_LABELS } from '../../utils/constants';
+import { CARD_TYPE_COLORS, CARD_TYPE_LABELS, rutaPublica } from '../../utils/constants';
 
 /**
  * Detalle de una carta: imagen grande + descripción completa.
@@ -16,7 +16,7 @@ export function CardDetailModal({ card, isOpen, onClose }) {
     <Modal isOpen={isOpen} onClose={onClose} size="sm">
       <div className="flex flex-col items-center gap-4 text-center">
         <div className="w-40 aspect-[7/10] overflow-hidden rounded-xl shadow-e2">
-          <img src={card.image} alt={card.name} className="h-full w-full object-cover object-center" />
+          <img src={rutaPublica(card.image)} alt={card.name} className="h-full w-full object-cover object-center" />
         </div>
 
         <div>

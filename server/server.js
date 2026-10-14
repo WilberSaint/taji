@@ -13,33 +13,40 @@ import { setupAdminHandlers } from './handlers/adminHandlers.js';
 import RoomManager from './managers/RoomManager.js';
 import GameManager from './managers/GameManager.js';
 import logger from './utils/logger.js';
+import { entrarAEspera } from './utils/listaSalas.js';
 
 // Cargar variables de entorno
 dotenv.config();
 
 const PORT = process.env.PORT || 3001;
-const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
+const EN_PRODUCCION = process.env.NODE_ENV === 'production';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Crear aplicación Express
 const app = express();
 const httpServer = createServer(app);
 
-// Configurar Socket.io con CORS
+/* CORS: en producción el sitio, el juego y el socket viven en el MISMO
+   dominio (ludoenergia.com, ludoenergia.com/taji, ludoenergia.com/socket.io),
+   así que no hace falta abrir nada. En desarrollo el cliente corre en otro
+   puerto (:5173) y sí lo necesita. Si algún día el juego se sirve desde otro
+   dominio, ponerlo en CORS_ORIGIN. */
+const CORS_ORIGIN = process.env.CORS_ORIGIN || (EN_PRODUCCION ? false : '*');
+
 const io = new Server(httpServer, {
-  cors: {
-    origin: '*', // Permitir todas las conexiones en desarrollo
-    methods: ['GET', 'POST'],
-    credentials: false // Cambiar a false cuando origin es '*'
-  }
+  cors: { origin: CORS_ORIGIN, methods: ['GET', 'POST'], credentials: false },
+  // Los mensajes del cliente son diminutos (ids de carta y de jugador). El
+  // tope por defecto es 1 MB; bajarlo evita que alguien sature la memoria
+  // mandando paquetes enormes.
+  maxHttpBufferSize: 64 * 1024,
+  // Sin compresión por mensaje (ya es el valor por defecto; se deja explícito):
+  // comprimir cada estado cuesta más CPU de lo que ahorra en mensajes de pocos KB.
+  perMessageDeflate: false,
 });
 
 // Middleware
-app.use(cors({
-  origin: '*', // Permitir todas las conexiones en desarrollo
-  credentials: false
-}));
-app.use(express.json());
+if (CORS_ORIGIN) app.use(cors({ origin: CORS_ORIGIN, credentials: false }));
+app.use(express.json({ limit: '16kb' }));
 
 // ============================================
 // RUTAS HTTP (API REST - OPCIONAL)
@@ -59,13 +66,29 @@ app.get('/health', (req, res) => {
 /**
  * Obtener estadísticas del servidor
  */
+let cpuAnterior = { uso: process.cpuUsage(), t: process.hrtime.bigint() };
+
 app.get('/stats', (req, res) => {
   const roomStats = RoomManager.getStats();
   const gameStats = GameManager.getStats();
 
+  // CPU del proceso desde la consulta anterior, en % de UN núcleo
+  const ahora = { uso: process.cpuUsage(), t: process.hrtime.bigint() };
+  const cpuMicros = (ahora.uso.user - cpuAnterior.uso.user) + (ahora.uso.system - cpuAnterior.uso.system);
+  const pasadoMicros = Number(ahora.t - cpuAnterior.t) / 1000;
+  cpuAnterior = ahora;
+  const mem = process.memoryUsage();
+
   res.json({
     rooms: roomStats,
     games: gameStats,
+    proceso: {
+      conexiones: io.engine.clientsCount,
+      rssMB: Math.round(mem.rss / 1048576),
+      heapMB: Math.round(mem.heapUsed / 1048576),
+      cpuPct: pasadoMicros > 0 ? Math.round((cpuMicros / pasadoMicros) * 1000) / 10 : 0,
+      uptimeMin: Math.round(process.uptime() / 60),
+    },
     timestamp: new Date().toISOString()
   });
 });
@@ -88,14 +111,27 @@ app.get('/rooms', (req, res) => {
 const clientDist = path.join(__dirname, '../client/dist');
 const siteDist = path.join(__dirname, '../site/dist');
 
+/* En el servidor de producción los estáticos los sirve Caddy
+   (deploy/Caddyfile), con menos memoria y CPU que Node; este proceso queda
+   solo para el socket. Esto se conserva para levantar todo con un solo
+   `npm start`, por ejemplo en una laptop durante un taller sin internet.
+   El HTML, el manifiesto y el service worker nunca se cachean (si no, la
+   gente se queda con una versión vieja); lo demás, un día. */
+const estaticos = {
+  maxAge: '1d',
+  setHeaders(res, ruta) {
+    if (/\.(html|webmanifest)$|sw\.js$/.test(ruta)) res.setHeader('Cache-Control', 'no-cache');
+  },
+};
+
 if (fs.existsSync(clientDist)) {
-  app.use('/taji', express.static(clientDist));
+  app.use('/taji', express.static(clientDist, estaticos));
   app.get('/taji/*', (req, res) => res.sendFile(path.join(clientDist, 'index.html')));
   logger.info('Sirviendo client/dist (TAJI) en /taji');
 }
 
 if (fs.existsSync(siteDist)) {
-  app.use('/', express.static(siteDist));
+  app.use('/', express.static(siteDist, estaticos));
   app.get('*', (req, res) => res.sendFile(path.join(siteDist, 'index.html')));
   logger.info('Sirviendo site/dist (LudoEnergía) en /');
 }
@@ -114,6 +150,9 @@ app.use('*', (req, res) => {
 
 io.on('connection', (socket) => {
   logger.info(`✨ Cliente conectado: ${socket.id}`);
+
+  // Todo socket empieza viendo la lista de salas (ver utils/listaSalas.js)
+  entrarAEspera(socket);
 
   // Configurar todos los handlers
   setupConnectionHandlers(io, socket);
@@ -178,7 +217,13 @@ httpServer.on('error', (error) => {
   process.exit(1);
 });
 
-httpServer.listen(PORT, '0.0.0.0', () => {
+// En el servidor va HOST=127.0.0.1: solo Caddy habla con Node, nadie de fuera.
+// En desarrollo 0.0.0.0 permite probar desde un teléfono en la misma red.
+const HOST = process.env.HOST || '0.0.0.0';
+
+httpServer.listen(PORT, HOST, () => {
+  // El logger calla en producción; esta línea sí debe quedar en el journal.
+  if (EN_PRODUCCION) console.log(`TAJI escuchando en ${HOST}:${PORT}`);
   logger.success(`
   ╔════════════════════════════════════════╗
   ║                                        ║
@@ -186,7 +231,7 @@ httpServer.listen(PORT, '0.0.0.0', () => {
   ║                                        ║
   ║  Port: ${PORT}                            ║
   ║  Environment: ${process.env.NODE_ENV || 'development'}              ║
-  ║  Listening on: 0.0.0.0 (todas las IPs) ║
+  ║  Listening on: ${HOST.padEnd(24)}║
   ║                                        ║
   ╚════════════════════════════════════════╝
   `);

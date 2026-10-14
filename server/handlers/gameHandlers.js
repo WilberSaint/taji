@@ -2,6 +2,7 @@ import GameManager from '../managers/GameManager.js';
 import RoomManager from '../managers/RoomManager.js';
 import { SOCKET_EVENTS, GAME_STATUS } from '../utils/constants.js';
 import logger from '../utils/logger.js';
+import { emitirListaSalas } from '../utils/listaSalas.js';
 
 /**
  * Maneja todos los eventos relacionados con la partida
@@ -65,7 +66,7 @@ export function setupGameHandlers(io, socket) {
       });
 
       // Actualizar lista de salas públicas (la sala ya no aparecerá)
-      io.emit(SOCKET_EVENTS.ROOM_LIST_UPDATE, RoomManager.getPublicRooms());
+      emitirListaSalas(io);
 
       // Responder al cliente
       if (callback) {

@@ -1,0 +1,48 @@
+# /etc/systemd/system/taji.service
+#
+# TAJI (LudoEnergía): el servidor de Node solo atiende el socket del juego
+# (/socket.io) y /health. El sitio y los archivos del juego los sirve Caddy
+# directamente desde disco (ver Caddyfile.snippet), así Node queda pequeño.
+#
+# Estructura en /opt/taji (la arma deploy/desplegar.sh):
+#   runtime/        Node.js propio de la app (no depende del Node del sistema)
+#   server/         código del servidor + node_modules de producción
+#   client/dist/    juego TAJI compilado          → ludoenergia.com/taji/
+#   site/dist/      sitio de LudoEnergía compilado → ludoenergia.com/
+#   .env            configuración (ADMIN_TOKEN, etc.; ver server/.env.example)
+#
+# Todo el estado de las partidas vive en memoria: reiniciar el servicio corta
+# las partidas en curso. Antes de desplegar, activar el modo mantenimiento
+# desde el panel (/taji/#/admin) para que no se abran salas nuevas.
+
+[Unit]
+Description=TAJI - LudoEnergia
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=wilber
+Group=wilber
+WorkingDirectory=/opt/taji/server
+EnvironmentFile=/opt/taji/.env
+ExecStart=/opt/taji/runtime/bin/node --max-old-space-size=160 server.js
+
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=taji
+
+# Ligero y contenido, igual que las otras apps del servidor. En las pruebas de
+# carga 1,000 jugadores simultáneos usaron ~120 MB y ~15% de un núcleo, así
+# que estos topes sobran; existen para que un error nunca afecte a las demás.
+MemoryMax=320M
+CPUQuota=100%
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

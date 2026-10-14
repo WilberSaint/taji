@@ -5,7 +5,7 @@ import { useGameStore } from '../../store/gameStore';
 import { useSocket } from '../../hooks/useSocket';
 import { Trash2, Info, Check } from 'lucide-react';
 import { useState } from 'react';
-import { CARD_TYPES } from '../../utils/constants';
+import { CARD_TYPES, rutaPublica } from '../../utils/constants';
 
 export default function PlayerHand({ cards = [], vertical = false }) {
   const {
@@ -285,7 +285,7 @@ export default function PlayerHand({ cards = [], vertical = false }) {
                 >
                   {ultimaDescartada && !discardMode ? (
                     <img
-                      src={ultimaDescartada.image}
+                      src={rutaPublica(ultimaDescartada.image)}
                       alt={ultimaDescartada.name}
                       draggable={false}
                       className="h-full w-full object-cover opacity-70"

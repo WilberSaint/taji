@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { CARD_TYPES, CARD_TYPE_COLORS } from '../../utils/constants';
+import { CARD_TYPES, CARD_TYPE_COLORS, rutaPublica } from '../../utils/constants';
 
 /**
  * Carta de la mano.
@@ -29,7 +29,7 @@ export function Card({
       style={isEvent ? { border: `3px solid ${typeColor}`, background: '#0b1220' } : undefined}
     >
       <img
-        src={card.image}
+        src={rutaPublica(card.image)}
         alt={card.name}
         draggable={false}
         className="h-full w-full object-cover object-center"

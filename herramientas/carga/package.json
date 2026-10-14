@@ -1,0 +1,12 @@
+{
+  "name": "taji-carga",
+  "private": true,
+  "type": "module",
+  "description": "Prueba de carga del servidor de TAJI (ver carga.mjs)",
+  "scripts": {
+    "carga": "node carga.mjs"
+  },
+  "dependencies": {
+    "socket.io-client": "^4.6.1"
+  }
+}

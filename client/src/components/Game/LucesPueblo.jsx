@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { ENERGY_TYPES } from '../../utils/constants';
+import { ENERGY_TYPES, rutaPublica } from '../../utils/constants';
 
 /**
  * El pueblo del fondo se enciende con tus plantas.
@@ -33,7 +33,7 @@ export function LucesPueblo({ jugador }) {
         <motion.div
           key={zona}
           className="absolute inset-0 encuadre-pueblo"
-          style={{ backgroundImage: `url('/assets/backgrounds/luces-${zona}.webp')` }}
+          style={{ backgroundImage: `url('${rutaPublica(`/assets/backgrounds/luces-${zona}.webp`)}')` }}
           initial={false}
           animate={{ opacity: daLuz(jugador?.board?.[energia]) ? 1 : 0 }}
           // Lento al encender y al apagar: se siente como luz de verdad,

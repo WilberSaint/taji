@@ -146,6 +146,21 @@ export const GAME_RULES = {
   DISCARD_MAX: 3,
 };
 
-// Configuración de servidor
+// Configuración de servidor.
+// En producción el socket vive en el mismo dominio que el juego
+// (ludoenergia.com/socket.io): `undefined` hace que socket.io use el origen
+// de la página, así el mismo build sirve para cualquier dominio o IP.
 export const SERVER_URL =
-  import.meta.env.VITE_SERVER_URL || "http://localhost:3001";
+  import.meta.env.VITE_SERVER_URL ||
+  (import.meta.env.PROD ? undefined : "http://localhost:3001");
+
+/**
+ * Ruta de un archivo de public/ (imágenes de cartas, plantas, fondos).
+ * El juego se publica bajo /taji/ y en desarrollo en la raíz; el servidor
+ * manda las rutas de las cartas como "/assets/…". Esto les antepone la base
+ * del build (import.meta.env.BASE_URL) para que funcionen en ambos casos.
+ */
+export const rutaPublica = (ruta) =>
+  ruta && ruta.startsWith("/")
+    ? import.meta.env.BASE_URL + ruta.slice(1)
+    : ruta;

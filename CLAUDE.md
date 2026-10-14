@@ -44,6 +44,15 @@ npm --prefix client run lint
 
 No hay pruebas automatizadas. Los lockfiles no se versionan (ver `.gitignore`).
 
+## Producción
+
+Ver `deploy/README.md`. Un dominio: `ludoenergia.com/` (sitio), `/taji/` (juego, build con
+`base: '/taji/'`), `/socket.io` (Node). Caddy sirve los estáticos; Node solo el socket.
+Desplegar con `bash deploy/desplegar.sh`. Las rutas a archivos de `client/public` desde código
+JS pasan por `rutaPublica()` (`client/src/utils/constants.js`) — nunca `'/assets/...'` directo,
+o se rompen bajo `/taji/`. La lista de salas en vivo se emite con `emitirListaSalas(io)`
+(`server/utils/listaSalas.js`), nunca con `io.emit`. Prueba de carga: `herramientas/carga/`.
+
 ## Panel de administrador
 
 Oculto en el propio juego: `client` en la ruta `#/admin` (ej. `http://localhost:5173/#/admin`).

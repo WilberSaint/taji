@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ENERGY_TYPES, CARD_TYPES, EVENT_TYPES } from '../../utils/constants';
+import { ENERGY_TYPES, CARD_TYPES, EVENT_TYPES, rutaPublica } from '../../utils/constants';
 import { useGameStore } from '../../store/gameStore';
 import { useSocket } from '../../hooks/useSocket';
 import { Sun, Wind, Waves, Flame, AlertTriangle, Shield, ShieldCheck } from 'lucide-react';
@@ -327,7 +327,7 @@ export default function PlayerSlot({
         className="pointer-events-none relative h-full w-full"
       >
         <img
-          src={isActive ? PLANT_IMAGES[slotType].on : PLANT_IMAGES[slotType].off}
+          src={rutaPublica(isActive ? PLANT_IMAGES[slotType].on : PLANT_IMAGES[slotType].off)}
           alt={energy.label}
           draggable={false}
           className="h-full w-full object-contain drop-shadow-xl pointer-events-none"

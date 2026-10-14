@@ -3,6 +3,7 @@ import GameManager from '../managers/GameManager.js';
 import { SOCKET_EVENTS } from '../utils/constants.js';
 import { getMaintenance } from '../state/adminSettings.js';
 import logger from '../utils/logger.js';
+import { emitirListaSalas, entrarAEspera, salirDeEspera } from '../utils/listaSalas.js';
 
 /**
  * Maneja todos los eventos relacionados con el lobby
@@ -56,6 +57,7 @@ export function setupLobbyHandlers(io, socket) {
 
       // Unir al socket a la sala
       socket.join(roomCode);
+      salirDeEspera(socket);
       socket.roomCode = roomCode;
       socket.playerName = player.name;
 
@@ -135,13 +137,14 @@ export function setupLobbyHandlers(io, socket) {
 
       // Unir al jugador a la sala de Socket.io
       socket.join(room.code);
+      salirDeEspera(socket);
 
       // Almacenar código de sala en el socket
       socket.roomCode = room.code;
       socket.playerName = playerName;
 
       // Emitir lista actualizada de salas públicas
-      io.emit(SOCKET_EVENTS.ROOM_LIST_UPDATE, RoomManager.getPublicRooms());
+      emitirListaSalas(io);
 
       // Responder al cliente
       if (callback) {
@@ -187,6 +190,7 @@ export function setupLobbyHandlers(io, socket) {
 
       // Unir al jugador a la sala de Socket.io
       socket.join(roomCode);
+      salirDeEspera(socket);
 
       // Almacenar información en el socket
       socket.roomCode = roomCode;
@@ -196,7 +200,7 @@ export function setupLobbyHandlers(io, socket) {
       io.to(roomCode).emit(SOCKET_EVENTS.ROOM_UPDATED, result.room.getState());
 
       // Actualizar lista de salas públicas
-      io.emit(SOCKET_EVENTS.ROOM_LIST_UPDATE, RoomManager.getPublicRooms());
+      emitirListaSalas(io);
 
       // Responder al cliente
       if (callback) {
@@ -241,6 +245,7 @@ export function setupLobbyHandlers(io, socket) {
 
       // Salir de la sala de Socket.io
       socket.leave(code);
+      entrarAEspera(socket);
 
       // Limpiar datos del socket
       delete socket.roomCode;
@@ -255,7 +260,7 @@ export function setupLobbyHandlers(io, socket) {
       }
 
       // Actualizar lista de salas públicas
-      io.emit(SOCKET_EVENTS.ROOM_LIST_UPDATE, RoomManager.getPublicRooms());
+      emitirListaSalas(io);
 
       // Responder al cliente
       if (callback) {
@@ -276,6 +281,9 @@ export function setupLobbyHandlers(io, socket) {
    */
   socket.on(SOCKET_EVENTS.LOBBY_LIST_ROOMS, (data, callback) => {
     try {
+      // Quien pide la lista la está viendo: que le lleguen los cambios en vivo
+      // (cubre también a quien fue expulsado y regresó a la pantalla de salas).
+      entrarAEspera(socket);
       const publicRooms = RoomManager.getPublicRooms();
 
       if (callback) {

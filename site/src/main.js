@@ -5,7 +5,9 @@ const root = document.documentElement;
 root.classList.add('js');
 
 /* ---------- enlace al juego TAJI ---------- */
-const TAJI_URL = import.meta.env.VITE_TAJI_URL || 'http://localhost:5173';
+// En producción el juego vive en el mismo dominio, en /taji/.
+const TAJI_URL =
+  import.meta.env.VITE_TAJI_URL || (import.meta.env.PROD ? '/taji/' : 'http://localhost:5173');
 document.querySelectorAll('.js-taji-link').forEach((a) => {
   a.href = TAJI_URL;
   a.target = '_blank';

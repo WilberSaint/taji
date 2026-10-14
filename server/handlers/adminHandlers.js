@@ -7,6 +7,7 @@ import {
 } from '../state/adminSettings.js';
 import { SOCKET_EVENTS } from '../utils/constants.js';
 import logger from '../utils/logger.js';
+import { emitirListaSalas } from '../utils/listaSalas.js';
 
 /**
  * Panel de administrador — todo protegido por un token compartido
@@ -49,7 +50,7 @@ export function setupAdminHandlers(io, socket) {
 
     io.to(roomCode).emit(SOCKET_EVENTS.YOU_WERE_KICKED, { reason: 'La sala fue cerrada por un administrador' });
     GameManager.deleteGame(roomCode);
-    io.emit(SOCKET_EVENTS.ROOM_LIST_UPDATE, RoomManager.getPublicRooms());
+    emitirListaSalas(io);
     logger.warn(`[admin] sala ${roomCode} cerrada manualmente`);
     callback?.({ success: true });
   });
@@ -65,7 +66,7 @@ export function setupAdminHandlers(io, socket) {
     if (!result.roomDeleted) {
       io.to(roomCode).emit(SOCKET_EVENTS.ROOM_UPDATED, result.room.getState());
     }
-    io.emit(SOCKET_EVENTS.ROOM_LIST_UPDATE, RoomManager.getPublicRooms());
+    emitirListaSalas(io);
     logger.warn(`[admin] ${result.player.name} expulsado de ${roomCode}`);
     callback?.({ success: true });
   });

@@ -2,6 +2,7 @@ import RoomManager from '../managers/RoomManager.js';
 import GameManager from '../managers/GameManager.js';
 import { SOCKET_EVENTS, PLAYER_STATUS } from '../utils/constants.js';
 import logger from '../utils/logger.js';
+import { emitirListaSalas, salirDeEspera } from '../utils/listaSalas.js';
 
 /**
  * Maneja eventos de conexión y desconexión
@@ -75,7 +76,7 @@ function handleDisconnect(io, socket) {
       }
 
       // Actualizar lista de salas públicas
-      io.emit(SOCKET_EVENTS.ROOM_LIST_UPDATE, RoomManager.getPublicRooms());
+      emitirListaSalas(io);
     }
 
     logger.info(`${player.name} removido del lobby ${roomCode}`);
@@ -148,6 +149,7 @@ export function handleReconnect(io, socket, roomCode, playerId) {
 
   // Unir al nuevo socket a la sala
   socket.join(roomCode);
+  salirDeEspera(socket);
   socket.roomCode = roomCode;
   socket.playerName = player.name;
 

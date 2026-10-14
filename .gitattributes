@@ -1,0 +1,4 @@
+# Lo que corre en el servidor Linux: siempre con saltos de línea LF (con CRLF, bash y systemd fallan)
+*.sh text eol=lf
+*.service text eol=lf
+Caddyfile.snippet text eol=lf
