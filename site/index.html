@@ -377,14 +377,18 @@
 
   <!-- ============================================================
        INSTITUCIONES
-       Los logotipos oficiales NO están en el repositorio: son marca de cada
-       institución y tienen que venir de sus propios manuales de identidad.
-       Para ponerlos, deja los archivos en site/public/img/instituciones/
-       con estos nombres exactos:
-            itson.svg      (o .png)
-            secihti.svg    (o .png)
-       Mientras no existan, cada bloque enseña el nombre escrito en vez de
-       una imagen rota: el main.js lo detecta y cambia solo.
+       Los logotipos son los OFICIALES, tomados de itson.mx y secihti.mx.
+       Están reducidos a 216 px de alto (el triple de los 72 px a los que se
+       ven, para que no se despixelen en pantallas retina) y convertidos a
+       WebP con transparencia: de 174 KB entre los dos a 26 KB, que importa en
+       las conexiones lentas para las que está pensado este sitio.
+
+       Si hay que reemplazarlos por una versión más nueva, el sitio los busca
+       en site/public/img/instituciones/ con estos nombres:
+            itson.webp
+            secihti.webp
+       Si un archivo falta o falla, el bloque enseña el nombre escrito en vez
+       de una imagen rota: main.js lo detecta y cambia solo.
        ============================================================ -->
   <section class="band alt" id="instituciones">
     <div class="wrap">
@@ -396,7 +400,7 @@
       <ul class="instituciones reveal">
         <li class="institucion">
           <a class="institucion__marca" href="https://www.itson.mx" target="_blank" rel="noopener">
-            <img class="institucion__logo" data-logo src="/img/instituciones/itson.svg" alt="Instituto Tecnológico de Sonora" width="200" height="80" />
+            <img class="institucion__logo" data-logo src="/img/instituciones/itson.webp" alt="Instituto Tecnológico de Sonora" width="468" height="216" loading="lazy" decoding="async" />
             <span class="institucion__texto">Instituto Tecnológico de Sonora</span>
           </a>
           <span class="institucion__rol" data-i18n="inst_itson">Institución responsable. El proyecto nace y se desarrolla en el ITSON, con un equipo interdisciplinario de sus departamentos de ingeniería, ciencias del agua, psicología y divulgación.</span>
@@ -404,7 +408,7 @@
 
         <li class="institucion">
           <a class="institucion__marca" href="https://secihti.mx" target="_blank" rel="noopener">
-            <img class="institucion__logo" data-logo src="/img/instituciones/secihti.svg" alt="SECIHTI · Secretaría de Ciencia, Humanidades, Tecnología e Innovación" width="200" height="80" />
+            <img class="institucion__logo" data-logo src="/img/instituciones/secihti.webp" alt="SECIHTI · Secretaría de Ciencia, Humanidades, Tecnología e Innovación" width="275" height="216" loading="lazy" decoding="async" />
             <span class="institucion__texto">SECIHTI</span>
           </a>
           <span class="institucion__rol" data-i18n="inst_secihti">Financiamiento. Proyecto apoyado por la Secretaría de Ciencia, Humanidades, Tecnología e Innovación en su convocatoria de divulgación 2025.</span>

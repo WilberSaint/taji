@@ -380,16 +380,22 @@ html.js .reveal.in { opacity: 1; transform: none; }
   padding: 22px; box-shadow: var(--sh-1);
   display: flex; flex-direction: column; gap: 12px;
 }
+/* Placa blanca SIEMPRE, también en tema oscuro. Los logotipos
+   institucionales están definidos para fondo claro —el de SECIHTI es granate
+   y sobre el panel oscuro resultaba casi ilegible— y lo correcto es darles el
+   fondo que presupone su manual, no recolorearlos ni invertirlos. */
 .institucion__marca {
   display: flex; align-items: center; justify-content: center;
   min-height: 86px; text-decoration: none;
+  background: #fff; border-radius: var(--r-md); padding: 14px 18px;
+  border: 1px solid var(--line);
 }
 .institucion__logo { max-height: 72px; max-width: 100%; width: auto; height: auto; object-fit: contain; }
 
 /* El nombre escrito solo aparece si el logotipo no está (ver main.js). Así el
    sitio nunca enseña una imagen rota mientras no lleguen los archivos
    oficiales, y en cuanto lleguen se pone el logotipo sin tocar nada. */
-.institucion__texto { display: none; font-size: 1.05rem; font-weight: 700; color: var(--ink); text-align: center; }
+.institucion__texto { display: none; font-size: 1.05rem; font-weight: 700; color: #16212A; text-align: center; }
 .institucion--sin-logo .institucion__logo { display: none; }
 .institucion--sin-logo .institucion__texto { display: block; }
 
