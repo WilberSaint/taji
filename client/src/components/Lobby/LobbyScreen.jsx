@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useGameStore } from '../../store/gameStore';
 import { useSocket } from '../../hooks/useSocket';
+import { iniciarModoLocal } from '../../socket';
 import { useTheme } from '../../hooks/useTheme';
 import Button from '../UI/Button';
 import Avatar from '../UI/Avatar';
@@ -9,8 +10,7 @@ import RulesModal from '../Game/RulesModal';
 import { leerEstadisticas, porcentajeVictorias } from '../../utils/estadisticas';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Users, Lock, Globe, LogIn, Plus, Bot, X, Crown,
-  Copy, Check, RefreshCw, ArrowLeft, Loader2, Monitor, Sun, Moon, HelpCircle,
+  ArrowLeft, Bot, Check, Copy, Crown, Globe, HelpCircle, Loader2, Lock, LogIn, Monitor, Moon, Play, Plus, RefreshCw, Sun, Users, WifiOff, X,
 } from 'lucide-react';
 
 /* ---------- piezas compartidas ---------- */
@@ -136,7 +136,8 @@ const fade = { initial: { opacity: 0, y: 10 }, animate: { opacity: 1, y: 0 } };
 export function LobbyScreen() {
   const { playerName, setPlayerName, playerAvatar, setPlayerAvatar, currentRoom, publicRooms, setNotification } = useGameStore();
   const { createRoom, joinRoom, listRooms, leaveRoom, setReady, startGame, reconnect, addBot, kickPlayer } = useSocket();
-  const [view, setView] = useState('home'); // home | create | join | room
+  const [view, setView] = useState('home'); // home | create | join | room | local
+  const [botsLocal, setBotsLocal] = useState(2);
   const [nameInput, setNameInput] = useState('');
   const [roomCode, setRoomCode] = useState('');
   const [isPublic, setIsPublic] = useState(true);
@@ -332,6 +333,22 @@ export function LobbyScreen() {
               <span className="font-display text-lg font-bold">Unirse con código</span>
               <span className="text-sm text-ink-soft">Entra a una sala privada con su código.</span>
             </motion.button>
+
+            {/* Partida sin conexión. Va en el menú principal y no escondida en
+                ajustes: en un taller sin internet es la ÚNICA opción que
+                funciona, y quien la necesita no debería tener que buscarla. */}
+            <motion.button
+              {...fade}
+              transition={{ delay: 0.15 }}
+              onClick={() => setView('local')}
+              className={`${panelBase} flex flex-col items-start gap-3 p-6 text-left transition-transform hover:-translate-y-0.5 hover:shadow-e2 sm:col-span-2`}
+            >
+              <span className="grid h-11 w-11 place-items-center rounded-[var(--r-md)] bg-surface-2 text-ink-soft">
+                <WifiOff size={22} />
+              </span>
+              <span className="font-display text-lg font-bold">Jugar sin internet</span>
+              <span className="text-sm text-ink-soft">Una partida contra bots en este dispositivo. No necesita conexión ni servidor.</span>
+            </motion.button>
           </div>
 
           <motion.div {...fade} transition={{ delay: 0.12 }} className="mb-6">
@@ -389,6 +406,73 @@ export function LobbyScreen() {
   }
 
   /* ===== crear sala ===== */
+  /* ===== PARTIDA SIN CONEXIÓN ===== */
+  if (view === 'local') {
+    const empezarLocal = async () => {
+      setLoading(true);
+      try {
+        const r = await iniciarModoLocal({
+          nombre: playerName || 'Jugador',
+          avatar: playerAvatar,
+          bots: botsLocal,
+        });
+        if (!r?.success) {
+          setNotification({ type: 'error', message: r?.error || 'No se pudo empezar la partida' });
+          setLoading(false);
+        }
+        // Si salió bien, el estado de la partida llega solo y la pantalla cambia
+      } catch (e) {
+        setNotification({ type: 'error', message: 'No se pudo empezar la partida sin conexión' });
+        setLoading(false);
+      }
+    };
+
+    return (
+      <Shell center>
+        <motion.div {...fade} className={`${panelBase} w-full max-w-md p-7`}>
+          <button
+            onClick={() => setView('home')}
+            className="mb-4 flex items-center gap-1.5 text-sm text-ink-soft hover:text-ink"
+          >
+            <ArrowLeft size={16} /> Volver
+          </button>
+
+          <h2 className="mb-2 font-display text-2xl font-bold">Jugar sin internet</h2>
+          <p className="mb-6 text-sm text-ink-soft">
+            La partida corre entera en este dispositivo. Puedes cerrar los datos o el wifi:
+            no hace falta conexión en ningún momento.
+          </p>
+
+          <label className="mb-2 block text-sm font-semibold">¿Contra cuántos bots?</label>
+          <div className="mb-6 grid grid-cols-5 gap-2">
+            {[1, 2, 3, 4, 5].map((n) => (
+              <button
+                key={n}
+                onClick={() => setBotsLocal(n)}
+                aria-pressed={botsLocal === n}
+                className="rounded-[var(--r-md)] border py-3 font-display text-lg font-bold transition-colors"
+                style={
+                  botsLocal === n
+                    ? { borderColor: 'var(--primary)', background: 'var(--primary-soft)', color: 'var(--primary)' }
+                    : { borderColor: 'var(--line)', color: 'var(--ink-soft)' }
+                }
+              >
+                {n}
+              </button>
+            ))}
+          </div>
+          <p className="mb-6 text-xs text-ink-faint">
+            Serán {botsLocal + 1} jugadores en la mesa, contándote.
+          </p>
+
+          <Button fullWidth onClick={empezarLocal} disabled={loading} icon={<Play size={18} />}>
+            {loading ? 'Preparando…' : 'Empezar partida'}
+          </Button>
+        </motion.div>
+      </Shell>
+    );
+  }
+
   if (view === 'create') {
     return (
       <Shell center>
